@@ -1,0 +1,124 @@
+---
+---
+
+<canvas id="hero-canvas"></canvas>
+
+<style>
+  #hero-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    display: block;
+  }
+</style>
+
+<script>
+  import * as THREE from 'three';
+
+  const canvas = document.getElementById('hero-canvas') as HTMLCanvasElement;
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x0c0f0b);
+
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x0c0f0b, 0.052);
+
+  const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera.position.set(0, 5, 10);
+  camera.lookAt(0, 0, -2);
+
+  // Terrain mesh
+  const SEGS = window.innerWidth < 768 ? 45 : 70;
+  const geometry = new THREE.PlaneGeometry(34, 34, SEGS, SEGS);
+  geometry.rotateX(-Math.PI / 2);
+
+  const material = new THREE.MeshBasicMaterial({
+    color: 0x4a5c3f,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.55,
+  });
+
+  const terrain = new THREE.Mesh(geometry, material);
+  terrain.frustumCulled = false;
+  scene.add(terrain);
+
+  // Accent highlight grid — a coarser overlay for depth
+  const geometry2 = new THREE.PlaneGeometry(34, 34, 14, 14);
+  geometry2.rotateX(-Math.PI / 2);
+  const material2 = new THREE.MeshBasicMaterial({
+    color: 0x8fb339,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.08,
+  });
+  const terrainAccent = new THREE.Mesh(geometry2, material2);
+  terrainAccent.frustumCulled = false;
+  scene.add(terrainAccent);
+
+  // Mouse parallax
+  let mouseX = 0;
+  let mouseY = 0;
+  let camX = 0;
+  let camY = 5;
+
+  document.addEventListener('mousemove', (e) => {
+    mouseX = (e.clientX / window.innerWidth - 0.5) * 2.5;
+    mouseY = (e.clientY / window.innerHeight - 0.5) * -1.2;
+  });
+
+  // Animation
+  const positions = geometry.attributes.position;
+  const positions2 = geometry2.attributes.position;
+  const arr = positions.array as Float32Array;
+  const arr2 = positions2.array as Float32Array;
+
+  let t = 0;
+
+  function animate() {
+    requestAnimationFrame(animate);
+    t += 0.0035;
+
+    // Animate main terrain
+    for (let i = 0; i < arr.length; i += 3) {
+      const x = arr[i];
+      const z = arr[i + 2];
+      arr[i + 1] =
+        Math.sin(x * 0.38 + t) * Math.cos(z * 0.32 - t * 0.65) * 1.05 +
+        Math.sin(x * 0.18 + z * 0.22 - t * 0.42) * 0.55;
+    }
+    positions.needsUpdate = true;
+
+    // Animate coarse accent grid (same wave, different phase)
+    for (let i = 0; i < arr2.length; i += 3) {
+      const x = arr2[i];
+      const z = arr2[i + 2];
+      arr2[i + 1] =
+        Math.sin(x * 0.38 + t) * Math.cos(z * 0.32 - t * 0.65) * 1.05 +
+        Math.sin(x * 0.18 + z * 0.22 - t * 0.42) * 0.55;
+    }
+    positions2.needsUpdate = true;
+
+    // Smooth camera parallax
+    camX += (mouseX - camX) * 0.04;
+    camY += (5 + mouseY - camY) * 0.04;
+    camera.position.x = camX;
+    camera.position.y = camY;
+    camera.lookAt(0, 0, -2);
+
+    renderer.render(scene, camera);
+  }
+
+  animate();
+
+  window.addEventListener('resize', () => {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+  });
+</script>

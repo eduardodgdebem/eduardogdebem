@@ -1,0 +1,22 @@
+---
+interface Props {
+  tag: string;
+  href?: string;
+  active?: boolean;
+}
+
+const { tag, href, active = false } = Astro.props;
+const base = 'font-mono text-[10px] tracking-[0.15em] uppercase px-2 py-0.5 border transition-colors duration-200';
+const inactive = 'border-trench text-brush hover:border-signal hover:text-signal';
+const activeStyle = 'border-signal text-signal';
+---
+
+{href ? (
+  <a href={href} class={`${base} ${active ? activeStyle : inactive}`}>
+    {tag}
+  </a>
+) : (
+  <span class={`${base} border-trench text-brush`}>
+    {tag}
+  </span>
+)}

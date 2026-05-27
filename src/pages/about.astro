@@ -1,63 +1,174 @@
 ---
-import AboutHeroImage from '../assets/blog-placeholder-about.jpg';
-import Layout from '../layouts/BlogPost.astro';
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import { SITE_TITLE } from '../consts';
 ---
 
-<Layout
-	title="About Me"
-	description="Lorem ipsum dolor sit amet"
-	pubDate={new Date('August 08 2021')}
-	heroImage={AboutHeroImage}
->
-	<p>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-		labore et dolore magna aliqua. Vitae ultricies leo integer malesuada nunc vel risus commodo
-		viverra. Adipiscing enim eu turpis egestas pretium. Euismod elementum nisi quis eleifend quam
-		adipiscing. In hac habitasse platea dictumst vestibulum. Sagittis purus sit amet volutpat. Netus
-		et malesuada fames ac turpis egestas. Eget magna fermentum iaculis eu non diam phasellus
-		vestibulum lorem. Varius sit amet mattis vulputate enim. Habitasse platea dictumst quisque
-		sagittis. Integer quis auctor elit sed vulputate mi. Dictumst quisque sagittis purus sit amet.
-	</p>
+<!doctype html>
+<html lang="en">
+  <head>
+    <BaseHead
+      title={`About — ${SITE_TITLE}`}
+      description="Fullstack developer based in Florianópolis. Building financial systems, AR platforms, and writing about it."
+    />
+  </head>
+  <body class="bg-void text-parchment">
+    <Header />
 
-	<p>
-		Morbi tristique senectus et netus. Id semper risus in hendrerit gravida rutrum quisque non
-		tellus. Habitasse platea dictumst quisque sagittis purus sit amet. Tellus molestie nunc non
-		blandit massa. Cursus vitae congue mauris rhoncus. Accumsan tortor posuere ac ut. Fringilla urna
-		porttitor rhoncus dolor. Elit ullamcorper dignissim cras tincidunt lobortis. In cursus turpis
-		massa tincidunt dui ut ornare lectus. Integer feugiat scelerisque varius morbi enim nunc.
-		Bibendum neque egestas congue quisque egestas diam. Cras ornare arcu dui vivamus arcu felis
-		bibendum. Dignissim suspendisse in est ante in nibh mauris. Sed tempus urna et pharetra pharetra
-		massa massa ultricies mi.
-	</p>
+    <main class="relative z-10 min-h-screen pt-28 pb-20 px-8 md:px-14">
+      <div class="max-w-5xl mx-auto">
 
-	<p>
-		Mollis nunc sed id semper risus in. Convallis a cras semper auctor neque. Diam sit amet nisl
-		suscipit. Lacus viverra vitae congue eu consequat ac felis donec. Egestas integer eget aliquet
-		nibh praesent tristique magna sit amet. Eget magna fermentum iaculis eu non diam. In vitae
-		turpis massa sed elementum. Tristique et egestas quis ipsum suspendisse ultrices. Eget lorem
-		dolor sed viverra ipsum. Vel turpis nunc eget lorem dolor sed viverra. Posuere ac ut consequat
-		semper viverra nam. Laoreet suspendisse interdum consectetur libero id faucibus. Diam phasellus
-		vestibulum lorem sed risus ultricies tristique. Rhoncus dolor purus non enim praesent elementum
-		facilisis. Ultrices tincidunt arcu non sodales neque. Tempus egestas sed sed risus pretium quam
-		vulputate. Viverra suspendisse potenti nullam ac tortor vitae purus faucibus ornare. Fringilla
-		urna porttitor rhoncus dolor purus non. Amet dictum sit amet justo donec enim.
-	</p>
+        <!-- Page title -->
+        <div class="flex items-center gap-4 mb-16">
+          <span class="w-6 h-px bg-signal"></span>
+          <span class="font-mono text-xs text-brush tracking-[0.2em] uppercase">About</span>
+        </div>
 
-	<p>
-		Mattis ullamcorper velit sed ullamcorper morbi tincidunt. Tortor posuere ac ut consequat semper
-		viverra. Tellus mauris a diam maecenas sed enim ut sem viverra. Venenatis urna cursus eget nunc
-		scelerisque viverra mauris in. Arcu ac tortor dignissim convallis aenean et tortor at. Curabitur
-		gravida arcu ac tortor dignissim convallis aenean et tortor. Egestas tellus rutrum tellus
-		pellentesque eu. Fusce ut placerat orci nulla pellentesque dignissim enim sit amet. Ut enim
-		blandit volutpat maecenas volutpat blandit aliquam etiam. Id donec ultrices tincidunt arcu. Id
-		cursus metus aliquam eleifend mi.
-	</p>
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-16">
 
-	<p>
-		Tempus quam pellentesque nec nam aliquam sem. Risus at ultrices mi tempus imperdiet. Id porta
-		nibh venenatis cras sed felis eget velit. Ipsum a arcu cursus vitae. Facilisis magna etiam
-		tempor orci eu lobortis elementum. Tincidunt dui ut ornare lectus sit. Quisque non tellus orci
-		ac. Blandit libero volutpat sed cras. Nec tincidunt praesent semper feugiat nibh sed pulvinar
-		proin gravida. Egestas integer eget aliquet nibh praesent tristique magna.
-	</p>
-</Layout>
+          <!-- Bio -->
+          <div>
+            <h1 class="font-display text-6xl md:text-8xl text-parchment tracking-wide leading-none mb-10">
+              EDUARDO<br />DE BEM
+            </h1>
+
+            <div class="prose max-w-none">
+              <p>
+                Fullstack developer based in Florianópolis, SC. Currently at Zallpy building a financial
+                platform for BMW USA — Angular Micro Frontends on the front, .NET and MuleSoft behind it,
+                all wired through Amazon API Gateway. Alongside that, I've been deep in a separate project
+                for the past six months: React + Vite, NestJS, PostgreSQL, and RabbitMQ.
+              </p>
+
+              <p>
+                Before Zallpy I was at eTopocart working on geoprocessing software — the kind of frontend
+                work that involves rendering 10,000-row tables without the browser giving up, and making
+                different browser tabs talk to each other. It was a good place to learn that performance
+                problems are usually more interesting than they look.
+              </p>
+
+              <p>
+                In 2023 I spent a year between the US and Europe. Went to sharpen my English. Came back
+                with that plus a clearer idea of what I actually want to build.
+              </p>
+
+              <p>
+                I used to play violin — seriously, for years. I don't anymore. But the same instincts
+                carry over: you can tell when something is slightly off even if you can't name it yet,
+                and the only way to get good at something is to show up before you're ready.
+              </p>
+
+              <p>
+                I'm studying Computer Science at UNISUL (graduating 2026) and volunteer on a WebGL-based
+                augmented reality project there — which is how I ended up comfortable enough with 3D
+                rendering to put a Three.js terrain on this homepage.
+              </p>
+
+              <h2 class="text-4xl mt-12 mb-4">WHAT I WORK WITH</h2>
+              <p>
+                On the frontend: TypeScript, React, Angular, and Micro Frontend architectures day-to-day.
+                On the backend: Node.js, NestJS, and .NET depending on the project. I've worked with
+                PostgreSQL, RabbitMQ, MuleSoft, and AWS (API Gateway, Lambda). I pick up what the problem
+                needs — the stack debate is usually less interesting than the problem itself.
+              </p>
+
+              <h2 class="text-4xl mt-12 mb-4">GET IN TOUCH</h2>
+              <p>
+                If you want to talk about a project, a role, or just found something here worth discussing —
+                <a href="mailto:eduardogdebem@gmail.com" class="text-signal hover:text-parchment transition-colors">
+                  send me an email
+                </a>
+                or find me on
+                <a href="https://linkedin.com/in/eduardogdebem" target="_blank" rel="noopener noreferrer" class="text-signal hover:text-parchment transition-colors">
+                  LinkedIn
+                </a>.
+              </p>
+            </div>
+          </div>
+
+          <!-- Sidebar -->
+          <aside class="lg:pt-2">
+            <div class="border-l border-trench pl-8 space-y-10">
+
+              <div>
+                <h3 class="font-mono text-xs text-brush tracking-[0.2em] uppercase mb-4">Currently</h3>
+                <ul class="space-y-2">
+                  {['Zallpy — Fullstack Pleno', 'BMW financial platform', 'React/NestJS/RabbitMQ project'].map(item => (
+                    <li class="font-sans text-sm text-parchment flex items-center gap-2">
+                      <span class="w-1 h-1 bg-signal rounded-full shrink-0"></span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <h3 class="font-mono text-xs text-brush tracking-[0.2em] uppercase mb-4">Reading</h3>
+                <ul class="space-y-2">
+                  {['Sci-fi', 'Fantasy', 'Whatever catches me'].map(tag => (
+                    <li class="font-sans text-sm text-parchment flex items-center gap-2">
+                      <span class="w-1 h-1 bg-signal rounded-full shrink-0"></span>
+                      {tag}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <h3 class="font-mono text-xs text-brush tracking-[0.2em] uppercase mb-4">Racing</h3>
+                <ul class="space-y-2">
+                  {['Formula 1', 'Constructor standings > driver standings'].map(tag => (
+                    <li class="font-sans text-sm text-parchment flex items-center gap-2">
+                      <span class="w-1 h-1 bg-signal rounded-full shrink-0"></span>
+                      {tag}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <h3 class="font-mono text-xs text-brush tracking-[0.2em] uppercase mb-4">Fighting</h3>
+                <ul class="space-y-2">
+                  {['MMA', 'Boxing', 'Combat sports in general'].map(tag => (
+                    <li class="font-sans text-sm text-parchment flex items-center gap-2">
+                      <span class="w-1 h-1 bg-signal rounded-full shrink-0"></span>
+                      {tag}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <h3 class="font-mono text-xs text-brush tracking-[0.2em] uppercase mb-4">Music</h3>
+                <ul class="space-y-2">
+                  {['Ex-violinist', 'Still listens'].map(tag => (
+                    <li class="font-sans text-sm text-parchment flex items-center gap-2">
+                      <span class="w-1 h-1 bg-field rounded-full shrink-0"></span>
+                      {tag}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <h3 class="font-mono text-xs text-brush tracking-[0.2em] uppercase mb-4">Languages</h3>
+                <ul class="space-y-2">
+                  {['Portuguese — native', 'English — advanced', 'Spanish — intermediate'].map(tag => (
+                    <li class="font-sans text-sm text-parchment flex items-center gap-2">
+                      <span class="w-1 h-1 bg-brush rounded-full shrink-0"></span>
+                      {tag}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+            </div>
+          </aside>
+        </div>
+      </div>
+    </main>
+
+    <Footer />
+  </body>
+</html>

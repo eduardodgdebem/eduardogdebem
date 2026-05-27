@@ -1,23 +1,38 @@
 ---
 import { getCollection } from 'astro:content';
-import BaseHead from '../../components/BaseHead.astro';
-import Footer from '../../components/Footer.astro';
-import FormattedDate from '../../components/FormattedDate.astro';
-import Header from '../../components/Header.astro';
-import Tag from '../../components/Tag.astro';
-import { SITE_DESCRIPTION, SITE_TITLE } from '../../consts';
+import BaseHead from '../../../components/BaseHead.astro';
+import Footer from '../../../components/Footer.astro';
+import FormattedDate from '../../../components/FormattedDate.astro';
+import Header from '../../../components/Header.astro';
+import Tag from '../../../components/Tag.astro';
+import { SITE_TITLE } from '../../../consts';
 
-const posts = (await getCollection('blog')).sort(
-  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
-);
+export async function getStaticPaths() {
+  const allPosts = await getCollection('blog');
+  const tags = [...new Set(allPosts.flatMap((post) => post.data.tags ?? []))];
 
-const allTags = [...new Set(posts.flatMap((p) => p.data.tags ?? []))].sort();
+  return tags.map((tag) => ({
+    params: { tag },
+    props: {
+      tag,
+      posts: allPosts
+        .filter((post) => post.data.tags?.includes(tag))
+        .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()),
+      allTags: tags.sort(),
+    },
+  }));
+}
+
+const { tag, posts, allTags } = Astro.props;
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
-    <BaseHead title={`Field Notes — ${SITE_TITLE}`} description={SITE_DESCRIPTION} />
+    <BaseHead
+      title={`${tag} — ${SITE_TITLE}`}
+      description={`Posts tagged with "${tag}"`}
+    />
   </head>
   <body class="bg-void text-parchment">
     <Header />
@@ -28,25 +43,26 @@ const allTags = [...new Set(posts.flatMap((p) => p.data.tags ?? []))].sort();
         <!-- Page header -->
         <div class="flex items-center gap-4 mb-4">
           <span class="w-6 h-px bg-signal"></span>
-          <span class="font-mono text-xs text-brush tracking-[0.2em] uppercase">All entries</span>
+          <span class="font-mono text-xs text-brush tracking-[0.2em] uppercase">Field Notes</span>
         </div>
-        <h1 class="font-display text-6xl md:text-8xl text-parchment tracking-wide leading-none mb-16">
+        <h1 class="font-display text-6xl md:text-8xl text-parchment tracking-wide leading-none mb-10">
           FIELD NOTES
         </h1>
 
         <!-- Tag filter row -->
-        {allTags.length > 0 && (
-          <div class="flex items-center gap-2 flex-wrap mb-12 pb-6 border-b border-trench">
-            <span class="font-mono text-[10px] tracking-[0.15em] uppercase px-2 py-0.5 border border-signal text-signal">
-              ALL
-            </span>
-            {allTags.map((tag) => (
-              <Tag tag={tag} href={`/blog/tag/${tag}`} />
-            ))}
-          </div>
-        )}
+        <div class="flex items-center gap-2 flex-wrap mb-12 pb-6 border-b border-trench">
+          <a
+            href="/blog"
+            class="font-mono text-[10px] tracking-[0.15em] uppercase px-2 py-0.5 border border-trench text-brush hover:border-signal hover:text-signal transition-colors duration-200"
+          >
+            ALL
+          </a>
+          {allTags.map((t) => (
+            <Tag tag={t} href={`/blog/tag/${t}`} active={t === tag} />
+          ))}
+        </div>
 
-        <!-- Post list -->
+        <!-- Filtered post list -->
         <div class="space-y-0">
           {posts.map((post) => (
             <a
@@ -67,8 +83,8 @@ const allTags = [...new Set(posts.flatMap((p) => p.data.tags ?? []))].sort();
                 )}
                 {post.data.tags && post.data.tags.length > 0 && (
                   <div class="flex gap-2 mt-2 flex-wrap">
-                    {post.data.tags.map((tag) => (
-                      <Tag tag={tag} />
+                    {post.data.tags.map((t) => (
+                      <Tag tag={t} />
                     ))}
                   </div>
                 )}
@@ -82,7 +98,7 @@ const allTags = [...new Set(posts.flatMap((p) => p.data.tags ?? []))].sort();
 
         {posts.length === 0 && (
           <p class="font-mono text-xs text-brush tracking-widest text-center py-20 uppercase">
-            No entries yet. First one is loading.
+            No entries for this topic yet.
           </p>
         )}
       </div>

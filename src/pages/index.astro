@@ -1,49 +1,115 @@
 ---
+import { getCollection } from 'astro:content';
 import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
+import FormattedDate from '../components/FormattedDate.astro';
 import Header from '../components/Header.astro';
+import HeroCanvas from '../components/HeroCanvas.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+
+const posts = (await getCollection('blog'))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 3);
 ---
 
 <!doctype html>
 <html lang="en">
-	<head>
-		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
-	</head>
-	<body>
-		<Header />
-		<main>
-			<h1>🧑‍🚀 Hello, Astronaut!</h1>
-			<p>
-				Welcome to the official <a href="https://astro.build/">Astro</a> blog starter template. This template
-				serves as a lightweight, minimally-styled starting point for anyone looking to build a personal
-				website, blog, or portfolio with Astro.
-			</p>
-			<p>
-				This template comes with a few integrations already configured in your
-				<code>astro.config.mjs</code> file. You can customize your setup with
-				<a href="https://astro.build/integrations">Astro Integrations</a> to add tools like Tailwind,
-				React, or Vue to your project.
-			</p>
-			<p>Here are a few ideas on how to get started with the template:</p>
-			<ul>
-				<li>Edit this page in <code>src/pages/index.astro</code></li>
-				<li>Edit the site header items in <code>src/components/Header.astro</code></li>
-				<li>Add your name to the footer in <code>src/components/Footer.astro</code></li>
-				<li>Check out the included blog posts in <code>src/content/blog/</code></li>
-				<li>Customize the blog post page layout in <code>src/layouts/BlogPost.astro</code></li>
-			</ul>
-			<p>
-				Have fun! If you get stuck, remember to
-				<a href="https://docs.astro.build/">read the docs</a>
-				or <a href="https://astro.build/chat">join us on Discord</a> to ask questions.
-			</p>
-			<p>
-				Looking for a blog template with a bit more personality? Check out
-				<a href="https://github.com/Charca/astro-blog-template">astro-blog-template</a>
-				by <a href="https://twitter.com/Charca">Maxi Ferreira</a>.
-			</p>
-		</main>
-		<Footer />
-	</body>
+  <head>
+    <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+  </head>
+  <body class="bg-void text-parchment overflow-x-hidden">
+
+    <!-- Three.js terrain canvas (fixed, z-0) -->
+    <HeroCanvas />
+
+    <!-- Header (fixed, z-50) -->
+    <Header />
+
+    <!-- Hero section: full viewport, transparent over canvas -->
+    <section class="relative z-10 min-h-screen flex flex-col justify-end px-8 md:px-14 pb-16 md:pb-20">
+
+      <!-- Coordinate tag -->
+      <div class="flex items-center gap-3 mb-5">
+        <span class="w-8 h-px bg-signal"></span>
+        <span class="font-mono text-xs text-brush tracking-[0.2em] uppercase">Field Notes</span>
+      </div>
+
+      <!-- Name -->
+      <h1 class="font-display text-[5.5rem] sm:text-[8rem] md:text-[11rem] lg:text-[13rem] leading-none tracking-wide text-parchment">
+        EDUARDO<br />DE BEM
+      </h1>
+
+      <!-- Rule -->
+      <div class="w-full max-w-xl h-px bg-trench my-6"></div>
+
+      <!-- Tagline -->
+      <p class="font-mono text-xs md:text-sm text-brush tracking-[0.18em] uppercase mb-10">
+        Fullstack Developer &nbsp;·&nbsp; Building things &nbsp;·&nbsp; Writing about them
+      </p>
+
+      <!-- CTAs -->
+      <div class="flex items-center gap-4 flex-wrap">
+        <a
+          href="/blog"
+          class="font-display text-xl tracking-widest px-7 py-2.5 bg-signal text-void! hover:bg-parchment transition-colors duration-200"
+        >
+          READ ENTRIES
+        </a>
+        <a
+          href="/about"
+          class="font-display text-xl tracking-widest px-7 py-2.5 border border-trench text-brush hover:border-signal hover:text-signal transition-colors duration-200"
+        >
+          ABOUT
+        </a>
+      </div>
+
+      <!-- Scroll indicator -->
+      <div class="absolute bottom-8 right-8 md:right-14 flex flex-col items-center gap-2">
+        <span class="font-mono text-[10px] text-brush tracking-[0.3em] [writing-mode:vertical-lr]">SCROLL</span>
+        <div class="w-px h-10 bg-brush animate-scroll-hint origin-top"></div>
+      </div>
+    </section>
+
+    <!-- Recent entries (solid bg covers canvas on scroll) -->
+    <section class="relative z-10 bg-void px-8 md:px-14 py-20 md:py-28">
+      <div class="max-w-6xl mx-auto">
+
+        <!-- Section header -->
+        <div class="flex items-center gap-6 mb-12">
+          <h2 class="font-display text-4xl md:text-5xl text-parchment tracking-wider shrink-0">
+            RECENT ENTRIES
+          </h2>
+          <span class="flex-1 h-px bg-trench"></span>
+          <a
+            href="/blog"
+            class="font-mono text-xs text-brush hover:text-signal tracking-widest shrink-0 transition-colors duration-200"
+          >
+            VIEW ALL →
+          </a>
+        </div>
+
+        <!-- Post cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {posts.map((post) => (
+            <a
+              href={`/blog/${post.id}/`}
+              class="group block bg-surface border-l-2 border-trench hover:border-signal p-6 transition-colors duration-200"
+            >
+              <time class="font-mono text-xs text-brush block mb-4 tracking-wide">
+                <FormattedDate date={post.data.pubDate} />
+              </time>
+              <h3 class="font-display text-2xl text-parchment group-hover:text-signal transition-colors duration-200 leading-tight mb-3">
+                {post.data.title}
+              </h3>
+              <p class="text-brush text-sm leading-relaxed line-clamp-3">
+                {post.data.description}
+              </p>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <Footer />
+  </body>
 </html>
