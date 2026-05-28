@@ -1,13 +1,15 @@
 ---
 import HeaderLink from './HeaderLink.astro';
+import Logo from './Logo.astro';
 ---
 
 <header class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 md:px-14 py-5">
   <a
     href="/"
-    class="font-display text-2xl tracking-widest text-signal hover:text-parchment transition-colors duration-200"
+    class="text-signal hover:text-parchment transition-colors duration-200"
+    aria-label="Home"
   >
-    EB
+    <Logo size={40} />
   </a>
 
   <nav class="flex items-center gap-8">
