@@ -1,0 +1,39 @@
+---
+// Fixed full-screen WebGL stage. The scene itself lives in src/scripts/holo/;
+// the page that renders this component owns the controller script.
+---
+
+<canvas id="holo-stage" aria-hidden="true"></canvas>
+<div class="holo-fallback" aria-hidden="true"></div>
+
+<style>
+  #holo-stage,
+  .holo-fallback {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    display: block;
+  }
+
+  /* Shown when WebGL is unavailable, the context is lost, or JS never runs. */
+  .holo-fallback {
+    z-index: -1;
+    background:
+      radial-gradient(ellipse 40% 45% at 70% 46%, rgb(143 179 57 / 0.1), transparent 70%),
+      repeating-linear-gradient(60deg, transparent 0 46px, rgb(74 92 63 / 0.12) 46px 47px),
+      repeating-linear-gradient(-60deg, transparent 0 46px, rgb(74 92 63 / 0.12) 46px 47px),
+      var(--color-void);
+  }
+
+  :global(.no-webgl) #holo-stage {
+    display: none;
+  }
+
+  @media (max-aspect-ratio: 19/20) {
+    .holo-fallback {
+      background-position: 50% 30%;
+    }
+  }
+</style>

@@ -1,115 +1,563 @@
 ---
-import { getCollection } from 'astro:content';
 import BaseHead from '../components/BaseHead.astro';
-import Footer from '../components/Footer.astro';
-import FormattedDate from '../components/FormattedDate.astro';
+import Frame from '../components/Frame.astro';
 import Header from '../components/Header.astro';
-import HeroCanvas from '../components/HeroCanvas.astro';
+import HoloStage from '../components/HoloStage.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 
-const posts = (await getCollection('blog'))
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-  .slice(0, 3);
+// Order must match SHAPES in src/scripts/holo/shapes.ts.
+const latin = ['Galea', 'Fides', 'Currus'];
+const slots = [
+  { kind: 'listening', label: 'Listening' },
+  { kind: 'watching', label: 'Watching' },
+];
+
+const nameLines = ['Eduardo', 'de Bem'];
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
     <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+    <script is:inline>
+      // Hide intro targets before first paint; release them if the module never runs.
+      document.documentElement.classList.add('js');
+      setTimeout(() => document.documentElement.classList.add('intro-done'), 4000);
+    </script>
   </head>
-  <body class="bg-void text-parchment overflow-x-hidden">
-
-    <!-- Three.js terrain canvas (fixed, z-0) -->
-    <HeroCanvas />
-
-    <!-- Header (fixed, z-50) -->
+  <body class="home bg-void text-parchment">
+    <HoloStage />
     <Header />
+    <Frame />
 
-    <!-- Hero section: full viewport, transparent over canvas -->
-    <section class="relative z-10 min-h-screen flex flex-col justify-end px-8 md:px-14 pb-16 md:pb-20">
+    <!-- Giant inscription behind the object; swaps with the active shape. -->
+    <p class="ghost" aria-hidden="true" data-ghost>{latin[0]}</p>
 
-      <!-- Coordinate tag -->
-      <div class="flex items-center gap-3 mb-5">
-        <span class="w-8 h-px bg-signal"></span>
-        <span class="font-mono text-xs text-brush tracking-[0.2em] uppercase">Field Notes</span>
-      </div>
-
-      <!-- Name -->
-      <h1 class="font-display text-[5.5rem] sm:text-[8rem] md:text-[11rem] lg:text-[13rem] leading-none tracking-wide text-parchment">
-        EDUARDO<br />DE BEM
-      </h1>
-
-      <!-- Rule -->
-      <div class="w-full max-w-xl h-px bg-trench my-6"></div>
-
-      <!-- Tagline -->
-      <p class="font-mono text-xs md:text-sm text-brush tracking-[0.18em] uppercase mb-10">
-        Fullstack Developer &nbsp;·&nbsp; Building things &nbsp;·&nbsp; Writing about them
-      </p>
-
-      <!-- CTAs -->
-      <div class="flex items-center gap-4 flex-wrap">
-        <a
-          href="/blog"
-          class="font-display text-xl tracking-widest px-7 py-2.5 bg-signal text-void! hover:bg-parchment transition-colors duration-200"
-        >
-          READ ENTRIES
-        </a>
-        <a
-          href="/about"
-          class="font-display text-xl tracking-widest px-7 py-2.5 border border-trench text-brush hover:border-signal hover:text-signal transition-colors duration-200"
-        >
-          ABOUT
-        </a>
-      </div>
-
-      <!-- Scroll indicator -->
-      <div class="absolute bottom-8 right-8 md:right-14 flex flex-col items-center gap-2">
-        <span class="font-mono text-[10px] text-brush tracking-[0.3em] [writing-mode:vertical-lr]">SCROLL</span>
-        <div class="w-px h-10 bg-brush animate-scroll-hint origin-top"></div>
-      </div>
-    </section>
-
-    <!-- Recent entries (solid bg covers canvas on scroll) -->
-    <section class="relative z-10 bg-void px-8 md:px-14 py-20 md:py-28">
-      <div class="max-w-6xl mx-auto">
-
-        <!-- Section header -->
-        <div class="flex items-center gap-6 mb-12">
-          <h2 class="font-display text-4xl md:text-5xl text-parchment tracking-wider shrink-0">
-            RECENT ENTRIES
-          </h2>
-          <span class="flex-1 h-px bg-trench"></span>
-          <a
-            href="/blog"
-            class="font-mono text-xs text-brush hover:text-signal tracking-widest shrink-0 transition-colors duration-200"
-          >
-            VIEW ALL →
-          </a>
-        </div>
-
-        <!-- Post cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {posts.map((post) => (
-            <a
-              href={`/blog/${post.id}/`}
-              class="group block bg-surface border-l-2 border-trench hover:border-signal p-6 transition-colors duration-200"
-            >
-              <time class="font-mono text-xs text-brush block mb-4 tracking-wide">
-                <FormattedDate date={post.data.pubDate} />
-              </time>
-              <h3 class="font-display text-2xl text-parchment group-hover:text-signal transition-colors duration-200 leading-tight mb-3">
-                {post.data.title}
-              </h3>
-              <p class="text-brush text-sm leading-relaxed line-clamp-3">
-                {post.data.description}
-              </p>
-            </a>
+    <main class="hero">
+      <div class="hero-copy">
+        <h1 class="name" aria-label="Eduardo de Bem">
+          {nameLines.map((line) => (
+            <span class="name-line" aria-hidden="true">
+              {[...line].map((ch) => (
+                <span class="name-char" data-intro-char>{ch === ' ' ? ' ' : ch}</span>
+              ))}
+            </span>
           ))}
+        </h1>
+
+        <p class="lede" data-intro>
+          Fullstack developer. I build things for the web and keep field notes on how they turned out.
+        </p>
+
+        <div class="ctas" data-intro>
+          <a href="/blog" class="cta cta-primary">Read the blog</a>
+          <a href="/about" class="cta cta-ghost">About me</a>
         </div>
       </div>
-    </section>
+    </main>
 
-    <Footer />
+    <!-- Filled from /api/now-playing.json (Jellyfin); stays hidden if it fails. -->
+    <footer class="console" data-intro>
+      <section class="media" data-media hidden aria-label="What I'm watching and listening to">
+        {slots.map((slot) => (
+          <div class="media-item" data-slot={slot.kind} data-label={slot.label} hidden>
+            <img class="media-art" alt="" width="48" height="48" decoding="async" />
+            <div class="media-text">
+              <span class="media-label"><span class="media-dot" aria-hidden="true"></span><span data-field="label"></span><span class="media-when" data-field="when"></span></span>
+              <span class="media-title" data-field="title"></span>
+              <span class="media-sub" data-field="sub"></span>
+            </div>
+          </div>
+        ))}
+      </section>
+    </footer>
+
+    <script>
+      import { gsap } from 'gsap';
+      import { createHoloStage } from '../scripts/holo/stage';
+
+      const root = document.documentElement;
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const DWELL = 7;
+
+      const canvas = document.getElementById('holo-stage') as HTMLCanvasElement;
+      const copy = document.querySelector<HTMLElement>('.hero-copy')!;
+
+      // Landscape: the space right of the copy. Portrait: the space above it.
+      const frame = () => {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        const top = 72;
+        const c = copy.getBoundingClientRect();
+        if (w / h >= 0.95) {
+          const left = Math.max(c.left + c.width * 0.82, w * 0.42);
+          const bottom = h - 120;
+          // Cap the height so the object stays a presence, not a wall, on tall screens.
+          const height = Math.min(bottom - h * 0.1, 640);
+          return { left, top: bottom - height, right: w - 56, bottom };
+        }
+        return { left: 12, top, right: w - 12, bottom: c.top + 12 };
+      };
+
+      const stage = createHoloStage(canvas, {
+        reducedMotion: reduced,
+        frame,
+        onContextLost: () => root.classList.add('no-webgl'),
+      });
+      if (!stage) root.classList.add('no-webgl');
+      document.fonts.ready.then(() => stage?.layout());
+
+      const ghost = document.querySelector<HTMLElement>('[data-ghost]')!;
+      const latin = ['Galea', 'Fides', 'Currus'];
+      let index = 0;
+      let cycle: gsap.core.Tween | null = null;
+
+      /* ── Ghost inscription: letters fall out, new ones rise in ── */
+
+      const splitGhost = (word: string) => {
+        ghost.textContent = '';
+        return [...word].map((ch) => {
+          const s = document.createElement('span');
+          s.textContent = ch;
+          ghost.appendChild(s);
+          return s;
+        });
+      };
+      let ghostChars = splitGhost(latin[0]);
+
+      const swapGhost = (word: string) => {
+        if (reduced) {
+          ghostChars = splitGhost(word);
+          return;
+        }
+        gsap.killTweensOf(ghostChars);
+        gsap.to(ghostChars, {
+          yPercent: -60,
+          autoAlpha: 0,
+          duration: 0.5,
+          stagger: 0.04,
+          ease: 'power2.in',
+          onComplete: () => {
+            ghostChars = splitGhost(word);
+            gsap.from(ghostChars, { yPercent: 60, autoAlpha: 0, duration: 1.1, stagger: 0.06, ease: 'expo.out', delay: 0.5 });
+          },
+        });
+      };
+
+      /* ── Cycle: hold each shape, then morph to the next ── */
+
+      const scheduleNext = () => {
+        cycle = gsap.delayedCall(DWELL, () => {
+          index = (index + 1) % latin.length;
+          stage?.show(index);
+          swapGhost(latin[index]);
+          scheduleNext();
+        });
+      };
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) cycle?.pause();
+        else cycle?.resume();
+      });
+
+      /* ── Now playing (Jellyfin) ── */
+
+      type Entry = { kind: string; title: string; subtitle: string; image: string | null; live: boolean; paused: boolean; lastPlayed: string | null };
+      const media = document.querySelector<HTMLElement>('[data-media]')!;
+      const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+
+      const ago = (iso: string) => {
+        const mins = Math.round((Date.parse(iso) - Date.now()) / 60000);
+        if (mins > -60) return rtf.format(mins, 'minute');
+        if (mins > -1440) return rtf.format(Math.round(mins / 60), 'hour');
+        return rtf.format(Math.round(mins / 1440), 'day');
+      };
+
+      const paint = (slot: HTMLElement, entry: Entry | null) => {
+        slot.hidden = !entry;
+        if (!entry) return;
+        const verb = slot.dataset.label!;
+        const label = entry.live
+          ? entry.paused ? `${verb}, paused` : `${verb} now`
+          : `Last ${verb.toLowerCase().replace('ing', 'ed')}`;
+        slot.querySelector('[data-field="when"]')!.textContent = !entry.live && entry.lastPlayed ? ago(entry.lastPlayed) : '';
+        slot.classList.toggle('is-live', entry.live && !entry.paused);
+        slot.querySelector('[data-field="label"]')!.textContent = label;
+        slot.querySelector('[data-field="title"]')!.textContent = entry.title;
+        slot.querySelector('[data-field="sub"]')!.textContent = entry.subtitle;
+        const img = slot.querySelector('img')!;
+        img.hidden = !entry.image;
+        if (entry.image && img.src !== entry.image) img.src = entry.image;
+      };
+
+      const refresh = async () => {
+        try {
+          const res = await fetch('/api/now-playing.json');
+          if (!res.ok) throw new Error(String(res.status));
+          const data = (await res.json()) as Record<string, Entry | null>;
+          media.querySelectorAll<HTMLElement>('[data-slot]').forEach((slot) => paint(slot, data[slot.dataset.slot!]));
+          media.hidden = !data.listening && !data.watching;
+        } catch {
+          media.hidden = true;
+        }
+      };
+
+      refresh();
+      setInterval(() => !document.hidden && refresh(), 60_000);
+
+      /* ── Intro ── */
+
+      const chars = document.querySelectorAll('[data-intro-char]');
+      const frameEdges = document.querySelectorAll<HTMLElement>('[data-frame-edge]');
+      const frameMarks = document.querySelectorAll('[data-frame-corner]');
+      const blocks = document.querySelectorAll('[data-intro]');
+
+      if (reduced) {
+        root.classList.add('intro-done');
+      } else {
+        gsap.set(chars, { yPercent: 115 });
+        gsap.set([...blocks, ghost, ...frameMarks], { autoAlpha: 0 });
+        frameEdges.forEach((e) => gsap.set(e, e.offsetWidth > e.offsetHeight ? { scaleX: 0 } : { scaleY: 0 }));
+        root.classList.add('intro-done');
+        stage?.intro();
+
+        gsap
+          .timeline({ defaults: { ease: 'expo.out' }, onComplete: scheduleNext })
+          .to(frameEdges, { scaleX: 1, scaleY: 1, duration: 1.6, ease: 'expo.inOut' }, 0)
+          .to(frameMarks, { autoAlpha: 1, duration: 0.6, stagger: 0.05 }, 0.9)
+          .to(chars, { yPercent: 0, duration: 1.4, stagger: 0.035 }, 0.5)
+          .to(ghost, { autoAlpha: 1, duration: 2 }, 0.9)
+          .fromTo(blocks, { y: 18 }, { y: 0, autoAlpha: 1, duration: 1.2, stagger: 0.12 }, 1.1);
+      }
+
+      window.addEventListener('pagehide', () => stage?.dispose(), { once: true });
+    </script>
+
+    <style>
+      .home {
+        height: 100svh;
+        overflow: hidden;
+      }
+
+      :global(.js:not(.intro-done)) [data-intro],
+      :global(.js:not(.intro-done)) .name,
+      :global(.js:not(.intro-done)) .ghost {
+        visibility: hidden;
+      }
+
+      /* ── Ghost inscription ── */
+
+      .ghost {
+        position: fixed;
+        z-index: 1;
+        top: 50%;
+        right: 2vw;
+        width: 58vw;
+        transform: translateY(-58%);
+        margin: 0;
+        font-family: var(--font-roman);
+        font-weight: 600;
+        font-size: min(17vw, 30svh);
+        line-height: 1;
+        letter-spacing: 0.06em;
+        text-align: center;
+        color: transparent;
+        -webkit-text-stroke: 1px rgb(143 179 57 / 0.16);
+        pointer-events: none;
+        user-select: none;
+        white-space: nowrap;
+      }
+
+      .ghost :global(span) {
+        display: inline-block;
+      }
+
+      /* ── Hero copy ── */
+
+      .hero {
+        position: relative;
+        z-index: 10;
+        height: 100svh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 6rem 3.5rem 9rem;
+        pointer-events: none;
+      }
+
+      .hero-copy {
+        width: fit-content;
+        pointer-events: auto;
+      }
+
+      .name {
+        font-family: var(--font-roman);
+        font-weight: 500;
+        font-size: min(7.4vw, 14svh, 10rem);
+        line-height: 0.98;
+        white-space: nowrap;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        margin: 0 0 1.75rem;
+      }
+
+      .name-line {
+        display: block;
+        overflow: hidden;
+        padding-bottom: 0.06em;
+      }
+
+      .name-char {
+        display: inline-block;
+      }
+
+      .lede {
+        font-family: var(--font-sans);
+        font-size: 1.15rem;
+        line-height: 1.6;
+        color: rgb(228 234 216 / 0.72);
+        max-width: 30rem;
+        margin: 0 0 2.25rem;
+      }
+
+      .ctas {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+      }
+
+      .cta {
+        font-family: var(--font-roman);
+        font-weight: 600;
+        font-size: 0.85rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        padding: 0.95rem 1.6rem;
+        border: 1px solid var(--color-signal);
+        transition:
+          background-color 0.25s ease,
+          color 0.25s ease,
+          border-color 0.25s ease;
+      }
+
+      .cta-primary {
+        background: var(--color-signal);
+        color: var(--color-void);
+      }
+
+      .cta-primary:hover {
+        background: var(--color-parchment);
+        border-color: var(--color-parchment);
+        color: var(--color-void);
+      }
+
+      .cta-ghost {
+        color: var(--color-parchment);
+        border-color: rgb(228 234 216 / 0.25);
+        background: rgb(12 15 11 / 0.35);
+      }
+
+      .cta-ghost:hover {
+        border-color: var(--color-signal);
+        color: var(--color-signal);
+      }
+
+      .cta:focus-visible {
+        outline: 2px solid var(--color-signal);
+        outline-offset: 4px;
+      }
+
+      /* ── Console: now watching / listening ── */
+
+      .console {
+        position: fixed;
+        z-index: 20;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 2rem;
+        padding: 0 3.5rem 2rem;
+      }
+
+      .media {
+        display: flex;
+        gap: 2.5rem;
+      }
+
+      .media[hidden],
+      .media-item[hidden],
+      .media-art[hidden] {
+        display: none;
+      }
+
+      .media-item {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        min-width: 0;
+        max-width: 20rem;
+      }
+
+      .media-art {
+        flex: none;
+        width: 48px;
+        height: 48px;
+        object-fit: cover;
+        border-radius: 0;
+        border: 1px solid var(--color-trench);
+        background: var(--color-surface);
+      }
+
+      .media-text {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        line-height: 1.3;
+      }
+
+      .media-label {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        white-space: nowrap;
+        font-family: var(--font-mono);
+        font-size: 0.66rem;
+        color: var(--color-brush);
+      }
+
+      .media-when:not(:empty)::before {
+        content: '·';
+        margin-right: 0.45rem;
+      }
+
+      .media-dot {
+        flex: none;
+        width: 6px;
+        height: 6px;
+        background: var(--color-brush);
+        transform: rotate(45deg);
+      }
+
+      .is-live .media-dot {
+        background: var(--color-signal);
+        animation: media-pulse 1.6s ease-in-out infinite;
+      }
+
+      .is-live .media-label {
+        color: var(--color-signal);
+      }
+
+      @keyframes media-pulse {
+        50% { opacity: 0.25; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .is-live .media-dot { animation: none; }
+      }
+
+      .media-title,
+      .media-sub {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .media-title {
+        font-family: var(--font-sans);
+        font-size: 0.98rem;
+        color: var(--color-parchment);
+        margin-top: 0.15rem;
+      }
+
+      .media-sub {
+        font-family: var(--font-sans);
+        font-size: 0.82rem;
+        color: rgb(228 234 216 / 0.55);
+      }
+
+      /* ── Narrow / portrait: object on top, copy beneath ── */
+
+      @media (max-aspect-ratio: 19/20) {
+        .ghost {
+          top: 31%;
+          right: 0;
+          width: 100%;
+          font-size: min(24vw, 16svh);
+        }
+
+        .hero {
+          justify-content: flex-end;
+          padding: 5rem 2rem 7.5rem;
+        }
+
+        .name {
+          font-size: min(12.5vw, 7svh);
+          margin-bottom: 0.9rem;
+        }
+
+        .lede {
+          font-size: 1rem;
+          margin-bottom: 1.25rem;
+        }
+
+        .ctas {
+          flex-wrap: nowrap;
+        }
+
+        .cta {
+          padding: 0.85rem 1.1rem;
+          font-size: 0.75rem;
+          letter-spacing: 0.12em;
+        }
+
+        .console {
+          padding: 0 2rem 1.25rem;
+        }
+
+        .media {
+          gap: 1.25rem;
+        }
+
+        .media-item {
+          flex: 1;
+          gap: 0.6rem;
+        }
+
+        .media-art {
+          width: 40px;
+          height: 40px;
+        }
+
+        .media-sub,
+        .media-when {
+          display: none;
+        }
+      }
+
+      @media (max-width: 900px) and (min-aspect-ratio: 19/20) {
+        .hero {
+          padding-inline: 2rem;
+        }
+
+        .console {
+          padding-inline: 2rem;
+        }
+      }
+
+      @media (max-aspect-ratio: 19/20) and (max-height: 720px) {
+        .lede {
+          display: none;
+        }
+      }
+
+      @media (max-height: 560px) {
+        .lede {
+          display: none;
+        }
+      }
+    </style>
   </body>
 </html>

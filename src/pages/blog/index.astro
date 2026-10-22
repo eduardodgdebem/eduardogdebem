@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 import BaseHead from '../../components/BaseHead.astro';
 import Footer from '../../components/Footer.astro';
 import FormattedDate from '../../components/FormattedDate.astro';
+import Frame from '../../components/Frame.astro';
 import Header from '../../components/Header.astro';
 import Tag from '../../components/Tag.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../../consts';
@@ -21,6 +22,7 @@ const allTags = [...new Set(posts.flatMap((p) => p.data.tags ?? []))].sort();
   </head>
   <body class="bg-void text-parchment">
     <Header />
+    <Frame />
 
     <main class="relative z-10 min-h-screen pt-28 pb-20 px-8 md:px-14">
       <div class="max-w-4xl mx-auto">

@@ -43,7 +43,17 @@ Key architectural decision: the Three.js canvas is `position: fixed; z-index: 0`
 
 ## Environment Variables
 
-**None required.** The site is fully static. The only configuration is:
+Every page is static **except** `/api/now-playing.json`, which runs on the Cloudflare worker (`prerender = false`) and proxies Jellyfin so the API key never reaches the browser. It needs three secrets:
+
+| Variable | Purpose |
+|---|---|
+| `JELLYFIN_URL` | `https://jellyfin.eduardogdebem.com` |
+| `JELLYFIN_API_KEY` | Jellyfin API key (Dashboard → API Keys) |
+| `JELLYFIN_USER_ID` | The `admin` user's id — only this user's playback is shown |
+
+Local: `.dev.vars` (gitignored; template in `.dev.vars.example`). Production: `npx wrangler secret put <NAME>`. Without them the route returns 503 and the home page simply hides the widget.
+
+Other configuration:
 
 ```js
 // astro.config.mjs — hardcoded
@@ -65,25 +75,32 @@ src/
 │   ├── Footer.astro         — Copyright, GitHub link, RSS link
 │   ├── FormattedDate.astro  — Formats Date objects to "MMM DD, YYYY"
 │   ├── Tag.astro            — Tag chip: optional href + active state
-│   └── HeroCanvas.astro     — Three.js terrain mesh + mouse parallax
+│   └── HoloStage.astro      — Fixed WebGL canvas + no-WebGL fallback for the home hologram
 │
 ├── layouts/
 │   └── BlogPost.astro       — Reading layout: meta, title, tags, prose slot, footer nav
 │
 ├── pages/
-│   ├── index.astro          — / (homepage: hero + recent posts)
+│   ├── index.astro          — / (no-scroll homepage: hologram hero + now watching / listening)
 │   ├── about.astro          — /about (bio + interests sidebar)
 │   ├── blog/
 │   │   ├── index.astro      — /blog (all posts + tag filter row)
 │   │   ├── [...slug].astro  — /blog/[slug]/ (dynamic post route)
 │   │   └── tag/
 │   │       └── [tag].astro  — /blog/tag/[tag]/ (filtered posts)
+│   ├── api/
+│   │   └── now-playing.json.ts — Jellyfin proxy: now playing / last watched + listened (server-rendered)
 │   └── rss.xml.js           — /rss.xml (RSS feed endpoint)
 │
 ├── content/
 │   └── blog/                — Markdown and MDX files. One file = one post.
 │       ├── *.md
 │       └── *.mdx
+│
+├── scripts/
+│   └── holo/
+│       ├── shapes.ts        — Procedural helmet / violin / F1 car, sampled into point clouds
+│       └── stage.ts         — Three.js particle morph stage (triangle sprites, terrain, pointer)
 │
 ├── styles/
 │   └── global.css           — Tailwind @theme tokens, base styles, prose styles
@@ -158,7 +175,7 @@ New colors in `@theme` using `--color-*` automatically generate bg/text/border u
 ```typescript
 geometry.attributes.position.needsUpdate = true;
 ```
-This is in `HeroCanvas.astro`'s animate loop. Never remove it.
+This is in the render loop of `src/scripts/holo/stage.ts`. Never remove it.
 
 ### 3. `WireframeGeometry` must be rebuilt every frame — use `wireframe: true` instead
 **Problem:** Using `WireframeGeometry` + `LineSegments` and updating vertices. The wireframe stays frozen because `WireframeGeometry` bakes positions.
@@ -249,7 +266,7 @@ All non-content text (dates, labels, coordinates, tags, nav links in context) us
 `Tag.astro` renders either a `<span>` (decorative, no link) or `<a>` (navigable) based on whether `href` is passed. The `active` prop switches the border/text to `signal` color. One component, three use cases: listing, post, filter row.
 
 ### 11. Scroll-below-hero pattern
-The homepage is one HTML document: `HeroCanvas` (fixed bg) → hero section (transparent) → posts section (opaque `bg-void`) → footer. No scroll detection JS is needed. The stacking context handles the visual transition.
+The homepage is a single no-scroll viewport (`100svh`, `overflow: hidden`): `HoloStage` (fixed bg) → hero copy (transparent) → fixed console (Jellyfin watching / listening, fetched client-side every 60s). Other pages still follow the opaque `bg-void` sections-over-canvas rule.
 
 ### 12. BlogPost layout separates metadata from content
 `BlogPost.astro` handles the chrome (header, nav, tags, dates, back link). The `<slot />` receives only the Markdown content. The layout is used by `[...slug].astro` which passes `post.data` as props.
@@ -316,7 +333,7 @@ vercel --prod
 | When writing | Run `npm run build` before pushing. Never push without a clean build. |
 | Monthly | `npm outdated` — check for Astro/Three.js/Tailwind updates |
 | On Astro major upgrade | Check `astro.config.mjs` and `content.config.ts` for breaking changes |
-| On Three.js upgrade | Check `HeroCanvas.astro` geometry/material API for deprecations |
+| On Three.js upgrade | Check `src/scripts/holo/` geometry/material/shader API for deprecations |
 
 ---
 
