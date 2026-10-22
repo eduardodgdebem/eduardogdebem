@@ -75,13 +75,12 @@ src/
 │   ├── Footer.astro         — Copyright, GitHub link, RSS link
 │   ├── FormattedDate.astro  — Formats Date objects to "MMM DD, YYYY"
 │   ├── Tag.astro            — Tag chip: optional href + active state
-│   └── HoloStage.astro      — Fixed WebGL canvas + no-WebGL fallback for the home hologram
 │
 ├── layouts/
 │   └── BlogPost.astro       — Reading layout: meta, title, tags, prose slot, footer nav
 │
 ├── pages/
-│   ├── index.astro          — / (no-scroll homepage: hologram hero + now watching / listening)
+│   ├── index.astro          — / (no-scroll homepage: open codex — contents on the verso, engraved plate on the recto)
 │   ├── about.astro          — /about (bio + interests sidebar)
 │   ├── blog/
 │   │   ├── index.astro      — /blog (all posts + tag filter row)
@@ -98,9 +97,9 @@ src/
 │       └── *.mdx
 │
 ├── scripts/
-│   └── holo/
-│       ├── shapes.ts        — Procedural helmet / violin / F1 car, sampled into point clouds
-│       └── stage.ts         — Three.js particle morph stage (triangle sprites, terrain, pointer)
+│   └── codex/
+│       ├── models.ts        — Solid procedural helmet / violin / F1 car (swap for .glb later)
+│       └── engraving.ts     — Copper-plate engraving renderer: hatch pass, normal/depth outlines, paper composite
 │
 ├── styles/
 │   └── global.css           — Tailwind @theme tokens, base styles, prose styles
@@ -175,7 +174,7 @@ New colors in `@theme` using `--color-*` automatically generate bg/text/border u
 ```typescript
 geometry.attributes.position.needsUpdate = true;
 ```
-This is in the render loop of `src/scripts/holo/stage.ts`. Never remove it.
+Applies to any animated Three.js geometry. Never remove it.
 
 ### 3. `WireframeGeometry` must be rebuilt every frame — use `wireframe: true` instead
 **Problem:** Using `WireframeGeometry` + `LineSegments` and updating vertices. The wireframe stays frozen because `WireframeGeometry` bakes positions.
@@ -266,7 +265,7 @@ All non-content text (dates, labels, coordinates, tags, nav links in context) us
 `Tag.astro` renders either a `<span>` (decorative, no link) or `<a>` (navigable) based on whether `href` is passed. The `active` prop switches the border/text to `signal` color. One component, three use cases: listing, post, filter row.
 
 ### 11. Scroll-below-hero pattern
-The homepage is a single no-scroll viewport (`100svh`, `overflow: hidden`): `HoloStage` (fixed bg) → hero copy (transparent) → fixed console (Jellyfin watching / listening, fetched client-side every 60s). Other pages still follow the opaque `bg-void` sections-over-canvas rule.
+The homepage is a single no-scroll viewport (`100svh`, `overflow: hidden`): an open codex. Left page: rubricated title, an index of chapters (field notes with the latest posts, about, GitHub) and Jellyfin marginalia in Latin. Right page: a WebGL copper-plate engraving of the current plate (I Galea, II Fides, III Currus) inside an armillary sphere; the lamp follows the cursor over the plate and dragging turns the object. Fonts: IM Fell English (+ SC). Other pages still follow the opaque `bg-void` sections-over-canvas rule.
 
 ### 12. BlogPost layout separates metadata from content
 `BlogPost.astro` handles the chrome (header, nav, tags, dates, back link). The `<slot />` receives only the Markdown content. The layout is used by `[...slug].astro` which passes `post.data` as props.
@@ -333,7 +332,7 @@ vercel --prod
 | When writing | Run `npm run build` before pushing. Never push without a clean build. |
 | Monthly | `npm outdated` — check for Astro/Three.js/Tailwind updates |
 | On Astro major upgrade | Check `astro.config.mjs` and `content.config.ts` for breaking changes |
-| On Three.js upgrade | Check `src/scripts/holo/` geometry/material/shader API for deprecations |
+| On Three.js upgrade | Check `src/scripts/codex/` geometry/material/shader API for deprecations |
 
 ---
 
