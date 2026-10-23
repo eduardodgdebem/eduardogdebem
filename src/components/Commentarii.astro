@@ -37,11 +37,15 @@ const rolls: LibraryRoll[] = posts
   .map((p) => ({ id: p.id, numeral: roman(chapters.get(p.id) ?? 1), title: p.data.title, date: date(p.data.pubDate), href: `/blog/${p.id}/` }));
 const rollOf = new Map(rolls.map((r, i) => [r.href, i]));
 
-const title = activeTag ? `De ${activeTag} — Commentarii — ${SITE_TITLE}` : `Commentarii — ${SITE_TITLE}`;
-const description = activeTag ? `Field notes on ${activeTag}.` : 'Field notes: what I built, read and learned, written down as I go.';
+const title = activeTag ? `Field notes on ${activeTag} — ${SITE_TITLE}` : `Field notes — ${SITE_TITLE}`;
+const description = activeTag
+  ? `Eduardo de Bem's field notes on ${activeTag}: what he built, read and learned.`
+  : 'Field notes by Eduardo de Bem, full stack developer: what I built, read and learned, written down as I go.';
+// A subject with only a post or two is too thin to stand on its own in search.
+const thin = !!activeTag && posts.length < 3;
 ---
 
-<Codex title={title} description={description} folio={activeTag ? 7 : 5}>
+<Codex title={title} description={description} folio={activeTag ? 7 : 5} noindex={thin}>
   <Fragment slot="verso">
     {activeTag ? <Plate plate={plateForTags([activeTag])} banner={subjectBanner(activeTag)} /> : <Library rolls={rolls} banner="Commentarii" />}
   </Fragment>
@@ -53,7 +57,7 @@ const description = activeTag ? `Field notes on ${activeTag}.` : 'Field notes: w
       <p class="intro" data-i18n="notes.intro">{en('notes.intro')}</p>
       <nav class="subjects" aria-label="Subjects">
         <span class="subjects-label" data-i18n="notes.subjects">{en('notes.subjects')}</span>
-        <a href="/blog" class="subject" aria-current={!activeTag ? 'page' : undefined} data-i18n="notes.all">{en('notes.all')}</a>
+        <a href="/blog/" class="subject" aria-current={!activeTag ? 'page' : undefined} data-i18n="notes.all">{en('notes.all')}</a>
         {allTags.map((t) => (
           <a href={`/blog/tag/${t}/`} class="subject" aria-current={t === activeTag ? 'page' : undefined}>{t}</a>
         ))}

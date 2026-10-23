@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 import Codex from '../layouts/Codex.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 import { en } from '../i18n/strings';
+import { PERSON, WEBSITE } from '../seo';
 
 const posts = (await getCollection('blog'))
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
@@ -25,7 +26,13 @@ const roman = (n: number) =>
 const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabrica', statua: 'Statua' };
 ---
 
-<Codex title={SITE_TITLE} description={SITE_DESCRIPTION} folio={1} fit>
+<Codex
+  title={`${SITE_TITLE} — Full Stack Developer in Florianópolis`}
+  description={SITE_DESCRIPTION}
+  folio={1}
+  fit
+  schema={{ '@context': 'https://schema.org', '@graph': [WEBSITE, PERSON] }}
+>
   <!-- Verso: the forum, engraved, under its banderole -->
   <Fragment slot="verso">
     <figure class="plate">
@@ -62,7 +69,7 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
         <a href="mailto:eduardogdebem@gmail.com" data-i18n="link.email">{en('link.email')}</a>
         <a href="https://linkedin.com/in/eduardogdebem" target="_blank" rel="noopener noreferrer">LinkedIn</a>
         <a href="https://github.com/eduardodgdebem" target="_blank" rel="noopener noreferrer">GitHub</a>
-        <a href="/about#correspondence" data-i18n="link.contact">{en('link.contact')}</a>
+        <a href="/about/#correspondence" data-i18n="link.contact">{en('link.contact')}</a>
       </p>
     </header>
 
@@ -75,7 +82,7 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
       <p class="rubric">Index</p>
       <ol>
         <li class="chapter">
-          <a href="/blog" data-place="bibliotheca"><span class="num">I.</span><span class="label" data-i18n="home.index.notes">{en('home.index.notes')}</span><span class="leader"></span><span class="pg" data-i18n="home.index.notes.pg">{en('home.index.notes.pg')}</span></a>
+          <a href="/blog/" data-place="bibliotheca"><span class="num">I.</span><span class="label" data-i18n="home.index.notes">{en('home.index.notes')}</span><span class="leader"></span><span class="pg" data-i18n="home.index.notes.pg">{en('home.index.notes.pg')}</span></a>
           <ol class="sub">
             {posts.map((p) => (
               <li>
@@ -85,13 +92,13 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
           </ol>
         </li>
         <li class="chapter">
-          <a href="/about" data-place="statua"><span class="num">II.</span><span class="label" data-i18n="home.index.author">{en('home.index.author')}</span><span class="leader"></span><span class="pg" data-i18n="home.index.author.pg">{en('home.index.author.pg')}</span></a>
+          <a href="/about/" data-place="statua"><span class="num">II.</span><span class="label" data-i18n="home.index.author">{en('home.index.author')}</span><span class="leader"></span><span class="pg" data-i18n="home.index.author.pg">{en('home.index.author.pg')}</span></a>
         </li>
         <li class="chapter">
           <a href="https://github.com/eduardodgdebem" target="_blank" rel="noopener noreferrer" data-place="fabrica"><span class="num">III.</span><span class="label" data-i18n="home.index.workshop">{en('home.index.workshop')}</span><span class="leader"></span><span class="pg">github</span></a>
         </li>
         <li class="chapter">
-          <a href="/about#correspondence"><span class="num">IV.</span><span class="label" data-i18n="home.index.letters">{en('home.index.letters')}</span><span class="leader"></span><span class="pg" data-i18n="home.index.letters.pg">{en('home.index.letters.pg')}</span></a>
+          <a href="/about/#correspondence"><span class="num">IV.</span><span class="label" data-i18n="home.index.letters">{en('home.index.letters')}</span><span class="leader"></span><span class="pg" data-i18n="home.index.letters.pg">{en('home.index.letters.pg')}</span></a>
         </li>
       </ol>
     </nav>

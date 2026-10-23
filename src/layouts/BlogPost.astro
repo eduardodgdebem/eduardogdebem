@@ -15,7 +15,7 @@ type Props = CollectionEntry<'blog'>['data'] & {
   next?: { href: string; title: string };
 };
 
-const { title, description, pubDate, updatedDate, tags, heroImage, chapter, headings, prev, next } = Astro.props;
+const { title, description, pubDate, updatedDate, tags, chapter, headings, prev, next, noindex } = Astro.props;
 
 const roman = (n: number) =>
   ([['M', 1000], ['CM', 900], ['D', 500], ['CD', 400], ['C', 100], ['XC', 90], ['L', 50], ['XL', 40], ['X', 10], ['IX', 9], ['V', 5], ['IV', 4], ['I', 1]] as const).reduce(
@@ -34,9 +34,9 @@ const date = (d: Date) => `${d.toLocaleDateString('en-GB', { day: 'numeric', mon
 const lede = description && !/^lorem ipsum/i.test(description) ? description : null;
 ---
 
-<Codex title={`${title} — ${SITE_TITLE}`} description={description} image={heroImage} folio={10 + chapter * 2}>
+<Codex title={`${title} — ${SITE_TITLE}`} description={description} folio={10 + chapter * 2} noindex={noindex}>
   <Fragment slot="verso">
-    <a href="/blog" class="back">← Commentarii</a>
+    <a href="/blog/" class="back">← Commentarii</a>
     <Plate plate={plateForTags(tags)} banner={`Caput ${roman(chapter)}`} />
     <header class="opener">
       <h1>{title}</h1>

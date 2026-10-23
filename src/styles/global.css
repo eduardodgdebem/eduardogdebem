@@ -9,9 +9,10 @@
   --color-brush: #5A6651;
   --color-trench: #1E2A1C;
 
-  --font-display: 'Bebas Neue', sans-serif;
+  /* The codex's faces (loaded in BaseHead.astro): Fell for the book, Cinzel for inscriptions. */
+  --font-display: 'IM Fell English SC', serif;
   --font-roman: 'Cinzel', serif;
-  --font-sans: 'Source Serif 4', serif;
+  --font-sans: 'IM Fell English', Georgia, serif;
   --font-mono: 'JetBrains Mono', monospace;
 
   --animate-scroll-hint: scroll-hint 2s ease-in-out infinite;

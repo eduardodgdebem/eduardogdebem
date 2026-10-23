@@ -18,6 +18,8 @@ Phones: plates narrower than 560px zoom in (`plateZoom` in `passes.ts`) and the 
 
 Languages: English and Portuguese (`src/i18n/strings.ts`; every key in both, Latin left as Latin, posts not translated). Pages render English through `en(key)`, and the element carries `data-i18n` (text) or `data-i18n-html` (markup). The EN · PT toggle in the recto's running head rewrites them in place (`.quill`). Only text that's on screen animates; long paragraphs go a word at a time, short lines a letter at a time, and only opacity and transform are animated, so the about page stays smooth. The runtime is the inline `define:vars` script at the end of `Codex.astro`, so a stored choice (`localStorage['codex-lang']`, else the browser's language) applies before first paint. Scripts read it through `src/scripts/codex/lang.ts` (`t`, `pick`, `onLang`): the 3D labels and captions re-render on `codex:lang`, and the orator's speeches carry their own `pt`. To add text: give it a key in both languages and mark up the element.
 
+SEO: the site lives at https://eduardogdebem.com (`site` in `astro.config.mjs`, `SITE_URL` in `src/seo.ts`), and canonicals, the sitemap and social previews derive from it. `BaseHead` takes `noindex`, `schema` (JSON-LD) and `canonical`. The home page carries `WebSite` + `Person` and the about page a `ProfilePage`, both from `src/seo.ts`: keep that in step with the CV. Posts with `noindex: true` in their frontmatter, and subject pages with fewer than three posts, carry a robots noindex and are filtered out of the sitemap in `astro.config.mjs`. The default link preview is `public/og.jpg`, a 1200×630 render of the home spread (re-render it when the home page changes). `public/robots.txt` names the sitemap, and `src/pages/404.astro` is the not-found page. Internal links use the trailing slash (`/blog/`, `/about/`), as the URLs are served.
+
 **Gotcha:** every engraved material shares one shader program, and a uniform a material doesn't declare keeps the last material's value. Declare every uniform the shader has, even at its default (`createInk` does), or a blue or pale surface leaks into everything drawn after it.
 
 Plates per page: home's old plates I–III (galea, fides, currus) and IV stilus are no longer shown; /about → V sigillum (the logo in wax); subject pages and posts pick by tag via `plateForTags()` (dev → machina, notes → liber, thoughts → hora, tools → circinus; others → liber). To illustrate a new tag, add it to `SUBJECTS` in `catalogue.ts`.
@@ -83,7 +85,7 @@ Other configuration:
 
 ```js
 // astro.config.mjs — hardcoded
-site: 'https://eduardogoulart.dev'
+site: 'https://eduardogdebem.com'
 ```
 
 Update this before deploying to any other domain. No `.env` file is used or expected.

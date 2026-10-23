@@ -1,6 +1,7 @@
 ---
 title: 'Fundamentals of Software Architecture Notes'
 description: 'Lorem ipsum dolor sit amet'
+noindex: true
 pubDate: '2026-05-13'
 tags: ["dev", "notes"]
 ---

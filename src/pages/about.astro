@@ -3,6 +3,7 @@ import Plaza, { type PlazaMonument } from '../components/Plaza.astro';
 import Codex from '../layouts/Codex.astro';
 import { SITE_TITLE } from '../consts';
 import { en, type StringKey } from '../i18n/strings';
+import { PERSON, SITE_URL } from '../seo';
 
 const EMAIL = 'eduardogdebem@gmail.com';
 const LINKEDIN = 'https://linkedin.com/in/eduardogdebem';
@@ -24,9 +25,10 @@ const monuments: PlazaMonument[] = NOTES.map(({ key, plate, inscription }) => ({
 ---
 
 <Codex
-  title={`De auctore — ${SITE_TITLE}`}
-  description="Full stack developer in Florianópolis, working on data pipelines and front ends, and writing down what I learn."
+  title={`About ${SITE_TITLE} — Full Stack Developer`}
+  description="Eduardo de Bem is a full stack developer in Florianópolis: data pipelines for BMW Europe at Zallpy, Angular and React front ends, Node.js and .NET. How to reach him."
   folio={3}
+  schema={{ '@context': 'https://schema.org', '@type': 'ProfilePage', url: `${SITE_URL}/about/`, mainEntity: PERSON }}
 >
   <Fragment slot="verso">
     <Plaza monuments={monuments} banner="De auctore" />

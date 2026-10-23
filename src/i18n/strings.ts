@@ -95,6 +95,12 @@ const EN = {
   'capsa.page': 'bigger on the inside, apparently',
   'capsa.by': 'it wasn’t here a moment ago',
   'medicus.by': 'a traveller',
+
+  'missing.title': 'This page isn’t in the book',
+  'missing.text': 'The leaf you were looking for has been torn out, or was never bound in. The way back is below.',
+  'missing.home': 'Back to the index',
+  'missing.notes': 'The field notes',
+  'missing.author': 'Of the author',
 };
 
 export type StringKey = keyof typeof EN;
@@ -191,6 +197,12 @@ const PT: Record<StringKey, string> = {
   'capsa.page': 'maior por dentro, ao que parece',
   'capsa.by': 'não estava aqui um minuto atrás',
   'medicus.by': 'um viajante',
+
+  'missing.title': 'Esta página não está no livro',
+  'missing.text': 'A folha que você procurava foi arrancada, ou nunca foi encadernada. O caminho de volta está aqui embaixo.',
+  'missing.home': 'Voltar ao índice',
+  'missing.notes': 'As notas de campo',
+  'missing.author': 'Do autor',
 };
 
 export type Lang = 'en' | 'pt';

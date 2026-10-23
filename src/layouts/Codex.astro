@@ -16,11 +16,17 @@ interface Props {
   image?: ImageMetadata;
   /** Folio of the left page; the right page is the next one. */
   folio: number;
+  /** Keep the page out of search results. */
+  noindex?: boolean;
+  /** Structured data (JSON-LD). */
+  schema?: Record<string, unknown>;
+  /** False for a page with no address of its own (the not-found page). */
+  canonical?: boolean;
   /** Fit the spread to one screen, without scrolling (the home page; on portrait it scrolls like the rest). */
   fit?: boolean;
 }
 
-const { title, description, image, folio, fit = false } = Astro.props;
+const { title, description, image, folio, fit = false, noindex = false, schema, canonical = true } = Astro.props;
 
 const roman = (n: number) =>
   ([['M', 1000], ['CM', 900], ['D', 500], ['CD', 400], ['C', 100], ['XC', 90], ['L', 50], ['XL', 40], ['X', 10], ['IX', 9], ['V', 5], ['IV', 4], ['I', 1]] as const).reduce(
@@ -37,15 +43,15 @@ const roman = (n: number) =>
 const path = Astro.url.pathname;
 const nav = [
   { href: '/', label: 'Index', current: path === '/' },
-  { href: '/blog', label: 'Commentarii', current: path.startsWith('/blog') },
-  { href: '/about', label: 'De auctore', current: path.startsWith('/about') },
+  { href: '/blog/', label: 'Commentarii', current: path.startsWith('/blog') },
+  { href: '/about/', label: 'De auctore', current: path.startsWith('/about') },
 ];
 ---
 
 <!doctype html>
 <html lang="en" data-folio={folio}>
   <head>
-    <BaseHead title={title} description={description} image={image} />
+    <BaseHead title={title} description={description} image={image} noindex={noindex} schema={schema} canonical={canonical} />
     <script is:inline>
       // The first page of a visit arrives as a closed book (Binding.astro).
       // Set before first paint so the closed board is what paints; if the
