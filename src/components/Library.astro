@@ -71,10 +71,13 @@ const s = tr(lang);
   // The banderole and the tags letter with the page fonts, so wait for them.
   await Promise.all([document.fonts.load('150px "IM Fell English SC"'), document.fonts.load('600 80px Cinzel')]).catch(() => undefined);
 
+  // Once he's on his way to a roll, more taps change nothing.
+  let going = false;
   const read = (i: number) => {
     const href = rolls[i]?.href;
-    if (!href) return;
+    if (!href || going) return;
     if (!library) return location.assign(href);
+    going = true;
     library.open(i).then(() => location.assign(href));
   };
 
@@ -126,8 +129,9 @@ const s = tr(lang);
   // The chapter list on the facing page draws out its roll.
   for (const a of links) {
     const i = Number(a.dataset.roll);
-    a.addEventListener('pointerenter', () => library?.highlight(i));
-    a.addEventListener('focus', () => library?.highlight(i));
+    // A mouse's hover or the keyboard's focus only (see the index on the home page: iOS takes a hover that changes the page as the tap).
+    a.addEventListener('pointerenter', (e) => e.pointerType === 'mouse' && library?.highlight(i));
+    a.addEventListener('focus', () => a.matches(':focus-visible') && library?.highlight(i));
     a.addEventListener('pointerleave', () => library?.highlight(null));
     a.addEventListener('blur', () => library?.highlight(null));
     a.addEventListener('click', (e) => {
@@ -139,7 +143,11 @@ const s = tr(lang);
     });
   }
 
-  window.addEventListener('pageshow', (e) => e.persisted && library?.reset());
+  window.addEventListener('pageshow', (e) => {
+    if (!e.persisted) return;
+    going = false;
+    library?.reset();
+  });
   window.addEventListener('pagehide', (e) => !e.persisted && library?.dispose());
 </script>
 
