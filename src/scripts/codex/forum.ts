@@ -666,6 +666,9 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     const x = ((e.clientX - r.left) / r.width) * 2 - 1;
     const y = -(((e.clientY - r.top) / r.height) * 2 - 1);
     const inside = Math.abs(x) <= 1 && Math.abs(y) <= 1;
+    // Over the plate, the view leans a little toward the pointer.
+    if (inside) tiltTarget.set(x, y);
+    else tiltTarget.set(0, 0);
     if (e.pointerType !== 'mouse' || entering) return;
     const hit = inside ? pick(e) : null;
     pointed = (hit?.object.userData.place as Place) ?? null;
@@ -687,6 +690,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     else walkTo(hit.point);
   };
   const onLeave = () => {
+    tiltTarget.set(0, 0);
     pointed = null;
     refocus();
   };
@@ -834,13 +838,19 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
 
   const view = { x: citizen.position.x };
   const target = new THREE.Vector3();
+  const tilt = new THREE.Vector2();
+  const tiltTarget = new THREE.Vector2();
+  const lean = new THREE.Vector3();
   const follow = (dt: number) => {
     const goal = indexed && !entering ? AT[indexed] : citizen.position.x;
     const limit = END + 4 - halfW;
     const x = THREE.MathUtils.clamp(goal, -limit, limit);
     view.x += (x - view.x) * (reducedMotion ? 1 : 1 - Math.exp(-dt * 3));
     target.set(view.x, VIEW_Y, VIEW_Z);
-    camera.position.copy(target).addScaledVector(VIEW_DIR, VIEW_DIST);
+    // A few degrees of tilt toward the pointer: round the street, and up or down it.
+    if (!reducedMotion) tilt.lerp(tiltTarget, 1 - Math.exp(-dt * 4));
+    lean.set(tilt.x * 0.1, -tilt.y * 0.055, 0).add(VIEW_DIR).normalize();
+    camera.position.copy(target).addScaledVector(lean, VIEW_DIST);
     camera.lookAt(target);
     // The sky is far off: the world and the stars drift slowly behind the street.
     world.position.set(view.x * 0.82 - 3.6 + halfW * 0.35, 1.2, -16);
