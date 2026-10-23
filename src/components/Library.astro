@@ -46,6 +46,7 @@ const { rolls, banner } = Astro.props;
 <script>
   import { createLibrary, type Subject } from '../scripts/codex/library';
   import { bookOpened } from '../scripts/codex/opening';
+  import { inView } from '../scripts/codex/visible';
   import type { LibraryRoll } from './Library.astro';
 
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -123,6 +124,8 @@ const { rolls, banner } = Astro.props;
     a.addEventListener('blur', () => library?.highlight(null));
     a.addEventListener('click', (e) => {
       if (!library || reduced || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      // Nobody to watch him fetch it (scrolled away, on a phone): just turn the page.
+      if (!inView(canvas)) return;
       e.preventDefault();
       read(i);
     });

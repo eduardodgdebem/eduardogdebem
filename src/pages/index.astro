@@ -129,6 +129,7 @@ const PLACES = {
   import { createCoverEngraving } from '../scripts/codex/cover';
   import { createForum, type Place } from '../scripts/codex/forum';
   import { SPEECHES } from '../scripts/codex/orator';
+  import { inView } from '../scripts/codex/visible';
   import { bookOpened } from '../scripts/codex/opening';
 
   const root = document.documentElement;
@@ -230,6 +231,8 @@ const PLACES = {
     a.addEventListener('blur', off);
     a.addEventListener('click', (e) => {
       if (!forum || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      // Nobody to watch him walk there (scrolled away, on a phone): just turn the page.
+      if (!inView(canvas)) return;
       // Off-site (the workshop): the new tab must open from the click itself,
       // so the citizen walks over while it does, then comes back.
       if (a.target === '_blank') {
