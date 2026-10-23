@@ -47,7 +47,9 @@ export async function openBook() {
   if (spread) {
     // Closed, the book sits centred; open, the spread is. The left page is
     // uncovered from the spine as the board passes over it.
-    tl.fromTo(book, { xPercent: -25 }, { xPercent: 0, duration: 1.5, ease: 'power2.inOut' }, '<');
+    // x: 0 matters: GSAP reads the CSS translateX(-25%) as a pixel x and would
+    // stack it under xPercent, holding the book off-centre until clearProps.
+    tl.fromTo(book, { x: 0, xPercent: -25 }, { x: 0, xPercent: 0, duration: 1.5, ease: 'power2.inOut' }, '<');
     tl.fromTo(
       verso,
       { clipPath: 'inset(0% 0% 0% 100%)' },
