@@ -11,7 +11,8 @@
     "preview": "npm run build && wrangler dev",
     "astro": "astro",
     "generate-types": "wrangler types",
-    "deploy": "npm run build && wrangler deploy"
+    "deploy": "npm run build && wrangler deploy",
+    "cv": "\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --headless --disable-gpu --no-pdf-header-footer --print-to-pdf=public/eduardo-de-bem-cv.pdf \"file://$(cd ../../../cv && pwd)/cv.html\""
   },
   "dependencies": {
     "@astrojs/cloudflare": "^13.5.5",
@@ -21,6 +22,7 @@
     "@tailwindcss/vite": "^4.2.4",
     "@types/three": "^0.184.1",
     "astro": "^6.3.1",
+    "gsap": "^3.15.0",
     "sharp": "^0.34.3",
     "tailwindcss": "^4.2.4",
     "three": "^0.184.0"

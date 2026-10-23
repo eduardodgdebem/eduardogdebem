@@ -1,0 +1,24 @@
+---
+// A top page corner that turns back or forward through the browser history.
+// Resting, it's a hint of a dog-ear; under the cursor (or focus) the corner
+// lifts and folds down, showing the leaf beneath and the name of the page it
+// turns to. Hidden until src/scripts/codex/corners.ts finds history that way.
+interface Props {
+  dir: 'back' | 'forward';
+  /** The copy shown only on portrait screens, where the spread is one column. */
+  portrait?: boolean;
+}
+
+const { dir, portrait = false } = Astro.props;
+---
+
+<button
+  type="button"
+  class:list={['corner', `corner--${dir}`, { 'corner--portrait': portrait }]}
+  data-turn={dir}
+  aria-label={dir === 'back' ? 'Back' : 'Forward'}
+  hidden
+>
+  <span class="fold" aria-hidden="true"></span>
+  <span class="corner-label" aria-hidden="true"></span>
+</button>

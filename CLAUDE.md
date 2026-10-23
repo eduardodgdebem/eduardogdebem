@@ -4,6 +4,36 @@ Personal blog-first portfolio. The goal is "knows what he's saying, but is chill
 
 ---
 
+## Codex design (current)
+
+The whole site is an open book. `src/layouts/Codex.astro` renders every page as a spread: `slot="verso"` (left) and `slot="recto"` (right), 50/50, inside a fixed viewport (long pages scroll inside the page; on portrait screens the spread stacks and scrolls). Navigating between pages turns the leaf: cross-document View Transitions (`@view-transition { navigation: auto }` in `codex.css`), with `.verso`/`.recto` as named transition groups. An inline `pagereveal` script in the layout tags each transition `forward` or `back` (history traversal, or going "up" in URL depth), and `html:active-view-transition-type(back)` reverses the turn.
+
+Home: the Via Sacra (`forum.ts`, geometry in `forum-models.ts`), a 2.5D orthographic street on a slab among the stars, with a FORUM banderole at the head of the plate. The name, role and contact links head the right page, above the bio. On portrait screens the home spread scrolls like every other page (only the landscape spread is kept to one screen). The reader's citizen walks with ←/→/↑/↓ or WASD, or to a clicked spot. Three buildings are pages: the library → /blog, the statue → /about, the forge → GitHub (positions in `AT`). Hovering one in the scene or in the index inks it red and the camera pans to it. Standing at its door and pressing Enter, or clicking it, walks the citizen in (walking into a door doesn't), then the page turns; `sessionStorage['forum-at']` brings him back out at that door. The three page buildings stand 12% larger, with red standards and braziers at their doors. Focusing one (pointer, door or index) pins a label over it (`onTag` → `.place-tag` in index.astro). The other buildings are scenery: two arches, a tholos, a basilica, the Curia, insulae in two rows, a temple, and a garden with an exedra behind the statue. Keep the back row low so the sky and the planet still show. Townspeople (passers-by, a marching squad, an orator's crowd, merchants) and birds are animated in `drawPeople`/`drawBirds`. Within earshot of the orator (`ORATOR`, `EARSHOT`) the label shows his speeches from `orator.ts`, rotating every 8s. The lamp is fixed on the home plate; the pointer over the plate tilts the view a few degrees instead (`tilt` in `follow()`). The sky parallaxes: the planet follows the view at 0.82 and the composite's star field shifts by `uStarShift`. Red ink travels in the ink pass's red channel (`uGlow`, red in the lettering texture) to the paper pass.
+
+/blog: inside the Bibliotheca (`library.ts`, geometry in `library-models.ts`, page wiring in `Library.astro`), walked like the street. Scroll cabinets line the back wall, and the number of cabinets grows with the posts. Each post is a red-tagged roll in a hole picked by a hash of its id, so it keeps its place as posts are added; the other holes hold plain rolls. Near a roll (or hovering it, or its line in the list) it is drawn out with a label; Enter or a click opens it. `sessionStorage['library-at']` brings the citizen back to that roll. The EXITVS door returns to the street outside the library. Also in the room: reading tables with readers, a librarian, browsers, a porter, and the Thinker (COGITATOR). Walking is shared with the forum through `walker.ts`; passes, ink, banner and helpers are shared through `passes.ts`.
+
+/about: the author's plaza (`plaza.ts`, `plaza-models.ts`, `Plaza.astro`). The statue stands in the middle, ringed by a monument for each marginal note in `about.astro`; the `MONUMENT` map gives each one its plate and inscription, and the old home plates stand on the columns. Near a monument (or hovering its note) it inks red and its object turns; Enter turns it once round. The arch at the back leads to the street, by the statue. Easter egg: a blue police box (blue ink, `uBlue`) materializes every 25–75s, and a traveller in a red scarf has a look round. `?tardis` brings it every few seconds.
+
+Phones: plates narrower than 560px zoom in (`plateZoom` in `passes.ts`) and the view follows the citizen in depth as well. On portrait the plate frame is 4:5 with an explicit width, because iOS Safari sizes an aspect-ratio-only frame too wide. With no hover and no Enter key, the label the citizen stands at becomes the button (`.place-tag.is-actionable`, whose `.tag-act` line says "Tap here to …"), and a `.touch-hint` replaces the keyboard hint. The view tilt follows a mouse only. Links in the index or chapter list only walk the citizen there when at least half the plate is on screen (`inView` in `visible.ts`); otherwise they turn the page straight away.
+
+Languages: English at `/` and Portuguese under `/pt/`. Home, about and the field-notes listing exist in both (`/pt/`, `/pt/sobre/`, `/pt/notas/`; addresses in `src/i18n/paths.ts`). The pages are views in `src/views/` (`Home.astro`, `About.astro`), plus `Commentarii.astro`, that take `lang` and render through `tr(lang)` from `src/i18n/strings.ts`, which holds every key in both languages. Latin stays Latin, and the posts, subject pages and 404 are English only. Each bilingual page names its pair (`alternates`): `BaseHead` emits hreflang (en, pt-BR, x-default → en), and the EN · PT toggle in the running head links the two. Following the toggle skips the page turn (`pageswap`), and the new page writes its on-screen `data-i18n`/`data-i18n-html` text in with the quill (inline script in `Codex.astro`; long paragraphs a word at a time). Scripts read the page's language and its strings through `src/scripts/codex/lang.ts` (`t`, `pick`, `lang`), for the 3D labels and captions. To add text: give it a key in both languages, render it with `s(key)`, and mark the element `data-i18n`.
+
+CV: `public/eduardo-de-bem-cv.pdf` is exported from the cv project (`../../../cv/cv.html`) by `npm run cv` (headless Chrome, A4). Re-run it after editing the CV. It's linked from the home and about pages and from the correspondence card (`CV_PDF` in `consts.ts`), and it includes the phone number.
+
+SEO: the site lives at https://eduardogdebem.com (`site` in `astro.config.mjs`, `SITE_URL` in `src/seo.ts`), and canonicals, the sitemap and social previews derive from it. `BaseHead` takes `noindex`, `schema` (JSON-LD) and `canonical`. The home page carries `WebSite` + `Person` and the about page a `ProfilePage`, both from `src/seo.ts`: keep that in step with the CV. Posts with `noindex: true` in their frontmatter, and subject pages with fewer than three posts, carry a robots noindex and are filtered out of the sitemap in `astro.config.mjs`. The default link preview is `public/og.jpg`, a 1200×630 render of the home spread (re-render it when the home page changes). `public/robots.txt` names the sitemap, and `src/pages/404.astro` is the not-found page. Internal links use the trailing slash (`/blog/`, `/about/`), as the URLs are served.
+
+**Gotcha:** every engraved material shares one shader program, and a uniform a material doesn't declare keeps the last material's value. Declare every uniform the shader has, even at its default (`createInk` does), or a blue or pale surface leaks into everything drawn after it.
+
+Plates per page: home's old plates I–III (galea, fides, currus) and IV stilus are no longer shown; /about → V sigillum (the logo in wax); subject pages and posts pick by tag via `plateForTags()` (dev → machina, notes → liber, thoughts → hora, tools → circinus; others → liber). To illustrate a new tag, add it to `SUBJECTS` in `catalogue.ts`.
+
+Page corners (`Corner.astro`, `corners.ts`, styles in `codex.css`): the top-left corner goes back and the top-right forward through browser history, shown only when there's history that way (Navigation API `canGoBack`/`canGoForward`). Each page stores its title in `sessionStorage['codex-titles']` so a corner can name where it leads. Folios run in reading order (index 1, about 3, blog 5, subjects 7, chapters 10 + 2n). On a link the turn direction compares folios (`pageswap` stores the folio being left), and on a history traversal it compares entry indexes.
+
+Opening: the first page of a visit arrives as a closed book. An inline script in `Codex.astro` sets `html.opening` before first paint (once per tab via `sessionStorage['codex-opened']`, never under reduced motion); `Binding.astro` is the board, whose gilt sigil tools in while the page loads; `opening.ts` swings it open. Plate intros wait on `bookOpened()`. To replay it, open the site in a new tab. Fade the board's faces, never `.board` itself: opacity flattens `preserve-3d` and the mirrored front shows through.
+
+**Gotcha:** in the page-turn CSS, back rules must use the full `animation:` shorthand. The forward rules' `animation: none` also resets `animation-duration` to 0, so a back rule that only sets `animation-name` runs instantly.
+
+The Dead Reckoning notes below describe the previous design and are kept for history.
+
 ## Architecture Overview
 
 Static site generated by Astro. No server, no database, no API. All content is Markdown/MDX files in `src/content/blog/`. The build outputs to `dist/` and is deployed as static HTML.
@@ -43,11 +73,21 @@ Key architectural decision: the Three.js canvas is `position: fixed; z-index: 0`
 
 ## Environment Variables
 
-**None required.** The site is fully static. The only configuration is:
+Every page is static **except** `/api/now-playing.json`, which runs on the Cloudflare worker (`prerender = false`) and proxies Jellyfin so the API key never reaches the browser. It needs three secrets:
+
+| Variable | Purpose |
+|---|---|
+| `JELLYFIN_URL` | `https://jellyfin.eduardogdebem.com` |
+| `JELLYFIN_API_KEY` | Jellyfin API key (Dashboard → API Keys) |
+| `JELLYFIN_USER_ID` | The `admin` user's id — only this user's playback is shown |
+
+Local: `.dev.vars` (gitignored; template in `.dev.vars.example`). Production: `npx wrangler secret put <NAME>`. Without them the route returns 503 and the home page simply hides the widget.
+
+Other configuration:
 
 ```js
 // astro.config.mjs — hardcoded
-site: 'https://eduardogoulart.dev'
+site: 'https://eduardogdebem.com'
 ```
 
 Update this before deploying to any other domain. No `.env` file is used or expected.
@@ -65,19 +105,21 @@ src/
 │   ├── Footer.astro         — Copyright, GitHub link, RSS link
 │   ├── FormattedDate.astro  — Formats Date objects to "MMM DD, YYYY"
 │   ├── Tag.astro            — Tag chip: optional href + active state
-│   └── HeroCanvas.astro     — Three.js terrain mesh + mouse parallax
 │
 ├── layouts/
-│   └── BlogPost.astro       — Reading layout: meta, title, tags, prose slot, footer nav
+│   ├── Codex.astro          — Every page: a two-page spread (verso/recto slots), running heads, folios, page-turn wiring
+│   └── BlogPost.astro       — A post as a chapter: opener on the verso, text on the recto
 │
 ├── pages/
-│   ├── index.astro          — / (homepage: hero + recent posts)
+│   ├── index.astro          — / (renders views/Home.astro in English; pt/index.astro in Portuguese) (no-scroll homepage: open codex — engraved plate + name banderole on the left, bio/index/engraved album cover on the right)
 │   ├── about.astro          — /about (bio + interests sidebar)
 │   ├── blog/
 │   │   ├── index.astro      — /blog (all posts + tag filter row)
 │   │   ├── [...slug].astro  — /blog/[slug]/ (dynamic post route)
 │   │   └── tag/
 │   │       └── [tag].astro  — /blog/tag/[tag]/ (filtered posts)
+│   ├── api/
+│   │   └── now-playing.json.ts — Jellyfin proxy: now playing / last watched + listened (server-rendered)
 │   └── rss.xml.js           — /rss.xml (RSS feed endpoint)
 │
 ├── content/
@@ -85,8 +127,17 @@ src/
 │       ├── *.md
 │       └── *.mdx
 │
+├── scripts/
+│   └── codex/
+│       ├── models.ts        — Plate registry + home models (helmet / violin / F1 car); buildModel()
+│       ├── scenes.ts        — Inner-page plates: stilus, sigillum, machina, liber, hora, circinus
+│       ├── catalogue.ts     — Plate numbers + captions; subject (tag) → plate and Latin banner
+│       ├── engraving.ts     — Copper-plate engraving renderer: hatch pass, normal/depth outlines, paper composite, name banderole
+│       └── cover.ts         — Re-draws the Jellyfin album cover as a line engraving (2D shader)
+│
 ├── styles/
-│   └── global.css           — Tailwind @theme tokens, base styles, prose styles
+│   ├── global.css           — Tailwind @theme tokens, base styles
+│   └── codex.css            — Book design system + cross-document page-turn view transitions
 │
 ├── assets/
 │   ├── fonts/               — Old Atkinson fonts (no longer used, safe to delete)
@@ -158,7 +209,7 @@ New colors in `@theme` using `--color-*` automatically generate bg/text/border u
 ```typescript
 geometry.attributes.position.needsUpdate = true;
 ```
-This is in `HeroCanvas.astro`'s animate loop. Never remove it.
+Applies to any animated Three.js geometry. Never remove it.
 
 ### 3. `WireframeGeometry` must be rebuilt every frame — use `wireframe: true` instead
 **Problem:** Using `WireframeGeometry` + `LineSegments` and updating vertices. The wireframe stays frozen because `WireframeGeometry` bakes positions.
@@ -249,7 +300,7 @@ All non-content text (dates, labels, coordinates, tags, nav links in context) us
 `Tag.astro` renders either a `<span>` (decorative, no link) or `<a>` (navigable) based on whether `href` is passed. The `active` prop switches the border/text to `signal` color. One component, three use cases: listing, post, filter row.
 
 ### 11. Scroll-below-hero pattern
-The homepage is one HTML document: `HeroCanvas` (fixed bg) → hero section (transparent) → posts section (opaque `bg-void`) → footer. No scroll detection JS is needed. The stacking context handles the visual transition.
+The homepage is a single no-scroll viewport (`100svh`, `overflow: hidden`): an open codex split 50/50. Left page: a WebGL copper-plate engraving of the current plate (I Galea, II Fides, III Currus) inside an armillary sphere, with the name lettered on an engraved banderole in the scene; the lamp follows the cursor over the plate and dragging turns the object. Right page: short bio with a rubricated initial, an index (field notes + latest posts, about, GitHub), and the Jellyfin cover re-drawn as an engraving with Latin marginalia (Nunc audit / Nuper spectavit). Fonts: IM Fell English (+ SC). Other pages still follow the opaque `bg-void` sections-over-canvas rule.
 
 ### 12. BlogPost layout separates metadata from content
 `BlogPost.astro` handles the chrome (header, nav, tags, dates, back link). The `<slot />` receives only the Markdown content. The layout is used by `[...slug].astro` which passes `post.data` as props.
@@ -316,7 +367,7 @@ vercel --prod
 | When writing | Run `npm run build` before pushing. Never push without a clean build. |
 | Monthly | `npm outdated` — check for Astro/Three.js/Tailwind updates |
 | On Astro major upgrade | Check `astro.config.mjs` and `content.config.ts` for breaking changes |
-| On Three.js upgrade | Check `HeroCanvas.astro` geometry/material API for deprecations |
+| On Three.js upgrade | Check `src/scripts/codex/` geometry/material/shader API for deprecations |
 
 ---
 

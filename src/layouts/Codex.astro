@@ -1,0 +1,234 @@
+---
+// Every page is a two-page spread of the codex: <slot name="verso" /> on the
+// left, <slot name="recto" /> on the right. Navigating between pages turns
+// the leaf (see the page-turn rules in src/styles/codex.css).
+import '../styles/codex.css';
+import type { ImageMetadata } from 'astro';
+import BaseHead from '../components/BaseHead.astro';
+import Logo from '../components/Logo.astro';
+import Binding from '../components/Binding.astro';
+import Corner from '../components/Corner.astro';
+import { STRINGS, type Lang } from '../i18n/strings';
+import { PATHS, href } from '../i18n/paths';
+
+interface Props {
+  title: string;
+  description: string;
+  image?: ImageMetadata;
+  /** Folio of the left page; the right page is the next one. */
+  folio: number;
+  /** Keep the page out of search results. */
+  noindex?: boolean;
+  /** Structured data (JSON-LD). */
+  schema?: Record<string, unknown>;
+  /** False for a page with no address of its own (the not-found page). */
+  canonical?: boolean;
+  /** Fit the spread to one screen, without scrolling (the home page; on portrait it scrolls like the rest). */
+  fit?: boolean;
+  /** The page's language. */
+  lang?: Lang;
+  /** The page's address in each language, for a page that exists in both: the toggle links them, and search engines are told. */
+  alternates?: Record<Lang, string>;
+}
+
+const { title, description, image, folio, fit = false, noindex = false, schema, canonical = true, lang = 'en', alternates } = Astro.props;
+// For scripts: this page's strings only (the 3D labels and captions are written at run time).
+const DICT = STRINGS[lang];
+
+const roman = (n: number) =>
+  ([['M', 1000], ['CM', 900], ['D', 500], ['CD', 400], ['C', 100], ['XC', 90], ['L', 50], ['XL', 40], ['X', 10], ['IX', 9], ['V', 5], ['IV', 4], ['I', 1]] as const).reduce(
+    (acc, [s, v]) => {
+      while (acc.n >= v) {
+        acc.out += s;
+        acc.n -= v;
+      }
+      return acc;
+    },
+    { n, out: '' },
+  ).out.toLowerCase();
+
+const path = Astro.url.pathname;
+const nav = [
+  { href: href(lang, 'home'), label: 'Index', current: path === PATHS.home[lang] },
+  { href: href(lang, 'notes'), label: 'Commentarii', current: path.startsWith(PATHS.notes[lang]) || path.startsWith('/blog') },
+  { href: href(lang, 'about'), label: 'De auctore', current: path.startsWith(PATHS.about[lang]) },
+];
+---
+
+<!doctype html>
+<html lang={lang === 'pt' ? 'pt-BR' : 'en'} data-folio={folio}>
+  <head>
+    <BaseHead title={title} description={description} image={image} noindex={noindex} schema={schema} canonical={canonical} lang={lang} alternates={alternates} />
+    <script is:inline>
+      // The first page of a visit arrives as a closed book (Binding.astro).
+      // Set before first paint so the closed board is what paints; if the
+      // opening script never runs, the book opens itself.
+      try {
+        if (!sessionStorage.getItem('codex-opened') && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          sessionStorage.setItem('codex-opened', '1');
+          document.documentElement.classList.add('opening');
+          setTimeout(() => window.__codexOpening || document.documentElement.classList.remove('opening'), 5000);
+        }
+      } catch {}
+    </script>
+    <script is:inline>
+      // Tell the page turn which way to go: back through history, or to a
+      // lower folio, turns the leaf backward. The page being left records its
+      // folio on the way out.
+      window.addEventListener('pageswap', (e) => {
+        if (!e.viewTransition) return;
+        // Over to the other language: no leaf turns; the new page is written in instead.
+        try {
+          if (sessionStorage.getItem('codex-quill')) return e.viewTransition.skipTransition();
+        } catch {}
+        try {
+          sessionStorage.setItem('codex-from-folio', document.documentElement.dataset.folio);
+        } catch {}
+      });
+      window.addEventListener('pagereveal', (e) => {
+        const vt = e.viewTransition;
+        const act = window.navigation && navigation.activation;
+        if (!vt || !act || !act.from) return;
+        let from = NaN;
+        try {
+          from = Number(sessionStorage.getItem('codex-from-folio'));
+        } catch {}
+        const depth = (u) => new URL(u).pathname.split('/').filter(Boolean).length;
+        let back = from ? Number(document.documentElement.dataset.folio) < from : depth(act.entry.url) < depth(act.from.url);
+        if (act.navigationType === 'traverse') back = act.entry.index < act.from.index;
+        vt.types.add(back ? 'back' : 'forward');
+      });
+    </script>
+  </head>
+  <body class="codex">
+    <div class:list={['book', { 'book--fit': fit }]}>
+      <Binding />
+      <section class="page verso">
+        <header class="running">
+          <a href="/" class="mark" aria-label="Codex Eduardi, home"><Logo size={22} /></a>
+          <a href="/" class="mark-text">Codex Eduardi</a>
+        </header>
+        <div class="page-body">
+          <slot name="verso" />
+        </div>
+        <footer class="folio">
+          <span>{roman(folio)}</span>
+        </footer>
+        <Corner dir="back" />
+        {/* On portrait the spread is one column: the top of the screen is this page's. */}
+        <Corner dir="forward" portrait />
+      </section>
+
+      <main class="page recto">
+        <header class="running">
+          <nav class="running-nav" aria-label="Sections">
+            {nav.map((n) => (
+              <a href={n.href} aria-current={n.current ? 'page' : undefined}>{n.label}</a>
+            ))}
+          </nav>
+          {alternates && (
+            <nav class="lang" aria-label={DICT['lang.toggle']}>
+              <a href={alternates.en} hreflang="en" lang="en" data-lang-link aria-current={lang === 'en' ? 'page' : undefined}>EN</a>
+              <a href={alternates.pt} hreflang="pt-BR" lang="pt-BR" data-lang-link aria-current={lang === 'pt' ? 'page' : undefined}>PT</a>
+            </nav>
+          )}
+        </header>
+        <div class="page-body">
+          <slot name="recto" />
+        </div>
+        <footer class="folio">
+          <a href="/rss.xml">rss</a>
+          <span>{roman(folio + 1)}</span>
+        </footer>
+        <Corner dir="forward" />
+      </main>
+    </div>
+    <script is:inline define:vars={{ DICT }}>
+      // The page's language, for scripts (src/scripts/codex/lang.ts): its
+      // strings, for the labels and captions the 3D plates write at run time.
+      // And when the reader has just come over by the EN · PT toggle, the page
+      // is written in as if by a quill: what's on screen and translatable
+      // (data-i18n, data-i18n-html) appears letter by letter, or a word at a
+      // time in a long paragraph. Inline at the end of the body, so it runs
+      // before first paint.
+      (() => {
+        const root = document.documentElement;
+        window.codexLang = { lang: root.lang.startsWith('pt') ? 'pt' : 'en', t: (key) => DICT[key] ?? key };
+
+        const FLAG = 'codex-quill';
+        document.addEventListener('click', (e) => {
+          const a = e.target.closest('a[data-lang-link]');
+          if (!a || a.hasAttribute('aria-current')) return;
+          try {
+            sessionStorage.setItem(FLAG, '1');
+          } catch {}
+        });
+        let arrived = false;
+        try {
+          arrived = sessionStorage.getItem(FLAG) === '1';
+          sessionStorage.removeItem(FLAG);
+        } catch {}
+        if (!arrived || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+        // An element's text cut into pieces, each in its own span, to be inked a
+        // moment after the last: letters for a short line, words for a long
+        // paragraph (thousands of animated letters would stutter).
+        const pieces = (el, start, step, byWord) => {
+          const walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+          const nodes = [];
+          while (walk.nextNode()) nodes.push(walk.currentNode);
+          let i = 0;
+          for (const node of nodes) {
+            const frag = document.createDocumentFragment();
+            for (const piece of node.textContent.split(byWord ? /(\s+)/ : /(\s)/)) {
+              if (!piece) continue;
+              if (/^\s+$/.test(piece)) {
+                frag.append(piece);
+                continue;
+              }
+              for (const unit of byWord ? [piece] : [...piece]) {
+                const span = document.createElement('span');
+                // The first word stays inline, so a drop cap (::first-letter) still finds it.
+                span.className = byWord && i > 0 ? 'quill quill-word' : 'quill';
+                span.style.setProperty('--d', `${Math.round(start + i * step)}ms`);
+                span.textContent = unit;
+                frag.append(span);
+                i++;
+              }
+            }
+            node.replaceWith(frag);
+          }
+        };
+        // On screen, and not scrolled out of its page: only that is worth animating.
+        const seen = (el) => {
+          const r = el.getBoundingClientRect();
+          if (!r.width && !r.height) return false;
+          const page = el.closest('.page-body')?.getBoundingClientRect();
+          const top = Math.max(0, page ? page.top : 0);
+          const bottom = Math.min(innerHeight, page ? page.bottom : innerHeight);
+          return r.bottom > top && r.top < bottom;
+        };
+
+        let order = 0;
+        for (const el of document.querySelectorAll('[data-i18n], [data-i18n-html]')) {
+          if (!seen(el)) continue;
+          const html = el.innerHTML;
+          const text = el.textContent;
+          const start = Math.min(order++ * 55, 900);
+          const byWord = text.length > 120;
+          const count = Math.max(1, byWord ? text.split(/\s+/).length : text.length);
+          const step = Math.min(byWord ? 45 : 14, 700 / count);
+          pieces(el, start, step, byWord);
+          // Back to plain text once dry, so selection and wrapping are as before.
+          setTimeout(() => (el.innerHTML = html), start + count * step + 400);
+        }
+      })();
+    </script>
+    <script>
+      import { openBook } from '../scripts/codex/opening';
+      import { foldCorners } from '../scripts/codex/corners';
+      openBook();
+      foldCorners();
+    </script>
+  </body>
+</html>

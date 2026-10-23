@@ -1,0 +1,1183 @@
+/* ─── Codex: the site as an open book ────────────────────────────────────
+   Shared by every page through src/layouts/Codex.astro. Page-specific
+   styling stays in the page. */
+
+/* Page turns between documents (Chrome 126+, Safari 18.2+; others just navigate). */
+@view-transition {
+  navigation: auto;
+}
+
+.codex {
+  --paper: #efe6d0;
+  --ink: #1b2419;
+  --ink-soft: #4a5243;
+  --rubric: #9b2d20;
+  --rule: #b9a985;
+
+  height: 100svh;
+  overflow: hidden;
+  margin: 0;
+  background:
+    radial-gradient(ellipse at 50% 120%, #2a1d14 0%, transparent 60%),
+    #17110c;
+  color: var(--ink);
+  font-family: 'IM Fell English', Georgia, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.codex ::selection {
+  background: var(--rubric);
+  color: var(--paper);
+}
+
+.codex h1,
+.codex h2,
+.codex h3,
+.codex h4 {
+  font-family: 'IM Fell English', Georgia, serif;
+  font-weight: 400;
+  letter-spacing: normal;
+  line-height: 1.1;
+  color: var(--ink);
+}
+
+.codex a {
+  color: inherit;
+}
+
+.codex a:hover {
+  color: var(--rubric);
+}
+
+.codex a:focus-visible,
+.codex button:focus-visible {
+  outline: 1px solid var(--rubric);
+  outline-offset: 3px;
+}
+
+/* ── The spread ── */
+
+.book {
+  position: fixed;
+  inset: clamp(10px, 2vw, 28px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  background: var(--paper);
+  box-shadow:
+    0 30px 80px rgb(0 0 0 / 0.6),
+    inset 0 0 120px rgb(120 90 40 / 0.25);
+  border-radius: 3px;
+}
+
+/* Fibres in the stock. */
+.book::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45  0 0 0 0 0.35  0 0 0 0 0.2  0 0 0 0.35 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.page {
+  position: relative;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(18px, 3vh, 34px) clamp(22px, 3.4vw, 56px) clamp(14px, 2.2vh, 26px);
+}
+
+/* Each page carries its half of the gutter crease, so the crease travels with
+   the page (page turns, the opening) instead of being painted on the spread. */
+.verso,
+.board-back {
+  background:
+    linear-gradient(90deg, transparent calc(100% - 34px), rgb(60 40 20 / 0.1)),
+    linear-gradient(90deg, transparent 88%, rgb(60 40 20 / 0.1)),
+    var(--paper);
+}
+
+.recto {
+  background:
+    linear-gradient(90deg, rgb(60 40 20 / 0.1), transparent 34px),
+    linear-gradient(90deg, rgb(60 40 20 / 0.12), transparent 12%),
+    var(--paper);
+}
+
+/* Long pages scroll inside the page, not the window. */
+.page-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule) transparent;
+  margin-right: -10px;
+  padding-right: 10px;
+}
+
+.running {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-family: 'IM Fell English SC', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 0.55rem;
+  margin-bottom: clamp(10px, 2vh, 20px);
+}
+
+.running a {
+  text-decoration: none;
+}
+
+.running .mark {
+  color: var(--rubric);
+  display: flex;
+}
+
+.running-nav {
+  display: flex;
+  gap: 1.4rem;
+  margin-left: auto;
+}
+
+.running-nav a[aria-current='page'] {
+  color: var(--rubric);
+}
+
+.folio {
+  flex: none;
+  display: flex;
+  justify-content: space-between;
+  font-family: 'IM Fell English SC', serif;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  border-top: 1px solid var(--rule);
+  padding-top: 0.5rem;
+  margin-top: clamp(10px, 2vh, 18px);
+}
+
+/* ── Page corners: back and forward through history (Corner.astro) ──
+   Resting, a hint of a dog-ear; under the cursor the top corner lifts and
+   folds down over the page, showing the leaf beneath. The fold is drawn for
+   a bottom-right corner and mirrored into the top two. */
+
+.corner {
+  position: absolute;
+  top: 0;
+  z-index: 6;
+  width: 96px;
+  height: 96px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  --fold: 12px;
+}
+
+.corner--forward {
+  right: 0;
+}
+
+.corner--back {
+  left: 0;
+}
+
+.corner--portrait,
+.corner[hidden] {
+  display: none !important;
+}
+
+.fold {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: var(--fold);
+  height: var(--fold);
+  filter: drop-shadow(-2px -2px 3px rgb(50 30 10 / 0.28));
+  transition:
+    width 0.45s cubic-bezier(0.3, 1.35, 0.5, 1),
+    height 0.45s cubic-bezier(0.3, 1.35, 0.5, 1);
+}
+
+.corner--forward .fold {
+  transform: scaleY(-1);
+}
+
+.corner--back .fold {
+  right: auto;
+  left: 0;
+  transform: scale(-1, -1);
+}
+
+/* Where the corner was: the next leaf, in the folded page's shadow. */
+.fold::before,
+.fold::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.fold::before {
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+  background: linear-gradient(to top left, #ddd0b0, #c4b28a 50%);
+}
+
+/* The corner itself, folded back: the crease catches the light, the tip doesn't. */
+.fold::after {
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+  background: linear-gradient(to bottom right, #d9cba8, #f1e9d4 38%, #f8f2e2 48%, #e3d7b8 50%);
+}
+
+.corner-label {
+  position: absolute;
+  right: 12px;
+  top: 78px;
+  padding: 0 0.3em;
+  font-style: italic;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  color: var(--rubric);
+  background: var(--paper);
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+  pointer-events: none;
+}
+
+.corner--back .corner-label {
+  right: auto;
+  left: 12px;
+}
+
+.corner:hover,
+.corner:focus-visible {
+  --fold: 66px;
+}
+
+.corner:active {
+  --fold: 84px;
+}
+
+.corner:hover .corner-label,
+.corner:focus-visible .corner-label {
+  opacity: 1;
+  transform: none;
+}
+
+.codex .corner:focus-visible {
+  outline: none;
+}
+
+/* No hover on touch: a larger dog-ear says the corner can be turned. */
+@media (hover: none) {
+  .corner {
+    --fold: 26px;
+  }
+}
+
+/* ── The label over a thing in a plate: a building, a roll, the orator's words ── */
+
+.place-tag {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.3rem 0.75rem 0.35rem;
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  box-shadow:
+    0 0 0 3px var(--paper),
+    0 0 0 4px var(--ink),
+    0 6px 14px rgb(40 25 10 / 0.25);
+  line-height: 1.15;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, calc(-100% - 16px)) scale(0.96);
+  transform-origin: 50% 100%;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+/* A pointer down to the building. */
+.place-tag::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -9px;
+  width: 10px;
+  height: 10px;
+  background: var(--paper);
+  border-right: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.place-tag.is-shown {
+  opacity: 1;
+  transform: translate(-50%, calc(-100% - 16px));
+}
+
+.place-tag.is-below {
+  transform: translate(-50%, 16px);
+  transform-origin: 50% 0;
+}
+
+.place-tag.is-below::after {
+  bottom: auto;
+  top: -9px;
+  transform: translateX(-50%) rotate(225deg);
+}
+
+.tag-latin {
+  font-family: 'IM Fell English SC', serif;
+  font-size: 1.05rem;
+  letter-spacing: 0.08em;
+  color: var(--rubric);
+}
+
+.tag-page {
+  font-style: italic;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.tag-by {
+  font-family: 'IM Fell English SC', serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+}
+
+.tag-by:empty {
+  display: none;
+}
+
+/* The orator's speech: a wider card, the words set to wrap. */
+.place-tag.is-speech {
+  width: max-content;
+  max-width: min(17rem, 80%);
+  white-space: normal;
+  text-align: center;
+  gap: 0.15rem;
+}
+
+.place-tag.is-speech .tag-page {
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .place-tag {
+    transition: none;
+  }
+}
+
+/* On touch screens there's no hover and no Enter key: a label that can be
+   acted on (a door, a roll) says so, and is tapped to act. */
+.tag-act {
+  display: none;
+  margin-top: 0.15rem;
+  font-family: 'IM Fell English SC', serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  color: var(--rubric);
+}
+
+.touch-hint {
+  display: none;
+}
+
+@media (hover: none) {
+  .place-tag.is-actionable {
+    pointer-events: auto;
+    cursor: pointer;
+  }
+
+  .place-tag.is-actionable .tag-act {
+    display: block;
+  }
+
+  .touch-hint {
+    display: block;
+    margin: 0.4rem 12px 0;
+    font-style: italic;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+}
+
+/* ── The language toggle, and the quill that rewrites the page ── */
+
+.lang {
+  display: flex;
+  gap: 0.1rem;
+  margin-left: 1rem;
+  font-family: 'IM Fell English SC', serif;
+}
+
+.lang a {
+  font-size: 0.85rem;
+  text-decoration: none;
+  letter-spacing: 0.08em;
+  padding: 0 0.35rem;
+  color: var(--ink-soft);
+  border: 1px solid transparent;
+  border-radius: 2px;
+}
+
+.lang a:hover {
+  color: var(--ink);
+}
+
+.lang a[aria-current] {
+  color: var(--rubric);
+  border-color: var(--rule);
+}
+
+/* Arriving by the language toggle: the page is inked in, one piece after another. Opacity and a small
+   rise only: both are cheap to animate, even for a few hundred at once. */
+.quill {
+  animation: quill 0.3s ease-out var(--d, 0ms) both;
+}
+
+/* A whole word can rise as it's written; a lone letter only fades in, since
+   letters set as blocks could break a word across lines. */
+.quill-word {
+  display: inline-block;
+  animation-name: quill-word;
+}
+
+@keyframes quill {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes quill-word {
+  from {
+    opacity: 0;
+    transform: translateY(-0.12em);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quill {
+    animation: none;
+  }
+}
+
+/* ── Book typography ── */
+
+.rubric {
+  font-family: 'IM Fell English SC', serif;
+  color: var(--rubric);
+  letter-spacing: 0.12em;
+  margin: 0 0 0.4rem;
+}
+
+/* Rubricated initial, dropped two lines. */
+.initial {
+  float: left;
+  font-size: 3.4em;
+  line-height: 0.82;
+  padding: 0.06em 0.08em 0 0;
+  color: var(--rubric);
+}
+
+.fleuron {
+  color: var(--rubric);
+  text-align: center;
+  font-size: 1.3rem;
+  margin: 0.6rem 0;
+}
+
+.contents ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.contents a {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5ch;
+  color: var(--ink);
+  text-decoration: none;
+  padding: 0.1rem 0;
+}
+
+.contents .num {
+  font-family: 'IM Fell English SC', serif;
+  color: var(--rubric);
+  min-width: 2.6ch;
+}
+
+.contents .label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.contents .leader {
+  flex: 1;
+  min-width: 2ch;
+  border-bottom: 1px dotted var(--ink-soft);
+  transform: translateY(-0.3em);
+}
+
+.contents .pg {
+  font-family: 'IM Fell English SC', serif;
+  font-size: 0.85em;
+  color: var(--ink-soft);
+}
+
+.contents a:hover .label,
+.contents a:focus-visible .label,
+.contents a[aria-current='page'] .label {
+  color: var(--rubric);
+}
+
+/* Subject tags, set as small caps in brackets. */
+.subject {
+  font-family: 'IM Fell English SC', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  text-decoration: none;
+}
+
+.subject::before { content: '['; color: var(--rule); }
+.subject::after { content: ']'; color: var(--rule); }
+
+a.subject:hover,
+.subject[aria-current='page'] {
+  color: var(--rubric);
+}
+
+/* ── Engraved plates ── */
+
+.plate {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin: 0.2rem 0 0;
+}
+
+/* Plate mark: the dent a copper plate leaves in the paper, plus a ruled border. */
+.plate-frame {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  border: 1px solid var(--ink);
+  outline: 1px solid var(--ink);
+  outline-offset: 5px;
+  box-shadow:
+    0 0 0 11px var(--paper),
+    0 0 0 12px rgb(80 60 30 / 0.28);
+  margin: 12px;
+}
+
+.plate-canvas,
+.plate-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: pan-y;
+  cursor: grab;
+}
+
+.plate-canvas:active {
+  cursor: grabbing;
+}
+
+.plate-fallback {
+  display: none;
+  place-items: end center;
+  padding-bottom: 12%;
+  font-family: 'IM Fell English SC', serif;
+  font-size: 2rem;
+  letter-spacing: 0.14em;
+  background:
+    repeating-linear-gradient(115deg, transparent 0 5px, rgb(27 36 25 / 0.1) 5px 6px),
+    var(--paper);
+}
+
+.no-webgl .plate-fallback {
+  display: grid;
+}
+
+.no-webgl .plate-canvas {
+  display: none;
+}
+
+.plate-caption {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.8rem;
+  margin: 0.6rem 12px 0;
+}
+
+.plate-caption .tab {
+  font-family: 'IM Fell English SC', serif;
+  color: var(--rubric);
+  letter-spacing: 0.08em;
+}
+
+.plate-caption .cap-latin {
+  font-family: 'IM Fell English SC', serif;
+  font-size: 1.25rem;
+  letter-spacing: 0.16em;
+}
+
+.plate-caption .cap-note {
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+/* ── Prose: field notes set as a book ── */
+
+.codex-prose {
+  font-size: clamp(1.02rem, 0.4vw + 0.8rem, 1.18rem);
+  line-height: 1.6;
+  hyphens: auto;
+}
+
+.codex-prose > p:first-of-type::first-letter {
+  float: left;
+  font-size: 3.6em;
+  line-height: 0.8;
+  padding: 0.06em 0.08em 0 0;
+  color: var(--rubric);
+}
+
+.codex-prose p,
+.codex-prose li {
+  text-align: justify;
+  max-width: 62ch;
+}
+
+.codex-prose p {
+  margin: 0 0 0.9em;
+}
+
+.codex-prose h1,
+.codex-prose h2,
+.codex-prose h3 {
+  font-family: 'IM Fell English SC', serif;
+  color: var(--rubric);
+  letter-spacing: 0.08em;
+  font-size: 1.15em;
+  margin: 1.6em 0 0.5em;
+}
+
+.codex-prose h3 {
+  font-size: 1.02em;
+  color: var(--ink);
+}
+
+.codex-prose a {
+  color: var(--rubric);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.codex-prose ul,
+.codex-prose ol {
+  padding-left: 1.6em;
+  margin: 0 0 1em;
+}
+
+.codex-prose ul {
+  list-style: '❧  ';
+}
+
+.codex-prose li::marker {
+  color: var(--rubric);
+}
+
+.codex-prose blockquote {
+  margin: 1em 0;
+  padding: 0 0 0 1em;
+  border-left: 1px solid var(--rubric);
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+.codex-prose code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82em;
+  background: rgb(27 36 25 / 0.06);
+  color: var(--ink);
+  padding: 0.05em 0.3em;
+  border-radius: 0;
+}
+
+.codex-prose pre {
+  background: rgb(27 36 25 / 0.05);
+  border: 1px solid var(--rule);
+  border-left: 2px solid var(--rubric);
+  border-radius: 0;
+  padding: 1em;
+  overflow-x: auto;
+  margin: 1em 0;
+}
+
+.codex-prose pre > code {
+  background: none;
+  padding: 0;
+  font-size: 0.8em;
+}
+
+/* Images printed into the page: ink tones, no colour. */
+.codex-prose img {
+  border-radius: 0;
+  filter: grayscale(1) sepia(0.35) contrast(1.1);
+  mix-blend-mode: multiply;
+}
+
+.codex-prose hr {
+  border: 0;
+  text-align: center;
+  margin: 1.6em 0;
+}
+
+.codex-prose hr::after {
+  content: '❦';
+  color: var(--rubric);
+}
+
+.codex-prose table {
+  border-collapse: collapse;
+}
+
+.codex-prose th,
+.codex-prose td {
+  border-bottom: 1px solid var(--rule);
+}
+
+/* ── Page turn ─────────────────────────────────────────────────────────
+   Forward: the right-hand leaf lifts at the spine and turns over to the left;
+   its back is the next spread's left page. The new right page is already
+   underneath. Back: the left-hand leaf turns over to the right. */
+
+.verso { view-transition-name: verso; }
+.recto { view-transition-name: recto; }
+
+::view-transition-group(verso),
+::view-transition-group(recto),
+::view-transition-group(root) {
+  animation: none;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+
+::view-transition-old(verso),
+::view-transition-new(verso),
+::view-transition-old(recto),
+::view-transition-new(recto) {
+  animation-duration: 0.95s;
+  animation-timing-function: cubic-bezier(0.45, 0.05, 0.3, 1);
+  animation-fill-mode: both;
+  backface-visibility: hidden;
+  mix-blend-mode: normal;
+}
+
+/* Forward (default) */
+::view-transition-old(recto) {
+  z-index: 2;
+  transform-origin: left center;
+  animation-name: leaf-lift-left;
+}
+
+::view-transition-new(recto) {
+  animation: none;
+}
+
+::view-transition-old(verso) {
+  animation: none;
+}
+
+::view-transition-new(verso) {
+  z-index: 2;
+  transform-origin: right center;
+  animation-name: leaf-land-left;
+}
+
+@keyframes leaf-lift-left {
+  from { transform: perspective(2600px) rotateY(0deg); filter: brightness(1); }
+  to { transform: perspective(2600px) rotateY(-180deg); filter: brightness(0.6); }
+}
+
+@keyframes leaf-land-left {
+  from { transform: perspective(2600px) rotateY(180deg); filter: brightness(0.6); }
+  to { transform: perspective(2600px) rotateY(0deg); filter: brightness(1); }
+}
+
+/* Back */
+/* Full shorthands here: the forward rules' `animation: none` also zeroed the duration. */
+html:active-view-transition-type(back)::view-transition-old(verso) {
+  z-index: 2;
+  transform-origin: right center;
+  animation: leaf-lift-right 0.95s cubic-bezier(0.45, 0.05, 0.3, 1) both;
+}
+
+html:active-view-transition-type(back)::view-transition-new(verso) {
+  z-index: auto;
+  animation: none;
+}
+
+html:active-view-transition-type(back)::view-transition-old(recto) {
+  z-index: auto;
+  animation: none;
+}
+
+html:active-view-transition-type(back)::view-transition-new(recto) {
+  z-index: 2;
+  transform-origin: left center;
+  animation: leaf-land-right 0.95s cubic-bezier(0.45, 0.05, 0.3, 1) both;
+}
+
+@keyframes leaf-lift-right {
+  from { transform: perspective(2600px) rotateY(0deg); filter: brightness(1); }
+  to { transform: perspective(2600px) rotateY(180deg); filter: brightness(0.6); }
+}
+
+@keyframes leaf-land-right {
+  from { transform: perspective(2600px) rotateY(-180deg); filter: brightness(0.6); }
+  to { transform: perspective(2600px) rotateY(0deg); filter: brightness(1); }
+}
+
+/* ── Portrait: one page at a time ── */
+
+@media (max-aspect-ratio: 1/1) {
+  .book {
+    /* minmax(0, …): a long title ellipsizes instead of widening the page. */
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: auto;
+    overflow-y: auto;
+    background: var(--paper);
+  }
+
+  .page {
+    padding: 14px 20px;
+    background: var(--paper);
+  }
+
+  .page-body {
+    overflow: visible;
+    margin-right: 0;
+    padding-right: 0;
+  }
+
+  /* One column, every page scrolling as one long page (the home spread only
+     fits one screen when it's a spread): pages size to their content, since
+     flex: 1 would contribute 0. */
+  .book {
+    grid-auto-rows: max-content;
+    align-content: start;
+  }
+
+  .book .page,
+  .book .page-body {
+    flex: none;
+    min-height: auto;
+  }
+
+  .book .plate {
+    flex: none;
+  }
+
+  /* Taller than wide on a phone: more room for the scene, and it reads at a
+     glance. The width is set outright (the page less the frame's 12px
+     margins): with only an aspect ratio, Safari sizes the frame wider than
+     the page and it sits off to the right. */
+  .book .plate-frame {
+    flex: none;
+    width: calc(100% - 24px);
+    aspect-ratio: 4 / 5;
+  }
+
+  .book .verso .folio,
+  .book .recto .running .mark-text {
+    display: none;
+  }
+
+  /* The nav and the language toggle share one line: set them closer. */
+  .recto .running {
+    letter-spacing: 0.05em;
+  }
+
+  .running-nav {
+    gap: 0.8rem;
+  }
+
+  .lang {
+    margin-left: 0.4rem;
+  }
+
+  /* One column: the top of the screen is the verso's, so it carries both. */
+  .recto .corner--forward {
+    display: none;
+  }
+
+  .corner--portrait:not([hidden]) {
+    display: block !important;
+  }
+
+  /* One leaf turning over the whole screen. */
+  .verso,
+  .recto {
+    view-transition-name: none;
+  }
+
+  .book {
+    view-transition-name: leaf;
+  }
+
+  ::view-transition-group(leaf) {
+    animation: none;
+  }
+
+  ::view-transition-old(leaf) {
+    z-index: 2;
+    transform-origin: left center;
+    backface-visibility: hidden;
+    animation: leaf-lift-left 0.8s cubic-bezier(0.45, 0.05, 0.3, 1) both;
+  }
+
+  ::view-transition-new(leaf) {
+    animation: none;
+  }
+
+  html:active-view-transition-type(back)::view-transition-old(leaf) {
+    transform-origin: right center;
+    animation: leaf-lift-right 0.8s cubic-bezier(0.45, 0.05, 0.3, 1) both;
+  }
+}
+
+/* ── The binding: the book arrives closed on the first page of a visit ──
+   html.opening is set before first paint by the inline script in Codex.astro;
+   src/scripts/codex/opening.ts swings the board open. */
+
+.binding {
+  display: none;
+}
+
+html.opening .binding {
+  display: block;
+  position: absolute;
+  inset: 0 0 0 50%;
+  z-index: 20;
+  perspective: 2600px;
+  perspective-origin: 0% 50%;
+}
+
+html.opening .book {
+  transform: translateX(-25%);
+  background: transparent;
+  box-shadow: none;
+}
+
+html.opening .book::before {
+  opacity: 0;
+}
+
+html.opening .verso {
+  clip-path: inset(0 0 0 100%);
+}
+
+.book,
+.book::before {
+  transition:
+    box-shadow 0.8s ease,
+    background-color 0.8s ease,
+    opacity 0.8s ease;
+}
+
+.board {
+  position: absolute;
+  inset: -6px -10px -6px 0;
+  transform-origin: 0% 50%;
+  transform-style: preserve-3d;
+}
+
+.board-front,
+.board-back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 2px 6px 6px 2px;
+}
+
+.board-front {
+  display: grid;
+  place-items: center;
+  padding: clamp(18px, 3vw, 40px);
+  background:
+    /* the spine's hinge */
+    linear-gradient(90deg, rgb(0 0 0 / 0.55), rgb(0 0 0 / 0) 4%, rgb(255 255 255 / 0.04) 5%, rgb(0 0 0 / 0) 7%),
+    /* wear at the edges */
+    radial-gradient(ellipse at 50% 45%, rgb(0 0 0 / 0) 55%, rgb(0 0 0 / 0.45)),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    #26301f;
+  box-shadow:
+    0 30px 80px rgb(0 0 0 / 0.65),
+    inset 0 0 0 1px rgb(0 0 0 / 0.5);
+  --gilt: #c9a35a;
+}
+
+/* Two gilt fillets tooled round the board. */
+.board-front::before,
+.board-front::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  border: 1px solid var(--gilt);
+  opacity: 0.75;
+}
+
+.board-front::before {
+  inset: clamp(14px, 2.2vw, 28px);
+}
+
+.board-front::after {
+  inset: clamp(20px, 2.8vw, 36px);
+  border-width: 3px;
+  border-style: double;
+}
+
+.tooling {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(10px, 2vh, 22px);
+  color: var(--gilt);
+  text-shadow: 0 1px 0 rgb(0 0 0 / 0.6);
+}
+
+.board-title {
+  margin: 0;
+  font-family: 'Cinzel', 'IM Fell English SC', serif;
+  font-size: clamp(1.4rem, 2.6vw, 2.6rem);
+  letter-spacing: 0.4em;
+  margin-right: -0.4em;
+  text-transform: uppercase;
+  animation: gilt-in 1.2s 0.2s ease-out both;
+}
+
+.board-year {
+  margin: 0;
+  font-family: 'Cinzel', serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.5em;
+  margin-right: -0.5em;
+  opacity: 0.7;
+  animation: gilt-in 1.2s 1.2s ease-out both;
+}
+
+/* The sigil is tooled in: the outline is pressed first, then the leaf laid. */
+.board-sigil {
+  width: clamp(110px, 16vw, 220px);
+  height: auto;
+  overflow: visible;
+  filter: drop-shadow(0 1px 0 rgb(0 0 0 / 0.7));
+}
+
+.board-sigil path {
+  fill: var(--gilt);
+  fill-opacity: 0;
+  fill-rule: evenodd;
+  stroke: var(--gilt);
+  stroke-width: 2.5;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation:
+    tool 1.3s 0.1s cubic-bezier(0.6, 0, 0.3, 1) forwards,
+    leaf 0.5s 1.3s ease-out forwards,
+    glint 2.4s 1.8s ease-in-out infinite;
+}
+
+@keyframes tool {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes leaf {
+  to {
+    fill-opacity: 1;
+  }
+}
+
+@keyframes glint {
+  50% {
+    fill: #ecd9a0;
+  }
+}
+
+@keyframes gilt-in {
+  from {
+    opacity: 0;
+    letter-spacing: 0.7em;
+  }
+}
+
+/* The inside of the board: once open it lies exactly over the left page and
+   matches it (background with .verso above), so its fade is seamless. */
+.board-back {
+  inset: 6px 10px 6px 0;
+  transform: rotateY(180deg);
+  border-radius: 0;
+}
+
+/* On portrait screens the spread is one column: the board covers it all. */
+@media (max-aspect-ratio: 1/1) {
+  html.opening .binding {
+    inset: 0;
+  }
+
+  html.opening .book {
+    transform: none;
+  }
+
+  html.opening .verso {
+    clip-path: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fold,
+  .corner-label {
+    transition: none;
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
