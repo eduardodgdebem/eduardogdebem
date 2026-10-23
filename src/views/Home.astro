@@ -2,6 +2,7 @@
 // The index spread, in English (/) or Portuguese (/pt/).
 import { getCollection } from 'astro:content';
 import Codex from '../layouts/Codex.astro';
+import PlateTools from '../components/PlateTools.astro';
 import { CV_PDF, SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 import { tr, type Lang } from '../i18n/strings';
 import { PATHS, href } from '../i18n/paths';
@@ -65,6 +66,7 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
           <span class="tag-by" data-tag-by></span>
           <span class="tag-act" data-tag-act></span>
         </div>
+        <PlateTools lang={lang} />
       </div>
       <figcaption class="plate-caption" data-places={JSON.stringify(PLACES)}>
         <span class="tab">Tab. I</span>

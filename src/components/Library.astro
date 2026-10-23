@@ -4,6 +4,7 @@
 // Rolls are linked to the chapter list on the same spread by index: an element
 // with `data-roll={i}` lights roll i.
 import { tr, type Lang } from '../i18n/strings';
+import PlateTools from './PlateTools.astro';
 
 export interface LibraryRoll {
   id: string;
@@ -34,6 +35,7 @@ const s = tr(lang);
       <span class="tag-by" data-tag-by></span>
       <span class="tag-act" data-tag-act></span>
     </div>
+    <PlateTools lang={lang} />
   </div>
   <figcaption class="plate-caption">
     <span class="tab">Tab. IV</span>

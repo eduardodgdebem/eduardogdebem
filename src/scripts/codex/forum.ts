@@ -3,6 +3,7 @@ import { gsap } from 'gsap';
 import { createBanner, createInk, createPasses, fine, inscriptionTexture, merge, plateZoom } from './passes';
 import { amphitheatrum } from './ludus-models';
 import { createWalker } from './walker';
+import { createZoom } from './zoom';
 import {
   arcus,
   basilica,
@@ -104,6 +105,8 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   }
   const pixel = Math.min(window.devicePixelRatio, 2);
   renderer.setPixelRatio(pixel);
+  // Wheel, pinch or the plate's buttons bring the view closer or further.
+  const zoom = createZoom(canvas, { min: 0.7, max: 2.2, onChange: () => resize() });
 
   const scene = new THREE.Scene();
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 100);
@@ -481,15 +484,15 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
 
   let halfW = FIT_W / 2;
   let halfH = FIT_H / 2;
-  let zoom = 1;
+  let small = 1; // closer on a phone's narrow plate
   const resize = () => {
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
     if (!w || !h) return;
     passes.setSize(w, h);
     const aspect = w / h;
-    zoom = plateZoom(w);
-    halfH = Math.max((FIT_H * zoom) / 2, (FIT_W * zoom) / 2 / aspect);
+    small = plateZoom(w);
+    halfH = Math.max((FIT_H * small) / 2, (FIT_W * small) / 2 / aspect) / zoom.value;
     halfW = halfH * aspect;
     Object.assign(camera, { left: -halfW, right: halfW, top: halfH, bottom: -halfH });
     camera.updateProjectionMatrix();
@@ -553,7 +556,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     downAt = { x: e.clientX, y: e.clientY };
   };
   const onUp = (e: PointerEvent) => {
-    if (!downAt || entering) return;
+    if (!downAt || entering || zoom.gesturing) return;
     const moved = Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y);
     downAt = null;
     if (moved > 8) return;
@@ -649,7 +652,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     const k = reducedMotion ? 1 : 1 - Math.exp(-dt * 3);
     view.x += (x - view.x) * k;
     // Closed in on a phone: follow him across the street too.
-    view.z += ((zoom < 1 ? citizen.position.z * 0.6 : 0) - view.z) * k;
+    view.z += ((small < 1 ? citizen.position.z * 0.6 : 0) - view.z) * k;
     target.set(view.x, VIEW_Y, VIEW_Z + view.z);
     // A few degrees of tilt toward the pointer: round the street, and up or down it.
     if (!reducedMotion) tilt.lerp(tiltTarget, 1 - Math.exp(-dt * 4));
@@ -775,6 +778,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
       window.removeEventListener('resize', resize);
       window.removeEventListener('pointermove', onPointerMove);
       walker.dispose();
+      zoom.dispose();
       canvas.removeEventListener('pointerdown', onDown);
       canvas.removeEventListener('pointerup', onUp);
       canvas.removeEventListener('pointerleave', onLeave);

@@ -16,6 +16,7 @@ import {
   triarius,
 } from '../ludus-models';
 import { createBanner, createInk, createPasses, fine, merge, plateZoom } from '../passes';
+import { createZoom } from '../zoom';
 import { GAULS, SLOTS, STATS, STEP, battle, type Battle, type Cohort, type Event as BattleEvent, type Formation, type Kind, type Plan } from './sim';
 
 // The arena plate on /ludus/: the sand seen from the stands, engraved like
@@ -24,9 +25,28 @@ import { GAULS, SLOTS, STATS, STEP, battle, type Battle, type Cohort, type Event
 // fought out here, a man at a time: each eases toward his place in his
 // cohort's formation, the fallen lie where they fell, volleys fly as lines.
 
+/** Where a cohort is on the plate, for the page to pin its badge over. */
+export interface Marker {
+  /** The place it stands at while planning; its cohort id in battle. */
+  id: number;
+  side: Cohort['side'];
+  kind: Kind;
+  formation: Formation;
+  /** CSS px within the canvas. */
+  x: number;
+  y: number;
+  /** Men left, 0..1. */
+  strength: number;
+  broken: boolean;
+}
+
 export interface Ludus {
   /** Show a plan, with one of its places picked out (planning only). */
   setPlan(plan: Plan, selected: number | null): void;
+  /** The place under a point on screen (client px), if any. */
+  slotAt(x: number, y: number): number | null;
+  /** Ring a place in red (while something is dragged over it). */
+  hover(slot: number | null): void;
   /** Fight it. Events come to `onEvent` as they happen. */
   fight(plan: Plan): Battle;
   /** The one horn call; false if it's been used, or the battle isn't on. */
@@ -44,6 +64,8 @@ interface Options {
   /** A place on the near half was clicked or tapped. */
   onPick?: (slot: number) => void;
   onEvent?: (event: BattleEvent, battle: Battle) => void;
+  /** Every frame: where each cohort is, for its badge. */
+  onMarkers?: (markers: Marker[]) => void;
 }
 
 const SCALE = 0.5; // soldiers, from life size to the arena's
@@ -110,7 +132,7 @@ const rand = (() => {
   return () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 })();
 
-export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, onContextLost, onPick, onEvent }: Options): Ludus | null {
+export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, onContextLost, onPick, onEvent, onMarkers }: Options): Ludus | null {
   let renderer: THREE.WebGLRenderer;
   try {
     renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false });
@@ -119,6 +141,9 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
   }
   const pixel = Math.min(window.devicePixelRatio, 2);
   renderer.setPixelRatio(pixel);
+  // The arena can be looked at closely: wheel, pinch, the plate's buttons; drag the sand to look around.
+  const zoom = createZoom(canvas, { min: 0.9, max: 3, onChange: () => resize() });
+  const pan = new THREE.Vector2();
 
   const scene = new THREE.Scene();
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 140);
@@ -237,13 +262,19 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
   const lying = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2);
   const pos = new THREE.Vector3();
   const one = new THREE.Vector3(1, 1, 1);
-  const red = new THREE.Color(1, 0, 0);
-  const ink = new THREE.Color(0, 0, 0);
+  // Romans in red ink, Gauls in blue; a picked-out cohort deeper red; the fallen in plain ink.
+  type Tone = 'roma' | 'gallia' | 'lit' | 'fallen';
+  const TONES: Record<Tone, THREE.Color> = {
+    roma: new THREE.Color(0.6, 0, 0),
+    gallia: new THREE.Color(0, 0.85, 0),
+    lit: new THREE.Color(1, 0, 0),
+    fallen: new THREE.Color(0, 0, 0),
+  };
 
   const drawMen = (dt: number) => {
     const counts = {} as Record<Kind, number>;
     for (const k of Object.keys(troops) as Kind[]) counts[k] = 0;
-    const put = (kind: Kind, x: number, y: number, z: number, yaw: number, down: boolean, lit: boolean) => {
+    const put = (kind: Kind, x: number, y: number, z: number, yaw: number, down: boolean, tone: Tone) => {
       const mesh = troops[kind];
       const i = counts[kind]++;
       if (i >= CAP) return;
@@ -251,7 +282,7 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
       if (down) q.multiply(lying);
       m4.compose(pos.set(x, y, z), q, one);
       mesh.setMatrixAt(i, m4);
-      mesh.setColorAt(i, lit ? red : ink);
+      mesh.setColorAt(i, TONES[tone]);
     };
     const k = reducedMotion ? 1 : 1 - Math.exp(-dt * 5);
     let poles = 0;
@@ -259,8 +290,10 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
     for (const c of shown()) {
       const s = STATS[c.kind];
       const cav = s.role === 'cavalry';
+      // Half as many figures as the men they stand for: a cohort reads as a block.
+      const figures = (n: number) => Math.ceil(n / 2);
       let list = men.get(c.id);
-      const spots = places(c.formation, c.maxMen, cav);
+      const spots = places(c.formation, figures(c.maxMen), cav);
       const yaw = Math.atan2(c.fx, c.fz);
       const cos = Math.cos(yaw);
       const sin = Math.sin(yaw);
@@ -274,12 +307,12 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
         men.set(c.id, list);
       }
       // The fallen: those beyond its strength now lie where they stood.
-      while (list.length > c.men) {
+      while (list.length > figures(c.men)) {
         const m = list.pop()!;
         if (c.state !== 'gone' || c.men === 0) fallen.push({ kind: c.kind, x: m.x, z: m.z, yaw: m.yaw + (rand() - 0.5) * 1.5 });
       }
       if (c.state === 'gone') continue;
-      const lit = !fight && selected === c.id;
+      const lit = !fight && selected === c.id ? 'lit' : c.side;
       list.forEach((m, i) => {
         const goal = at(i);
         const jitter = c.state === 'fight' ? Math.sin(clock * 9 + i) * 0.05 : 0;
@@ -306,12 +339,32 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
         standards.boar.setMatrixAt(boars++, m4);
       }
     }
-    for (const f of fallen) put(f.kind, f.x, 0.04, f.z, f.yaw, true, false);
+    for (const f of fallen) put(f.kind, f.x, 0.04, f.z, f.yaw, true, 'fallen');
     for (const kind of Object.keys(troops) as Kind[]) {
       const mesh = troops[kind];
       mesh.count = Math.min(CAP, counts[kind]);
       mesh.instanceMatrix.needsUpdate = true;
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    }
+    // Where each cohort's badge goes: over its middle, a little above the men.
+    if (onMarkers) {
+      const markers: Marker[] = [];
+      for (const c of shown()) {
+        if (c.state === 'gone') continue;
+        const list = men.get(c.id);
+        if (!list?.length) continue;
+        const mx = list.reduce((a, m) => a + m.x, 0) / list.length;
+        const mz = list.reduce((a, m) => a + m.z, 0) / list.length;
+        pos.set(mx, 1.5, mz).project(camera);
+        markers.push({
+          id: c.id, side: c.side, kind: c.kind, formation: c.formation,
+          x: ((pos.x + 1) / 2) * canvas.clientWidth,
+          y: ((1 - pos.y) / 2) * canvas.clientHeight,
+          strength: c.men / c.maxMen,
+          broken: c.state === 'rout',
+        });
+      }
+      onMarkers(markers);
     }
     standards.pole.count = standards.cloth.count = poles;
     standards.boar.count = boars;
@@ -353,11 +406,13 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
   const tilt = new THREE.Vector2();
   const tiltTarget = new THREE.Vector2();
   const lean = new THREE.Vector3();
+  const look = new THREE.Vector3();
   const aim = (dt: number) => {
     if (!reducedMotion) tilt.lerp(tiltTarget, 1 - Math.exp(-dt * 4));
     lean.set(tilt.x * 0.08, -tilt.y * 0.04, 0).add(VIEW_DIR).normalize();
-    camera.position.copy(LOOK).addScaledVector(lean, VIEW_DIST);
-    camera.lookAt(LOOK);
+    look.set(LOOK.x + pan.x, LOOK.y, LOOK.z + pan.y);
+    camera.position.copy(look).addScaledVector(lean, VIEW_DIST);
+    camera.lookAt(look);
   };
   const resize = () => {
     const w = canvas.clientWidth;
@@ -366,8 +421,9 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
     passes.setSize(w, h);
     const aspect = w / h;
     // The whole arena in view, whatever the plate's shape (a phone gets a little closer).
-    const zoom = plateZoom(w) < 1 ? 0.9 : 1;
-    halfH = Math.max((FIT_H * zoom) / 2, (FIT_W * zoom) / 2 / aspect);
+    const phone = plateZoom(w) < 1 ? 0.9 : 1;
+    clampPan();
+    halfH = Math.max((FIT_H * phone) / 2, (FIT_W * phone) / 2 / aspect) / zoom.value;
     halfW = halfH * aspect;
     Object.assign(camera, { left: -halfW, right: halfW, top: halfH, bottom: -halfH });
     camera.updateProjectionMatrix();
@@ -381,10 +437,18 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
   const ray = new THREE.Raycaster();
   const ndc = new THREE.Vector2();
   const floor = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-  let downAt: { x: number; y: number } | null = null;
+  let downAt: { x: number; y: number; panned: boolean } | null = null;
   let hovered: number | null = null;
-  const slotAt = (e: PointerEvent) => {
+  let dragged: number | null = null; // a ring something is being dragged over
+  /** Keep the view over the arena: the closer it is, the further it may look. */
+  const clampPan = () => {
+    const room = 1 - 1 / zoom.value;
+    pan.x = THREE.MathUtils.clamp(pan.x, -SAND.rx * room, SAND.rx * room);
+    pan.y = THREE.MathUtils.clamp(pan.y, -SAND.rz * room * 1.2, SAND.rz * room * 1.2);
+  };
+  const slotAt = (e: { clientX: number; clientY: number }) => {
     const r = canvas.getBoundingClientRect();
+    if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return null;
     ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -(((e.clientY - r.top) / r.height) * 2 - 1));
     ray.setFromCamera(ndc, camera);
     const p = ray.ray.intersectPlane(floor, new THREE.Vector3());
@@ -407,18 +471,30 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
     const inside = Math.abs(x) <= 1 && Math.abs(y) <= 1;
     const leaning = inside && e.pointerType === 'mouse';
     tiltTarget.set(leaning ? x : 0, leaning ? y : 0);
+    // Dragging the sand looks around (once the view is closer than the whole arena).
+    if (downAt && e.buttons && !zoom.gesturing) {
+      const dx = e.clientX - downAt.x;
+      const dy = e.clientY - downAt.y;
+      if (downAt.panned || Math.hypot(dx, dy) > 8) {
+        const perPx = (halfW * 2) / canvas.clientWidth;
+        pan.x -= e.movementX * perPx;
+        pan.y -= e.movementY * perPx * 1.3;
+        clampPan();
+        downAt.panned = true;
+      }
+    }
     if (fight || e.pointerType !== 'mouse') return;
     hovered = inside ? slotAt(e) : null;
     canvas.style.cursor = hovered !== null ? 'pointer' : '';
   };
   const onDown = (e: PointerEvent) => {
-    downAt = { x: e.clientX, y: e.clientY };
+    downAt = { x: e.clientX, y: e.clientY, panned: false };
   };
   const onUp = (e: PointerEvent) => {
-    if (!downAt || fight) return;
-    const moved = Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y);
+    if (!downAt) return;
+    const tap = !downAt.panned && !zoom.gesturing;
     downAt = null;
-    if (moved > 8) return;
+    if (!tap || fight) return;
     const slot = slotAt(e);
     if (slot !== null) onPick?.(slot);
   };
@@ -438,7 +514,7 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
   const render = () => {
     slotRings.forEach((r, i) => {
       r.visible = !fight;
-      r.material = i === hovered || i === selected ? slotLit : slotMat;
+      r.material = i === hovered || i === selected || i === dragged ? slotLit : slotMat;
     });
     camera.updateMatrixWorld(true);
     banner.update();
@@ -495,7 +571,7 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
   window.addEventListener('resize', resize);
   window.addEventListener('pointermove', onMove, { passive: true });
   canvas.addEventListener('pointerdown', onDown);
-  canvas.addEventListener('pointerup', onUp);
+  window.addEventListener('pointerup', onUp);
   canvas.addEventListener('pointerleave', onLeave);
   document.addEventListener('visibilitychange', onVisibility);
   canvas.addEventListener('webglcontextlost', onLost);
@@ -520,6 +596,10 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
       fight = battle(next);
       return fight;
     },
+    slotAt: (x, y) => slotAt({ clientX: x, clientY: y }),
+    hover(slot) {
+      dragged = slot;
+    },
     sound: (call) => fight?.sound(call) ?? false,
     reset() {
       fight = null;
@@ -541,7 +621,8 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
       window.removeEventListener('resize', resize);
       window.removeEventListener('pointermove', onMove);
       canvas.removeEventListener('pointerdown', onDown);
-      canvas.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointerup', onUp);
+      zoom.dispose();
       canvas.removeEventListener('pointerleave', onLeave);
       document.removeEventListener('visibilitychange', onVisibility);
       canvas.removeEventListener('webglcontextlost', onLost);

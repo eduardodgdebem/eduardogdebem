@@ -1,8 +1,13 @@
 ---
-// The games, in English (/ludus/) or Portuguese (/pt/ludus/): the arena on
-// the left page, the battle plan and its annals on the right. The game is
-// src/scripts/codex/ludus/ (sim.ts fights it, ludus.ts draws it).
+// The games, in English (/ludus/) or Portuguese (/pt/ludus/). The game is
+// played on the plate itself: coins at its head, a badge over every cohort,
+// a tray of soldiers to drag onto the sand, a formation picker for the cohort
+// in hand, one big button to fight and then to sound the horn. The facing page
+// says how to play, in icons, and keeps the annals.
+// The game is src/scripts/codex/ludus/ (sim.ts fights it, ludus.ts draws it).
 import Codex from '../layouts/Codex.astro';
+import PlateTools from '../components/PlateTools.astro';
+import { ICONS } from '../components/icons';
 import { SITE_TITLE } from '../consts';
 import { tr, type Lang, type StringKey } from '../i18n/strings';
 import { PATHS } from '../i18n/paths';
@@ -14,6 +19,7 @@ interface Props {
 
 const { lang } = Astro.props;
 const s = tr(lang);
+const k = (key: string) => key as StringKey;
 const META = {
   en: {
     title: `Ludus: a battle in the arena — ${SITE_TITLE}`,
@@ -26,15 +32,68 @@ const META = {
 }[lang];
 const FORMATIONS = ['acies', 'testudo', 'cuneus', 'orbis'] as const;
 const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus', 'Cuneus'], ['orbis', 'Orbis']] as const;
-const k = (key: string) => key as StringKey;
 ---
 
 <Codex lang={lang} alternates={PATHS.ludus} title={META.title} description={META.description} folio={9}>
   <Fragment slot="verso">
     <figure class="plate">
-      <div class="plate-frame">
+      <div class="plate-frame ludus-frame">
         <canvas class="plate-canvas ludus-canvas" data-ludus aria-hidden="true"></canvas>
         <div class="plate-fallback" aria-hidden="true"><span>Ludus</span></div>
+
+        <!-- The head of the plate: what's spent, and how the sides stand. -->
+        <div class="hud-top">
+          <span class="purse" data-purse title={s('ludus.treasury')}>
+            <span class="ic" set:html={ICONS.coin} /><b data-spent>0</b>/{BUDGET}
+            <span class="sep">·</span>
+            <span class="ic" set:html={ICONS.legionarius} /><b data-count>0</b>/{MAX_COHORTS}
+          </span>
+          <span class="tally" data-tally hidden>
+            <span class="side roma" title={s('ludus.roma')}><i></i><b data-roma>0</b></span>
+            <span class="clock" data-time>0:00</span>
+            <span class="side gallia" title={s('ludus.gallia')}><i></i><b data-gallia>0</b></span>
+          </span>
+        </div>
+
+        <!-- A badge over every cohort: what it is, and how much of it is left. -->
+        <div class="badges" data-badges></div>
+
+        <!-- The cohort in hand: its formation, or send it away. -->
+        <div class="forms" data-forms hidden>
+          {FORMATIONS.map((f) => (
+            <button type="button" data-formation={f} aria-label={s(k(`ludus.form.${f}`))} title={s(k(`ludus.form.${f}`))} set:html={ICONS[f]} />
+          ))}
+          <button type="button" class="drop" data-remove aria-label={s('ludus.remove')} title={s('ludus.remove')} set:html={ICONS.trash} />
+        </div>
+
+        <!-- The tray: soldiers to drag onto the sand (or pick, then tap a ring). -->
+        <div class="tray" data-tray role="group" aria-label={s('ludus.tray')}>
+          {ROMAN_KINDS.map((kind, i) => (
+            <button type="button" class="tile" data-kind={kind} aria-pressed={i === 0 ? 'true' : 'false'} aria-label={`${s(k(`ludus.kind.${kind}`))}, ${COST[kind]}`} title={s(k(`ludus.kind.${kind}`))}>
+              <span class="ic" set:html={ICONS[kind]} />
+              <span class="price"><span class="ic" set:html={ICONS.coin} />{COST[kind]}</span>
+            </button>
+          ))}
+        </div>
+
+        <!-- One button: fight, then the horn. -->
+        <button type="button" class="go" data-go aria-label="Pugnate!" title="Pugnate!">
+          <span class="ic" data-go-icon set:html={ICONS.fight} />
+          <span class="go-label" data-go-label>Pugnate!</span>
+        </button>
+
+        <!-- When it's over. -->
+        <div class="verdict" data-verdict hidden>
+          <p class="verdict-title" data-verdict-title></p>
+          <p class="verdict-note" data-verdict-note></p>
+          <p class="verdict-actions">
+            <button type="button" class="again" data-again><span class="ic" set:html={ICONS.again} /> <span data-i18n="ludus.again">{s('ludus.again')}</span></button>
+            <button type="button" data-replan><span data-i18n="ludus.replan">{s('ludus.replan')}</span></button>
+          </p>
+        </div>
+
+        <div class="message" data-message role="status" aria-live="polite"></div>
+        <PlateTools lang={lang} />
       </div>
       <figcaption class="plate-caption">
         <span class="tab">Tab. VI</span>
@@ -42,7 +101,6 @@ const k = (key: string) => key as StringKey;
         <span class="cap-note" data-i18n="ludus.note">{s('ludus.note')}</span>
       </figcaption>
     </figure>
-    <p class="tip" data-i18n="ludus.tip">{s('ludus.tip')}</p>
   </Fragment>
 
   <Fragment slot="recto">
@@ -50,74 +108,49 @@ const k = (key: string) => key as StringKey;
     <h1 data-i18n="ludus.title">{s('ludus.title')}</h1>
     <p class="intro" data-i18n="ludus.intro">{s('ludus.intro')}</p>
 
-    <!-- The plan: what to field, and how. -->
-    <section class="tabula" data-tabula aria-label="Battle plan">
-      <p class="treasury">
-        <span data-i18n="ludus.treasury">{s('ludus.treasury')}</span> <b data-spent>0</b>/{BUDGET} ·
-        <span data-i18n="ludus.cohorts">{s('ludus.cohorts')}</span> <b data-count>0</b>/{MAX_COHORTS}
-      </p>
+    <ol class="how">
+      <li><span class="ic big" set:html={ICONS.legionarius} /><span data-i18n="ludus.how.drag">{s('ludus.how.drag')}</span></li>
+      <li><span class="ic big" set:html={ICONS.testudo} /><span data-i18n="ludus.how.tap">{s('ludus.how.tap')}</span></li>
+      <li><span class="ic big" set:html={ICONS.fight} /><span data-i18n="ludus.how.fight">{s('ludus.how.fight')}</span></li>
+    </ol>
 
-      <fieldset class="pick">
-        <legend data-i18n="ludus.unit">{s('ludus.unit')}</legend>
-        {ROMAN_KINDS.map((kind, i) => (
-          <label>
-            <input type="radio" name="kind" value={kind} checked={i === 0} />
-            <span class="name" data-i18n={k(`ludus.kind.${kind}`)}>{s(k(`ludus.kind.${kind}`))}</span>
-            <span class="cost">{COST[kind]} d.</span>
-            <span class="note" data-i18n={k(`ludus.kind.${kind}.note`)}>{s(k(`ludus.kind.${kind}.note`))}</span>
-          </label>
-        ))}
-      </fieldset>
+    <h2 class="rubric small" data-i18n="ludus.beats">{s('ludus.beats')}</h2>
+    <ul class="beats">
+      {ROMAN_KINDS.map((kind) => (
+        <li>
+          <span class="ic" set:html={ICONS[kind]} />
+          <b data-i18n={k(`ludus.kind.${kind}`)}>{s(k(`ludus.kind.${kind}`))}</b>
+          <span data-i18n={k(`ludus.beats.${kind}`)}>{s(k(`ludus.beats.${kind}`))}</span>
+        </li>
+      ))}
+    </ul>
+    <ul class="beats forms-key">
+      {FORMATIONS.map((f) => (
+        <li>
+          <span class="ic" set:html={ICONS[f]} />
+          <b data-i18n={k(`ludus.form.${f}`)}>{s(k(`ludus.form.${f}`))}</b>
+          <span data-i18n={k(`ludus.form.${f}.note`)}>{s(k(`ludus.form.${f}.note`))}</span>
+        </li>
+      ))}
+    </ul>
 
-      <fieldset class="pick">
-        <legend data-i18n="ludus.order">{s('ludus.order')}</legend>
-        {FORMATIONS.map((f, i) => (
-          <label>
-            <input type="radio" name="formation" value={f} checked={i === 0} />
-            <span class="name" data-i18n={k(`ludus.form.${f}`)}>{s(k(`ludus.form.${f}`))}</span>
-            <span class="note" data-i18n={k(`ludus.form.${f}.note`)}>{s(k(`ludus.form.${f}.note`))}</span>
-          </label>
-        ))}
-      </fieldset>
+    <p class="presets">
+      <span class="label" data-i18n="ludus.presets">{s('ludus.presets')}</span>
+      {PRESETS.map(([id, name]) => <button type="button" data-preset={id}>{name}</button>)}
+    </p>
+    <p class="presets">
+      <button type="button" data-clear data-i18n="ludus.clear">{s('ludus.clear')}</button>
+      <button type="button" data-share data-i18n="ludus.share">{s('ludus.share')}</button>
+    </p>
 
-      <p class="presets">
-        <span class="label" data-i18n="ludus.presets">{s('ludus.presets')}</span>
-        {PRESETS.map(([id, name]) => <button type="button" data-preset={id}>{name}</button>)}
-      </p>
-
-      <p class="message" data-message role="status" aria-live="polite"></p>
-
-      <p class="actions">
-        <button type="button" class="primary" data-fight>Pugnate!</button>
-        <button type="button" data-remove hidden data-i18n="ludus.remove">{s('ludus.remove')}</button>
-        <button type="button" data-clear data-i18n="ludus.clear">{s('ludus.clear')}</button>
-        <button type="button" data-share data-i18n="ludus.share">{s('ludus.share')}</button>
-      </p>
-    </section>
-
-    <!-- The battle: the clock, the horn, and what to do after. -->
-    <section class="pugna" data-pugna hidden aria-label="The battle">
-      <p class="score">
-        <span data-time>0:00</span> · Roma <b data-roma>0</b> · Gallia <b data-gallia>0</b>
-      </p>
-      <p class="horn" data-horn-row>
-        <span class="label" data-i18n="ludus.horn">{s('ludus.horn')}</span>
-        <button type="button" data-horn="signum" data-i18n="ludus.signum">{s('ludus.signum')}</button>
-        <button type="button" data-horn="receptui" data-i18n="ludus.receptui">{s('ludus.receptui')}</button>
-      </p>
-      <p class="actions" data-after hidden>
-        <button type="button" class="primary" data-again data-i18n="ludus.again">{s('ludus.again')}</button>
-        <button type="button" data-replan data-i18n="ludus.replan">{s('ludus.replan')}</button>
-      </p>
-    </section>
-
-    <h2 class="rubric annales-head">Annales</h2>
+    <h2 class="rubric small">Annales</h2>
     <ol class="annales" data-annales aria-live="polite"></ol>
   </Fragment>
 </Codex>
 
 <script>
-  import { createLudus, type Ludus } from '../scripts/codex/ludus/ludus';
+  import { ICONS } from '../components/icons';
+  import { createLudus, type Ludus, type Marker } from '../scripts/codex/ludus/ludus';
   import {
     ALLOWED,
     BUDGET,
@@ -141,14 +174,15 @@ const k = (key: string) => key as StringKey;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = <T extends Element = HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
   const canvas = $<HTMLCanvasElement>('[data-ludus]');
-  const tabula = $('[data-tabula]');
-  const pugna = $('[data-pugna]');
+  const frame = canvas.parentElement!;
+  const badgeLayer = $('[data-badges]');
+  const formsBar = $('[data-forms]');
+  const tray = $('[data-tray]');
+  const tiles = [...document.querySelectorAll<HTMLButtonElement>('.tile')];
+  const go = $<HTMLButtonElement>('[data-go]');
+  const verdict = $('[data-verdict]');
   const annales = $('[data-annales]');
   const message = $('[data-message]');
-  const removeBtn = $<HTMLButtonElement>('[data-remove]');
-  const fightBtn = $<HTMLButtonElement>('[data-fight]');
-  const kinds = [...document.querySelectorAll<HTMLInputElement>('input[name="kind"]')];
-  const forms = [...document.querySelectorAll<HTMLInputElement>('input[name="formation"]')];
 
   const roman = (n: number) =>
     ([['X', 10], ['IX', 9], ['V', 5], ['IV', 4], ['I', 1]] as const).reduce(
@@ -162,110 +196,193 @@ const k = (key: string) => key as StringKey;
       { n, out: '' },
     ).out;
 
-  // The plan: from a shared link if there is one, else the triple line.
+  // Ready to play: the triple line is already on the sand (or a shared plan).
   let plan: Plan = decode(new URLSearchParams(location.hash.slice(1)).get('plan') ?? '') ?? preset('triplex');
   let selected: number | null = null;
   let current: Battle | null = null;
-  // The plate, once its font has loaded (the handlers below may run before then).
+  let hand: RomanKind = 'legionarius';
   let ludus: Ludus | null = null;
 
-  const kind = () => kinds.find((i) => i.checked)!.value as RomanKind;
-  const formation = () => forms.find((i) => i.checked)!.value as Formation;
-  const allowed = (k: RomanKind, f: Formation) => ALLOWED[k].includes(f);
-
-  /** Keep the pickers, the treasury and the plate in step with the plan. */
-  const refresh = () => {
-    const k = kind();
-    for (const f of forms) {
-      f.disabled = !allowed(k, f.value as Formation);
-      if (f.checked && f.disabled) forms[0].checked = true;
-    }
-    $('[data-spent]').textContent = String(cost(plan));
-    $('[data-count]').textContent = String(count(plan));
-    removeBtn.hidden = selected === null;
-    fightBtn.disabled = count(plan) === 0;
-    ludus?.setPlan(plan, selected);
-  };
+  const fits = (next: Plan) => cost(next) <= BUDGET && count(next) <= MAX_COHORTS;
   const say = (text: string) => {
     message.textContent = text;
+    message.classList.add('is-shown');
     clearTimeout(sayT);
-    sayT = setTimeout(() => (message.textContent = ''), 3000);
+    sayT = setTimeout(() => message.classList.remove('is-shown'), 2400);
   };
   let sayT: ReturnType<typeof setTimeout> | undefined;
 
-  /** Would this plan fit the treasury and the eight cohorts? */
-  const fits = (next: Plan) => cost(next) <= BUDGET && count(next) <= MAX_COHORTS;
+  /** Keep the purse, the tray and the plate in step with the plan. */
+  const refresh = () => {
+    $('[data-spent]').textContent = String(cost(plan));
+    $('[data-count]').textContent = String(count(plan));
+    const left = BUDGET - cost(plan);
+    tiles.forEach((b) => {
+      const kind = b.dataset.kind as RomanKind;
+      b.setAttribute('aria-pressed', String(kind === hand));
+      b.classList.toggle('is-dear', COST[kind]! > left);
+    });
+    go.disabled = !current && count(plan) === 0;
+    formsBar.hidden = selected === null || !!current;
+    if (selected !== null && plan[selected]) {
+      for (const b of formsBar.querySelectorAll<HTMLButtonElement>('[data-formation]')) {
+        const f = b.dataset.formation as Formation;
+        b.disabled = !ALLOWED[plan[selected]!.kind].includes(f);
+        b.setAttribute('aria-pressed', String(plan[selected]!.formation === f));
+      }
+    }
+    ludus?.setPlan(plan, current ? null : selected);
+  };
 
+  /** Put a soldier of the hand's kind at a place (replacing what's there), if the purse allows. */
+  const place = (slot: number, kind: RomanKind) => {
+    const next = [...plan];
+    const was = plan[slot];
+    next[slot] = { kind, formation: was && ALLOWED[kind].includes(was.formation) ? was.formation : 'acies' };
+    if (!fits(next)) {
+      say(t('ludus.full'));
+      return false;
+    }
+    plan = next;
+    return true;
+  };
+
+  // Tapping a ring: pick out what's there, or set down the soldier in hand.
   const pick = (slot: number) => {
     if (current) return;
-    const there = plan[slot];
-    if (there) {
-      // A cohort already stands there: pick it out (or let it go), and show what it is.
-      selected = selected === slot ? null : slot;
-      if (selected !== null) {
-        kinds.forEach((i) => (i.checked = i.value === there.kind));
-        refresh();
-        forms.forEach((i) => (i.checked = i.value === there.formation));
-      }
-    } else {
-      const k = kind();
+    if (plan[slot]) selected = selected === slot ? null : slot;
+    else if (place(slot, hand)) selected = null;
+    refresh();
+  };
+
+  /* ── Drag and drop: from the tray onto a ring; a cohort to another ring, or off the sand ── */
+
+  const ghost = document.createElement('div');
+  ghost.className = 'ghost';
+  ghost.hidden = true;
+  // Inside the plate, so it shows when the plate is at full screen.
+  frame.append(ghost);
+  /** Dropped outside the plate altogether: a cohort is sent away. */
+  const offPlate = (x: number, y: number) => {
+    const r = canvas.getBoundingClientRect();
+    return x < r.left || x > r.right || y < r.top || y > r.bottom;
+  };
+  type Drag = { from: 'tray'; kind: RomanKind } | { from: 'slot'; slot: number };
+  let drag: (Drag & { x0: number; y0: number; moved: boolean; id: number }) | null = null;
+
+  const startDrag = (e: PointerEvent, what: Drag, icon: string) => {
+    if (current || e.button !== 0) return;
+    // A drag, not a text selection.
+    e.preventDefault();
+    drag = { ...what, x0: e.clientX, y0: e.clientY, moved: false, id: e.pointerId };
+    ghost.innerHTML = icon;
+    ghost.dataset.from = what.from;
+  };
+  window.addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    if (!drag.moved && Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 6) return;
+    drag.moved = true;
+    ghost.hidden = false;
+    ghost.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+    const slot = ludus?.slotAt(e.clientX, e.clientY) ?? null;
+    ludus?.hover(slot);
+    // Off the plate, a cohort being dragged would be sent away.
+    ghost.classList.toggle('is-leaving', drag.from === 'slot' && offPlate(e.clientX, e.clientY));
+  });
+  window.addEventListener('pointerup', (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const d = drag;
+    drag = null;
+    ghost.hidden = true;
+    ludus?.hover(null);
+    if (!d.moved) {
+      // A tap: on a tile, take that kind in hand; on a badge, pick the cohort out.
+      if (d.from === 'tray') hand = d.kind;
+      else selected = selected === d.slot ? null : d.slot;
+      return refresh();
+    }
+    const slot = ludus?.slotAt(e.clientX, e.clientY) ?? null;
+    if (d.from === 'tray') {
+      hand = d.kind;
+      if (slot !== null && place(slot, d.kind)) selected = null;
+    } else if (offPlate(e.clientX, e.clientY)) {
+      plan = plan.map((p, i) => (i === d.slot ? null : p));
+      selected = null;
+    } else if (slot !== null && slot !== d.slot) {
+      // Onto another ring: move there, trading places with whatever stood there.
       const next = [...plan];
-      next[slot] = { kind: k, formation: allowed(k, formation()) ? formation() : 'acies' };
-      if (fits(next)) {
-        plan = next;
-        selected = null;
-      } else say(t('ludus.full'));
+      [next[slot], next[d.slot]] = [plan[d.slot], plan[slot]];
+      plan = next;
+      selected = slot;
     }
     refresh();
-  };
+  });
+  for (const tile of tiles) {
+    tile.addEventListener('pointerdown', (e) => startDrag(e, { from: 'tray', kind: tile.dataset.kind as RomanKind }, ICONS[tile.dataset.kind as RomanKind]));
+    // Keyboard: Enter takes the kind in hand (then a tap or click on a ring sets it down).
+    tile.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      hand = tile.dataset.kind as RomanKind;
+      refresh();
+    });
+  }
 
-  // Change the picked cohort when the pickers change.
-  const amend = () => {
-    if (selected === null || !plan[selected]) return refresh();
-    const k = kind();
-    const next = [...plan];
-    next[selected] = { kind: k, formation: allowed(k, formation()) ? formation() : 'acies' };
-    if (fits(next)) plan = next;
-    else {
-      say(t('ludus.full'));
-      kinds.forEach((i) => (i.checked = i.value === plan[selected!]!.kind));
-    }
-    refresh();
-  };
-  kinds.forEach((i) => i.addEventListener('change', amend));
-  forms.forEach((i) => i.addEventListener('change', amend));
-
-  removeBtn.addEventListener('click', () => {
+  // The cohort in hand: its formation, or away with it.
+  for (const b of formsBar.querySelectorAll<HTMLButtonElement>('[data-formation]')) {
+    b.addEventListener('click', () => {
+      if (selected === null || !plan[selected]) return;
+      plan = plan.map((p, i) => (i === selected && p ? { ...p, formation: b.dataset.formation as Formation } : p));
+      refresh();
+    });
+  }
+  $('[data-remove]').addEventListener('click', () => {
     if (selected === null) return;
     plan = plan.map((p, i) => (i === selected ? null : p));
     selected = null;
     refresh();
   });
-  $('[data-clear]').addEventListener('click', () => {
-    plan = SLOTS.map(() => null);
-    selected = null;
-    refresh();
-  });
-  for (const b of document.querySelectorAll<HTMLButtonElement>('[data-preset]')) {
-    b.addEventListener('click', () => {
-      plan = preset(b.dataset.preset as Parameters<typeof preset>[0]);
-      selected = null;
-      refresh();
-    });
-  }
-  $('[data-share]').addEventListener('click', async () => {
-    const url = new URL(location.href);
-    url.hash = `plan=${encode(plan)}`;
-    history.replaceState(null, '', url);
-    try {
-      await navigator.clipboard.writeText(url.href);
-    } catch {}
-    say(t('ludus.shared'));
-  });
+
+  /* ── Badges over the cohorts ── */
+
+  const badges = new Map<string, HTMLElement>();
+  const onMarkers = (markers: Marker[]) => {
+    const seen = new Set<string>();
+    for (const m of markers) {
+      const key = `${current ? 'b' : 'p'}${m.side}${m.id}`;
+      seen.add(key);
+      let el = badges.get(key);
+      if (!el) {
+        el = document.createElement('span');
+        el.className = `badge ${m.side}`;
+        el.innerHTML = `<span class="ic">${ICONS[(m.side === 'roma' ? m.kind : GAUL_ICON[m.kind]) as keyof typeof ICONS]}</span><i class="bar"><i></i></i>`;
+        // In planning, a Roman badge is the handle: drag it to another ring, or off the sand; tap to pick it out.
+        if (m.side === 'roma' && !current) {
+          const slot = m.id;
+          el.addEventListener('pointerdown', (e) => startDrag(e, { from: 'slot', slot }, ICONS[m.kind as RomanKind]));
+        }
+        badgeLayer.append(el);
+        badges.set(key, el);
+      }
+      el.style.transform = `translate(${m.x}px, ${m.y}px)`;
+      el.classList.toggle('is-lit', !current && m.side === 'roma' && m.id === selected);
+      el.classList.toggle('is-broken', m.broken);
+      el.classList.toggle('is-planning', !current && m.side === 'roma');
+      (el.querySelector('.bar > i') as HTMLElement).style.width = `${Math.round(m.strength * 100)}%`;
+      // The formation picker sits under the cohort in hand.
+      if (!current && m.side === 'roma' && m.id === selected) formsBar.style.transform = `translate(${m.x}px, ${m.y + 30}px)`;
+    }
+    for (const [key, el] of badges) {
+      if (seen.has(key)) continue;
+      el.remove();
+      badges.delete(key);
+    }
+  };
+  // A Gaul's badge shows what his men are, in Roman terms: warriors, slingers, horse, spears.
+  const GAUL_ICON: Record<string, string> = { gallus: 'legionarius', funditor: 'sagittarius', equesGallus: 'eques', hastatus: 'triarius' };
 
   /* ── The battle, and its annals ── */
 
-  // Each side's cohorts by name: Cohors II of archers; Warband III.
   const nameOf = (b: Battle, id: number) => {
     const c = b.cohorts[id];
     if (c.side === 'roma') return `Cohors ${roman(c.n)} ${t('ludus.kindOf')} ${t(`ludus.kind.${c.kind}`).toLowerCase()}`;
@@ -273,7 +390,7 @@ const k = (key: string) => key as StringKey;
     const nth = b.cohorts.filter((o) => o.side === 'gallia' && o.kind === c.kind && o.id <= c.id).length;
     return `${t(`gaul.${c.kind}`)} ${roman(nth)}`;
   };
-  const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+  const clock = (sec: number) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, '0')}`;
 
   /** A line in the annals, written in a word at a time. */
   const write = (text: string, strong = false) => {
@@ -301,54 +418,96 @@ const k = (key: string) => key as StringKey;
         .replace('{b}', c === undefined ? '' : nameOf(b, c));
     if (e.type === 'start') write(t('log.start'));
     else if (e.type === 'contact' || e.type === 'flank' || e.type === 'rear') {
-      // Every meeting is logged once a side; the front-to-front ones only by the Romans, to keep it readable.
+      // Front-to-front meetings only from the Roman side, to keep the annals readable.
       if (e.type !== 'contact' || b.cohorts[e.a].side === 'roma') write(fill(`log.${e.type}`, e.a, e.b));
     } else if (e.type === 'broken' || e.type === 'destroyed') write(fill(`log.${e.type}`, e.a));
     else if (e.type === 'horn') write(t(`log.${e.call}`), true);
     else if (e.type === 'end') {
       write(t(`log.${e.result}`), true);
-      $('[data-after]').hidden = false;
-      $('[data-horn-row]').hidden = true;
+      const [title, note] = t(`log.${e.result}`).split(/\.\s+/);
+      $('[data-verdict-title]').textContent = title.replace(/\.$/, '') + (e.result === 'vicisti' ? '!' : '');
+      $('[data-verdict-note]').textContent = note ?? '';
+      verdict.dataset.result = e.result;
+      verdict.hidden = false;
+      go.hidden = true;
     }
   };
 
-  // The clock and the men standing, while it lasts.
-  const score = () => {
+  const tally = () => {
     if (!current) return;
     $('[data-time]').textContent = clock(current.t);
     const men = (side: string) => current!.cohorts.filter((c) => c.side === side && c.state !== 'gone' && c.state !== 'rout').reduce((n, c) => n + c.men, 0);
     $('[data-roma]').textContent = String(men('roma'));
     $('[data-gallia]').textContent = String(men('gallia'));
-    if (!current.result) requestAnimationFrame(score);
+    if (!current.result) requestAnimationFrame(tally);
   };
 
+  // The one button: Pugnate! to begin; then the horn, once.
+  const setGo = (mode: 'fight' | 'horn' | 'spent') => {
+    go.dataset.mode = mode;
+    const label = mode === 'fight' ? 'Pugnate!' : t('ludus.charge');
+    $('[data-go-icon]').innerHTML = mode === 'fight' ? ICONS.fight : ICONS.horn;
+    $('[data-go-label]').textContent = mode === 'fight' ? 'Pugnate!' : 'Signum!';
+    go.setAttribute('aria-label', label);
+    go.title = label;
+    go.disabled = mode === 'spent';
+  };
   const fight = () => {
     if (!ludus || count(plan) === 0) return;
     selected = null;
     annales.replaceChildren();
-    tabula.hidden = true;
-    pugna.hidden = false;
-    $('[data-after]').hidden = true;
-    $('[data-horn-row]').hidden = false;
-    for (const b of document.querySelectorAll<HTMLButtonElement>('[data-horn]')) b.disabled = false;
+    verdict.hidden = true;
+    go.hidden = false;
+    tray.hidden = true;
+    $('[data-purse]').hidden = true;
+    $('[data-tally]').hidden = false;
     current = ludus.fight(plan);
-    score();
+    setGo('horn');
+    refresh();
+    tally();
   };
-  fightBtn.addEventListener('click', fight);
-  $('[data-again]').addEventListener('click', fight);
-  $('[data-replan]').addEventListener('click', () => {
+  const replan = () => {
     current = null;
     ludus?.reset();
-    pugna.hidden = true;
-    tabula.hidden = false;
+    verdict.hidden = true;
+    go.hidden = false;
+    tray.hidden = false;
+    $('[data-purse]').hidden = false;
+    $('[data-tally]').hidden = true;
+    setGo('fight');
     refresh();
+  };
+  go.addEventListener('click', () => {
+    if (go.dataset.mode === 'horn') {
+      if (ludus?.sound('signum')) setGo('spent');
+    } else fight();
   });
-  for (const b of document.querySelectorAll<HTMLButtonElement>('[data-horn]')) {
+  $('[data-again]').addEventListener('click', fight);
+  $('[data-replan]').addEventListener('click', replan);
+
+  for (const b of document.querySelectorAll<HTMLButtonElement>('[data-preset]')) {
     b.addEventListener('click', () => {
-      if (!ludus?.sound(b.dataset.horn as 'signum' | 'receptui')) return;
-      for (const o of document.querySelectorAll<HTMLButtonElement>('[data-horn]')) o.disabled = true;
+      if (current) replan();
+      plan = preset(b.dataset.preset as Parameters<typeof preset>[0]);
+      selected = null;
+      refresh();
     });
   }
+  $('[data-clear]').addEventListener('click', () => {
+    if (current) replan();
+    plan = SLOTS.map(() => null);
+    selected = null;
+    refresh();
+  });
+  $('[data-share]').addEventListener('click', async () => {
+    const url = new URL(location.href);
+    url.hash = `plan=${encode(plan)}`;
+    history.replaceState(null, '', url);
+    try {
+      await navigator.clipboard.writeText(url.href);
+    } catch {}
+    say(t('ludus.shared'));
+  });
 
   // The banderole letters with the page font, so wait for it.
   await document.fonts.load('150px "IM Fell English SC"').catch(() => undefined);
@@ -358,10 +517,13 @@ const k = (key: string) => key as StringKey;
     onContextLost: () => document.documentElement.classList.add('no-webgl'),
     onPick: pick,
     onEvent,
+    onMarkers,
   });
   if (!ludus) document.documentElement.classList.add('no-webgl');
   ludus?.intro(bookOpened());
+  setGo('fight');
   refresh();
+  frame.classList.add('is-ready');
 
   window.addEventListener('pagehide', (e) => !e.persisted && ludus?.dispose());
 </script>
@@ -372,12 +534,453 @@ const k = (key: string) => key as StringKey;
     cursor: default;
   }
 
-  .tip {
-    margin: 0.4rem 12px 0;
-    font-style: italic;
-    font-size: 0.85rem;
+  /* Dragging soldiers and the sand shouldn't select the page's text. */
+  .ludus-frame {
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  .ludus-canvas {
+    touch-action: none;
+  }
+
+  /* The plate's controls sit down its right side, clear of the banderole and the tray. */
+  .ludus-frame :global(.plate-tools) {
+    top: 30%;
+    bottom: auto;
+    flex-direction: column;
+  }
+
+  .ic {
+    display: inline-grid;
+    place-items: center;
+    font-size: 1.15em;
+    line-height: 0;
+  }
+
+  /* ── The head of the plate ── */
+
+  .hud-top {
+    position: absolute;
+    left: 10px;
+    top: 26%;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    pointer-events: none;
+  }
+
+  .purse,
+  .tally {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.6rem;
+    font-family: 'IM Fell English SC', serif;
+    font-size: 1.05rem;
+    background: rgb(239 230 208 / 0.92);
+    border: 1px solid var(--ink);
+    border-radius: 999px;
+  }
+
+  .purse b,
+  .tally b {
+    font-weight: 400;
+    color: var(--rubric);
+  }
+
+  .purse .sep {
     color: var(--ink-soft);
   }
+
+  .tally .side i {
+    display: inline-block;
+    width: 0.7em;
+    height: 0.7em;
+    border-radius: 50%;
+    margin-right: 0.25em;
+  }
+
+  .tally .roma i {
+    background: var(--rubric);
+  }
+
+  .tally .gallia i {
+    background: #1e3a78;
+  }
+
+  .tally .gallia b {
+    color: #1e3a78;
+  }
+
+  .tally .clock {
+    padding: 0 0.3rem;
+    color: var(--ink-soft);
+  }
+
+  /* ── Badges ── */
+
+  .badges {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .badges :global(.badge) {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    margin: -15px 0 0 -15px;
+    font-size: 17px;
+    background: var(--paper);
+    border: 2px solid var(--rubric);
+    border-radius: 50%;
+    color: var(--rubric);
+    box-shadow: 0 1px 3px rgb(40 25 10 / 0.3);
+    transition: opacity 0.3s;
+  }
+
+  .badges :global(.badge.gallia) {
+    border-color: #1e3a78;
+    color: #1e3a78;
+  }
+
+  .badges :global(.badge.is-planning) {
+    pointer-events: auto;
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .badges :global(.badge.is-lit) {
+    background: var(--rubric);
+    color: var(--paper);
+  }
+
+  .badges :global(.badge.is-broken) {
+    opacity: 0.35;
+  }
+
+  .badges :global(.badge .bar) {
+    position: absolute;
+    left: 3px;
+    right: 3px;
+    bottom: -7px;
+    height: 4px;
+    background: rgb(27 36 25 / 0.2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .badges :global(.badge .bar > i) {
+    display: block;
+    height: 100%;
+    background: currentColor;
+  }
+
+  .badges :global(.badge.is-lit .bar > i) {
+    background: var(--rubric);
+  }
+
+  /* ── The formation picker, under the cohort in hand ── */
+
+  .forms {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 4;
+    display: flex;
+    gap: 3px;
+    padding: 4px;
+    margin-left: -88px;
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    border-radius: 999px;
+    box-shadow: 0 3px 10px rgb(40 25 10 / 0.3);
+  }
+
+  .forms[hidden] {
+    display: none;
+  }
+
+  .forms button,
+  .tile,
+  .go,
+  .verdict button,
+  .presets button {
+    font: inherit;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    cursor: pointer;
+  }
+
+  .forms button {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    font-size: 19px;
+    border-radius: 50%;
+  }
+
+  .forms button[aria-pressed='true'] {
+    color: var(--paper);
+    background: var(--rubric);
+    border-color: var(--rubric);
+  }
+
+  .forms button:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .forms .drop:hover {
+    color: var(--rubric);
+    border-color: var(--rubric);
+  }
+
+  /* ── The tray ── */
+
+  .tray {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    z-index: 3;
+    display: flex;
+    gap: 6px;
+  }
+
+  .tray[hidden] {
+    display: none;
+  }
+
+  .tile {
+    position: relative;
+    display: grid;
+    place-items: center;
+    gap: 2px;
+    width: 56px;
+    height: 62px;
+    padding: 6px 0 4px;
+    font-size: 26px;
+    border: 1px solid var(--ink);
+    border-radius: 8px;
+    touch-action: none;
+    cursor: grab;
+    box-shadow: 0 2px 6px rgb(40 25 10 / 0.25);
+  }
+
+  .tile[aria-pressed='true'] {
+    border-color: var(--rubric);
+    box-shadow:
+      0 0 0 2px var(--rubric),
+      0 2px 6px rgb(40 25 10 / 0.25);
+    color: var(--rubric);
+  }
+
+  .tile.is-dear {
+    opacity: 0.4;
+  }
+
+  .tile .price {
+    display: inline-flex;
+    align-items: center;
+    gap: 1px;
+    font-family: 'IM Fell English SC', serif;
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+
+  .tile .price .ic {
+    font-size: 12px;
+  }
+
+  /* ── The one button ── */
+
+  .go {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    width: 78px;
+    height: 78px;
+    padding: 0;
+    color: var(--paper);
+    background: var(--rubric);
+    border: 3px double var(--paper);
+    border-radius: 50%;
+    box-shadow: 0 3px 10px rgb(40 25 10 / 0.4);
+  }
+
+  .go .ic {
+    font-size: 30px;
+  }
+
+  .go-label {
+    margin-top: -14px;
+    font-family: 'IM Fell English SC', serif;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+  }
+
+  .go:hover:not(:disabled) {
+    background: #7f2318;
+  }
+
+  .go:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .go[data-mode='horn']:not(:disabled) {
+    animation: call 1.6s ease-in-out infinite;
+  }
+
+  @keyframes call {
+    50% {
+      box-shadow:
+        0 0 0 6px rgb(155 45 32 / 0.25),
+        0 3px 10px rgb(40 25 10 / 0.4);
+    }
+  }
+
+  .go[hidden] {
+    display: none;
+  }
+
+  /* ── When it's over ── */
+
+  .verdict {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 5;
+    transform: translate(-50%, -50%);
+    min-width: 230px;
+    padding: 1rem 1.4rem 1.1rem;
+    text-align: center;
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    outline: 1px solid var(--ink);
+    outline-offset: 3px;
+    box-shadow: 0 8px 30px rgb(40 25 10 / 0.35);
+  }
+
+  .verdict[hidden] {
+    display: none;
+  }
+
+  .verdict-title {
+    margin: 0;
+    font-family: 'IM Fell English SC', serif;
+    font-size: 2rem;
+    letter-spacing: 0.06em;
+    color: var(--rubric);
+  }
+
+  .verdict[data-result='victus'] .verdict-title {
+    color: #1e3a78;
+  }
+
+  .verdict-note {
+    margin: 0.2rem 0 0.8rem;
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  .verdict-actions {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 0;
+  }
+
+  .verdict button,
+  .presets button {
+    font-family: 'IM Fell English SC', serif;
+    letter-spacing: 0.04em;
+    padding: 0.3rem 0.8rem;
+    border-radius: 999px;
+  }
+
+  .verdict .again {
+    color: var(--paper);
+    background: var(--rubric);
+    border-color: var(--rubric);
+  }
+
+  .presets button:hover,
+  .verdict button:not(.again):hover {
+    color: var(--rubric);
+    border-color: var(--rubric);
+  }
+
+  /* A word on the plate: not enough denarii, a link copied. */
+  .message {
+    position: absolute;
+    left: 50%;
+    bottom: 86px;
+    z-index: 5;
+    transform: translate(-50%, 6px);
+    padding: 0.25rem 0.8rem;
+    font-style: italic;
+    color: var(--paper);
+    background: var(--ink);
+    border-radius: 999px;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity 0.2s,
+      transform 0.2s;
+    white-space: nowrap;
+  }
+
+  .message.is-shown {
+    opacity: 0.92;
+    transform: translate(-50%, 0);
+  }
+
+  /* The soldier being dragged. */
+  :global(.ghost) {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 80;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    margin: -22px 0 0 -22px;
+    font-size: 26px;
+    color: var(--rubric);
+    background: var(--paper);
+    border: 2px solid var(--rubric);
+    border-radius: 50%;
+    box-shadow: 0 6px 16px rgb(40 25 10 / 0.35);
+    pointer-events: none;
+  }
+
+  :global(.ghost[hidden]) {
+    display: none;
+  }
+
+  :global(.ghost.is-leaving) {
+    opacity: 0.5;
+    border-style: dashed;
+  }
+
+  /* ── The facing page ── */
 
   h1 {
     font-size: clamp(2.2rem, 3.4vw, 3.4rem);
@@ -389,141 +992,84 @@ const k = (key: string) => key as StringKey;
     margin: 0 0 1rem;
   }
 
-  .treasury,
-  .score {
-    font-family: 'IM Fell English SC', serif;
-    letter-spacing: 0.05em;
-    margin: 0 0 0.6rem;
+  .how {
+    list-style: none;
+    margin: 0 0 1.1rem;
+    padding: 0;
+    display: grid;
+    gap: 0.55rem;
   }
 
-  .treasury b,
-  .score b {
+  .how li {
+    display: grid;
+    grid-template-columns: 2.2rem 1fr;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .ic.big {
+    display: grid;
+    place-items: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    font-size: 1.3rem;
     color: var(--rubric);
+    border: 1px solid var(--rubric);
+    border-radius: 50%;
+  }
+
+  .rubric.small {
+    font-size: 1rem;
+    margin: 0.6rem 0 0.35rem;
+    color: var(--rubric);
+  }
+
+  .beats {
+    list-style: none;
+    margin: 0 0 0.6rem;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.3rem 1rem;
+    font-size: 0.92rem;
+  }
+
+  .beats li {
+    display: grid;
+    grid-template-columns: 1.3rem auto 1fr;
+    align-items: baseline;
+    gap: 0.35rem;
+  }
+
+  .beats .ic {
+    font-size: 1.1rem;
+    color: var(--rubric);
+    align-self: center;
+  }
+
+  .beats b {
+    font-family: 'IM Fell English SC', serif;
     font-weight: 400;
   }
 
-  .pick {
-    border: 0;
-    border-top: 1px solid var(--rule);
-    margin: 0 0 0.6rem;
-    padding: 0.5rem 0 0;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.35rem 1rem;
-  }
-
-  .pick legend {
-    font-family: 'IM Fell English SC', serif;
-    letter-spacing: 0.08em;
-    color: var(--rubric);
-    padding: 0 0.4rem 0 0;
-  }
-
-  .pick label {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: baseline;
-    gap: 0 0.45rem;
-    padding: 0.25rem 0.4rem;
-    border: 1px solid transparent;
-    border-radius: 2px;
-    cursor: pointer;
-  }
-
-  .pick label:has(input:checked) {
-    border-color: var(--rubric);
-  }
-
-  .pick label:has(input:disabled) {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-
-  .pick input {
-    accent-color: var(--rubric);
-  }
-
-  .pick .name {
-    font-family: 'IM Fell English SC', serif;
-    letter-spacing: 0.04em;
-  }
-
-  .pick .cost {
-    font-style: italic;
-    color: var(--ink-soft);
-    font-size: 0.85rem;
-  }
-
-  .pick .note {
+  .beats li > span:last-child {
     grid-column: 2 / -1;
     font-style: italic;
-    font-size: 0.82rem;
     color: var(--ink-soft);
     line-height: 1.25;
   }
 
-  .presets,
-  .horn,
-  .actions {
+  .presets {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: 0.4rem 0.6rem;
-    margin: 0.4rem 0 0.6rem;
+    gap: 0.4rem;
+    margin: 0.3rem 0;
   }
 
-  .presets .label,
-  .horn .label {
+  .presets .label {
     font-style: italic;
     color: var(--ink-soft);
-  }
-
-  button {
-    font: inherit;
-    font-family: 'IM Fell English SC', serif;
-    letter-spacing: 0.05em;
-    font-size: 0.92rem;
-    padding: 0.15rem 0.6rem;
-    color: var(--ink);
-    background: none;
-    border: 1px solid var(--rule);
-    border-radius: 2px;
-    cursor: pointer;
-  }
-
-  button:hover:not(:disabled) {
-    color: var(--rubric);
-    border-color: var(--rubric);
-  }
-
-  button:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-
-  button.primary {
-    color: var(--paper);
-    background: var(--rubric);
-    border-color: var(--rubric);
-    padding: 0.25rem 1.1rem;
-  }
-
-  button.primary:hover:not(:disabled) {
-    color: var(--paper);
-    background: #7f2318;
-  }
-
-  .message {
-    min-height: 1.2em;
-    margin: 0;
-    font-style: italic;
-    color: var(--rubric);
-  }
-
-  .annales-head {
-    font-size: 1rem;
-    margin: 1rem 0 0.4rem;
-    color: var(--rubric);
   }
 
   .annales {
@@ -550,16 +1096,55 @@ const k = (key: string) => key as StringKey;
     margin-right: 0.3rem;
   }
 
-  @media (max-width: 560px) {
-    .pick {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  /* On a phone the arena is wider than the usual 4:5 plate: square it. */
+  /* On a phone the arena is wider than the usual 4:5 plate: square it, and the controls a touch smaller. */
   @media (max-aspect-ratio: 1/1) {
     .plate .plate-frame {
       aspect-ratio: 1;
+    }
+
+    .tile {
+      width: 46px;
+      height: 54px;
+      font-size: 22px;
+    }
+
+    .go {
+      width: 64px;
+      height: 64px;
+    }
+
+    .hud-top {
+      top: 18%;
+    }
+
+    /* Small badges, so the men show under them; slim tools down the side. */
+    .badges :global(.badge) {
+      width: 20px;
+      height: 20px;
+      margin: -10px 0 0 -10px;
+      font-size: 12px;
+      border-width: 1.5px;
+    }
+
+    .badges :global(.badge .bar) {
+      bottom: -5px;
+      height: 3px;
+    }
+
+    .ludus-frame :global(.plate-tools button) {
+      width: 30px;
+      height: 30px;
+      font-size: 15px;
+    }
+
+    .purse,
+    .tally {
+      font-size: 0.9rem;
+      padding: 0.1rem 0.5rem;
+    }
+
+    .beats {
+      grid-template-columns: 1fr;
     }
   }
 </style>

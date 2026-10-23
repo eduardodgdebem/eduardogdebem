@@ -1181,3 +1181,57 @@ html.opening .verso {
     animation: none !important;
   }
 }
+
+/* ── A plate's own controls (PlateTools.astro), and the plate at full screen ── */
+
+.plate-tools {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  z-index: 3;
+  display: flex;
+  gap: 4px;
+}
+
+.plate-tools button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  font-size: 18px;
+  color: var(--ink);
+  background: rgb(239 230 208 / 0.9);
+  border: 1px solid var(--ink);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.plate-tools button:hover {
+  color: var(--rubric);
+  border-color: var(--rubric);
+}
+
+.plate-frame.is-full {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  margin: 0;
+  background: var(--paper);
+  box-shadow: none;
+  outline: none;
+  aspect-ratio: auto !important;
+  width: auto !important;
+}
+
+html.plate-is-full,
+html.plate-is-full body {
+  overflow: hidden;
+}
+
+@media (max-aspect-ratio: 1/1) {
+  .plate-tools button {
+    width: 40px;
+    height: 40px;
+  }
+}
