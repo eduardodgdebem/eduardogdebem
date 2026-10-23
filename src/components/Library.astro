@@ -1,0 +1,157 @@
+---
+// The field notes' plate: inside the Bibliotheca (src/scripts/codex/library.ts).
+// The citizen walks the reading room; every post is a roll on the shelves.
+// Rolls are linked to the chapter list on the same spread by index: an element
+// with `data-roll={i}` lights roll i.
+
+export interface LibraryRoll {
+  id: string;
+  numeral: string;
+  title: string;
+  date: string;
+  href: string;
+}
+
+interface Props {
+  rolls: LibraryRoll[];
+  /** Lettered on the banderole. */
+  banner: string;
+}
+
+const { rolls, banner } = Astro.props;
+---
+
+<figure class="plate">
+  <div class="plate-frame">
+    <canvas class="plate-canvas library-canvas" data-library data-rolls={JSON.stringify(rolls)} data-banner={banner} aria-hidden="true"></canvas>
+    <div class="plate-fallback" aria-hidden="true"><span>{banner}</span></div>
+    <div class="place-tag" data-tag aria-hidden="true">
+      <span class="tag-latin" data-tag-latin></span>
+      <span class="tag-page" data-tag-page></span>
+      <span class="tag-by" data-tag-by></span>
+    </div>
+  </div>
+  <figcaption class="plate-caption">
+    <span class="tab">Tab. IV</span>
+    <span class="cap-latin">Bibliotheca</span>
+    <span class="cap-note">the reading room; every red-tagged roll is a chapter.</span>
+  </figcaption>
+</figure>
+<p class="library-hint">
+  <kbd>←</kbd><kbd>→</kbd> or <kbd>A</kbd><kbd>D</kbd> to walk · <kbd>Enter</kbd> at a roll to read it · or click one
+</p>
+
+<script>
+  import { createLibrary, type Subject } from '../scripts/codex/library';
+  import { bookOpened } from '../scripts/codex/opening';
+  import type { LibraryRoll } from './Library.astro';
+
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const canvas = document.querySelector<HTMLCanvasElement>('[data-library]')!;
+  const rolls: LibraryRoll[] = JSON.parse(canvas.dataset.rolls!);
+  const tag = canvas.parentElement!.querySelector<HTMLElement>('[data-tag]')!;
+  const tagLatin = tag.querySelector<HTMLElement>('[data-tag-latin]')!;
+  const tagPage = tag.querySelector<HTMLElement>('[data-tag-page]')!;
+  const tagBy = tag.querySelector<HTMLElement>('[data-tag-by]')!;
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('a[data-roll]')];
+  const linkFor = (i: number | null) => links.find((a) => Number(a.dataset.roll) === i);
+
+  // The banderole and the tags letter with the page fonts, so wait for them.
+  await Promise.all([document.fonts.load('150px "IM Fell English SC"'), document.fonts.load('600 80px Cinzel')]).catch(() => undefined);
+
+  const read = (i: number) => {
+    const href = rolls[i]?.href;
+    if (!href) return;
+    if (!library) return location.assign(href);
+    library.open(i).then(() => location.assign(href));
+  };
+
+  const LABELS: Record<Exclude<Subject, number>, [string, string, string]> = {
+    exitus: ['Exitus', 'back out to the Via Sacra', 'press Enter'],
+    cogitator: ['Cogitator', 'a thinker, some eighteen centuries early', 'after Rodin'],
+  };
+
+  const library = createLibrary(canvas, {
+    rolls: rolls.map(({ id, numeral }) => ({ id, numeral })),
+    name: canvas.dataset.banner!,
+    reducedMotion: reduced,
+    onContextLost: () => document.documentElement.classList.add('no-webgl'),
+    onFocus: (i) => links.forEach((a) => a.classList.toggle('is-lit', a === linkFor(i))),
+    onOpen: read,
+    onExit: () => (library ? library.leave().then(() => location.assign('/')) : location.assign('/')),
+    onTag: (subject, x, y) => {
+      tag.classList.toggle('is-shown', subject !== null);
+      if (subject === null) return;
+      const [latin, page, by] =
+        typeof subject === 'number' ? [`Caput ${rolls[subject].numeral}`, rolls[subject].title, rolls[subject].date] : LABELS[subject];
+      tagLatin.textContent = latin;
+      tagPage.textContent = page;
+      tagBy.textContent = by;
+      // Kept inside the plate; it flips below its subject near the top edge.
+      const w = tag.offsetWidth;
+      const frame = tag.parentElement!.clientWidth;
+      tag.style.left = `${Math.min(Math.max(x, w / 2 + 6), frame - w / 2 - 6)}px`;
+      tag.style.top = `${y}px`;
+      tag.classList.toggle('is-below', y < tag.offsetHeight + 70);
+    },
+  });
+  if (!library) document.documentElement.classList.add('no-webgl');
+  library?.intro(bookOpened());
+
+  // The chapter list on the facing page draws out its roll.
+  for (const a of links) {
+    const i = Number(a.dataset.roll);
+    a.addEventListener('pointerenter', () => library?.highlight(i));
+    a.addEventListener('focus', () => library?.highlight(i));
+    a.addEventListener('pointerleave', () => library?.highlight(null));
+    a.addEventListener('blur', () => library?.highlight(null));
+    a.addEventListener('click', (e) => {
+      if (!library || reduced || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault();
+      read(i);
+    });
+  }
+
+  window.addEventListener('pageshow', (e) => e.persisted && library?.reset());
+  window.addEventListener('pagehide', (e) => !e.persisted && library?.dispose());
+</script>
+
+<style>
+  /* Nothing to drag: a plain cursor, a hand over a roll. */
+  .library-canvas,
+  .library-canvas:active {
+    cursor: default;
+  }
+
+  /* A roll's title can run long: let the label wrap. */
+  .plate :global(.place-tag) {
+    max-width: min(18rem, 86%);
+    width: max-content;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .library-hint {
+    margin: 0.4rem 12px 0;
+    text-align: right;
+    font-style: italic;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+
+  .library-hint kbd {
+    font-family: inherit;
+    font-style: normal;
+    font-size: 0.8em;
+    padding: 0 0.3em;
+    margin: 0 0.1em;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+  }
+
+  @media (max-aspect-ratio: 1/1) {
+    .library-hint {
+      display: none;
+    }
+  }
+</style>

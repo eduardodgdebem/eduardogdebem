@@ -1,18 +1,7 @@
 import * as THREE from 'three';
 import { gsap } from 'gsap';
-import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import {
-  INK,
-  PAPER,
-  RUBRIC,
-  banderole,
-  compositeFragment,
-  compositeVertex,
-  engraveFragment,
-  engraveVertex,
-  letteringTexture,
-  raw,
-} from './engraving';
+import { createBanner, createInk, createPasses, fine, inscriptionTexture, merge } from './passes';
+import { createWalker } from './walker';
 import {
   arcus,
   basilica,
@@ -101,48 +90,6 @@ const FIT_H = 14;
 const FIT_W = 11;
 const LINE_FREQ = 13;
 
-/** A carved inscription, black capitals on transparent, sized to its panel. */
-function inscriptionTexture(text: string, w: number, h: number) {
-  const canvas = document.createElement('canvas');
-  canvas.width = 1024;
-  canvas.height = Math.max(32, Math.round((1024 * h) / w));
-  const ctx = canvas.getContext('2d')!;
-  ctx.fillStyle = '#000';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  const spaced = text.split('').join(' ');
-  let size = canvas.height * 0.78;
-  ctx.font = `600 ${size}px Cinzel, "IM Fell English SC", serif`;
-  const width = ctx.measureText(spaced).width;
-  if (width > canvas.width * 0.92) {
-    size *= (canvas.width * 0.92) / width;
-    ctx.font = `600 ${size}px Cinzel, "IM Fell English SC", serif`;
-  }
-  ctx.fillText(spaced, canvas.width / 2, canvas.height / 2 + size * 0.04);
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.anisotropy = 8;
-  return texture;
-}
-
-/** One geometry from many, so each building is a single draw. */
-function merge(parts: THREE.BufferGeometry[]) {
-  const flat = parts.map((g) => {
-    const n = g.index ? g.toNonIndexed() : g;
-    if (n !== g) g.dispose();
-    for (const name of Object.keys(n.attributes)) if (!['position', 'normal', 'uv'].includes(name)) n.deleteAttribute(name);
-    return n;
-  });
-  const merged = mergeGeometries(flat, false)!;
-  flat.forEach((g) => g.dispose());
-  return merged;
-}
-
-const angleTo = (from: number, to: number) => {
-  let d = (to - from) % (Math.PI * 2);
-  if (d > Math.PI) d -= Math.PI * 2;
-  if (d < -Math.PI) d += Math.PI * 2;
-  return d;
-};
 
 export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, onContextLost, onFocus, onEnter, onTag }: Options): Forum | null {
   let renderer: THREE.WebGLRenderer;
@@ -160,36 +107,12 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
 
   /* ── Materials: shared hatching, a red glow per place ── */
 
-  const shared = {
-    uLight: { value: new THREE.Vector3(0.5, 0.6, 0.8) },
-    uFreq: { value: LINE_FREQ },
-    uReveal: { value: 1 },
-    uObjectInverse: { value: new THREE.Matrix4() }, // the street hatches in world space
-  };
-  const materials: THREE.Material[] = [];
-  const textures: THREE.Texture[] = [];
-  const material = (glow: { value: number }, text?: THREE.Texture) => {
-    const m = new THREE.ShaderMaterial({
-      uniforms: { ...shared, uGlow: glow, uText: { value: text ?? null }, uHasText: { value: text ? 1 : 0 } },
-      vertexShader: engraveVertex,
-      fragmentShader: engraveFragment,
-      side: THREE.DoubleSide,
-    });
-    materials.push(m);
-    return m;
-  };
+  const { shared, material, materials, textures } = createInk(LINE_FREQ);
   const stone = material({ value: 0 });
   const jointMat = new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.42 });
   const fineMat = new THREE.LineBasicMaterial({ color: 0x000000 });
   materials.push(jointMat, fineMat);
 
-  const fine = (o: THREE.Object3D) => {
-    o.traverse((c) => {
-      c.layers.set(1); // ink pass only: no outlines
-      c.frustumCulled = false;
-    });
-    return o;
-  };
   const build = (parts: THREE.BufferGeometry[], at: [number, number], turn = 0, m: THREE.Material = stone) => {
     const mesh = new THREE.Mesh(merge(parts), m);
     mesh.position.set(at[0], 0, at[1]);
@@ -542,55 +465,11 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
 
   /* ── Banderole: carried with the view, across the head of the plate ── */
 
-  const nameTexture = letteringTexture(name);
-  textures.push(nameTexture);
-  const ribbonUniforms = {
-    uLight: shared.uLight,
-    uFreq: { value: 22 },
-    uReveal: { value: 1 },
-    uObjectInverse: { value: new THREE.Matrix4() },
-    uText: { value: nameTexture },
-    uHasText: { value: 1 },
-    uGlow: { value: 0 },
-  };
-  const ribbonMat = new THREE.ShaderMaterial({ uniforms: ribbonUniforms, vertexShader: engraveVertex, fragmentShader: engraveFragment, side: THREE.DoubleSide });
-  materials.push(ribbonMat);
-  const ribbonGeo = banderole();
-  ribbonGeo.computeBoundingBox();
-  ribbonGeo.translate(...ribbonGeo.boundingBox!.getCenter(new THREE.Vector3()).negate().toArray());
-  ribbonGeo.computeBoundingBox();
-  const ribbonSize = ribbonGeo.boundingBox!.getSize(new THREE.Vector3());
-  const ribbon = new THREE.Mesh(ribbonGeo, ribbonMat);
-  // Tipped back a little, so its twist reads in depth against the flat view.
-  ribbon.rotation.x = -0.25;
-  camera.add(ribbon);
+  const banner = createBanner(camera, name, shared.uLight);
 
-  /* ── Targets and the paper pass ── */
+  /* ── The passes ── */
 
-  const inkTarget = new THREE.WebGLRenderTarget(1, 1);
-  const normalTarget = new THREE.WebGLRenderTarget(1, 1, { depthTexture: new THREE.DepthTexture(1, 1) });
-  const normalMat = new THREE.MeshNormalMaterial({ side: THREE.DoubleSide });
-  materials.push(normalMat);
-  const compositeUniforms = {
-    tInk: { value: inkTarget.texture },
-    tNormal: { value: normalTarget.texture },
-    tDepth: { value: normalTarget.depthTexture },
-    uResolution: { value: new THREE.Vector2(1, 1) },
-    uNear: { value: camera.near },
-    uFar: { value: camera.far },
-    uOrtho: { value: 1 },
-    uStarShift: { value: new THREE.Vector2() },
-    uPixel: { value: pixel },
-    uReveal: { value: 1 },
-    uPaper: { value: raw(PAPER) },
-    uInk: { value: raw(INK) },
-    uRed: { value: raw(RUBRIC) },
-  };
-  const quadMat = new THREE.ShaderMaterial({ uniforms: compositeUniforms, vertexShader: compositeVertex, fragmentShader: compositeFragment, depthTest: false, depthWrite: false });
-  materials.push(quadMat);
-  const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), quadMat);
-  const quadScene = new THREE.Scene().add(quad);
-  const quadCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  const passes = createPasses(renderer, camera, pixel);
 
   let halfW = FIT_W / 2;
   let halfH = FIT_H / 2;
@@ -598,12 +477,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
     if (!w || !h) return;
-    renderer.setSize(w, h, false);
-    const pw = Math.floor(w * pixel);
-    const ph = Math.floor(h * pixel);
-    inkTarget.setSize(pw, ph);
-    normalTarget.setSize(pw, ph);
-    compositeUniforms.uResolution.value.set(pw, ph);
+    passes.setSize(w, h);
     const aspect = w / h;
     halfH = Math.max(FIT_H / 2, FIT_W / 2 / aspect);
     halfW = halfH * aspect;
@@ -611,38 +485,28 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     camera.updateProjectionMatrix();
     // Line spacing follows the plate's scale, so it holds on screen.
     shared.uFreq.value = LINE_FREQ * (FIT_H / 2 / halfH);
-    // The ribbon spans the plate and sits at its head.
-    const k = Math.min((halfW * 2 * 0.98) / ribbonSize.x, (halfH * 0.24) / ribbonSize.y);
-    ribbon.scale.setScalar(k);
-    ribbon.position.set(0, halfH - (ribbonSize.y * k) / 2 - halfH * 0.025, -6);
+    banner.place(halfW, halfH, 6);
     if (!running) render();
   };
 
-  /* ── Input: keys walk; the pointer moves the lamp, picks places, picks a spot to walk to ── */
+  /* ── Walking: keys, a clicked spot, or on his own to a door ── */
 
-  const keys = new Set<string>();
-  const KEYMAP: Record<string, [number, number]> = {
-    ArrowLeft: [-1, 0], KeyA: [-1, 0],
-    ArrowRight: [1, 0], KeyD: [1, 0],
-    ArrowUp: [0, -1], KeyW: [0, -1],
-    ArrowDown: [0, 1], KeyS: [0, 1],
+  const clampToStreet = (p: THREE.Vector3) => {
+    p.x = THREE.MathUtils.clamp(p.x, -BOUNDS.x, BOUNDS.x);
+    p.z = THREE.MathUtils.clamp(p.z, BOUNDS.zMin, BOUNDS.zMax);
+    return p;
   };
-  const typing = (t: EventTarget | null) => t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
-  const onKeyDown = (e: KeyboardEvent) => {
-    if (e.metaKey || e.ctrlKey || e.altKey || typing(e.target)) return;
-    if (KEYMAP[e.code]) {
-      e.preventDefault();
-      keys.add(e.code);
-      autoWalk?.kill();
-      autoWalk = null;
-      stroll = null;
-    } else if (e.code === 'Enter' && atDoor && !(e.target instanceof HTMLAnchorElement || e.target instanceof HTMLButtonElement)) {
-      e.preventDefault();
-      onEnter?.(atDoor);
-    }
-  };
-  const onKeyUp = (e: KeyboardEvent) => keys.delete(e.code);
-  const onBlur = () => keys.clear();
+  let atDoor: Place | null = null; // the citizen's
+  const walker = createWalker(citizen, {
+    speed: SPEED,
+    clamp: clampToStreet,
+    reducedMotion,
+    onEnterKey: () => atDoor && onEnter?.(atDoor),
+  });
+  let entering = false;
+  let nearOrator = false;
+
+  /* ── Pointer: picks places, picks a spot to walk to, tilts the view ── */
 
   // The lamp stands still, up and to the right, as in the old plates.
   const lamp = new THREE.Vector2(0.55, 0.55);
@@ -651,7 +515,6 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   const ndc = new THREE.Vector2();
   let pointed: Place | null = null; // under the pointer
   let indexed: Place | null = null; // from the index
-  let atDoor: Place | null = null; // the citizen's
   let downAt: { x: number; y: number } | null = null;
 
   const pick = (e: PointerEvent) => {
@@ -687,7 +550,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     if (!hit) return;
     const place = hit.object.userData.place as Place | undefined;
     if (place) onEnter?.(place);
-    else walkTo(hit.point);
+    else walker.walkTo(hit.point);
   };
   const onLeave = () => {
     tiltTarget.set(0, 0);
@@ -711,77 +574,31 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     onFocus?.(place, door);
   };
 
-  /* ── Walking ── */
-
-  const velocity = new THREE.Vector3();
-  const heading = { value: citizen.rotation.y };
-  let stride = 0;
-  let stroll: THREE.Vector3 | null = null; // a spot clicked on the street
-  let autoWalk: gsap.core.Tween | null = null; // walking in at a door
-  let entering = false;
-  let nearOrator = false;
-
-  const clampToStreet = (p: THREE.Vector3) => {
-    p.x = THREE.MathUtils.clamp(p.x, -BOUNDS.x, BOUNDS.x);
-    p.z = THREE.MathUtils.clamp(p.z, BOUNDS.zMin, BOUNDS.zMax);
-    return p;
-  };
-  const walkTo = (point: THREE.Vector3) => {
-    stroll = clampToStreet(point.clone().setY(0));
-  };
+  /* ── Going in ── */
 
   const walk = (place: Place) => {
     try {
       sessionStorage.setItem('forum-at', place);
+      // In at the library's front door, not back at the last roll read.
+      if (place === 'bibliotheca') sessionStorage.removeItem('library-at');
     } catch {}
     indexed = place;
     refocus();
     if (reducedMotion) return Promise.resolve();
     entering = true;
-    stroll = null;
-    keys.clear();
-    autoWalk?.kill();
     canvas.style.cursor = '';
     // Along the street to the door, then in.
     const door = doorOf(place);
-    const inside = door.clone().setZ(FRONT - 0.9);
-    const path = new THREE.CurvePath<THREE.Vector3>();
-    const from = citizen.position.clone();
-    if (from.distanceTo(door) > 0.05) path.add(new THREE.LineCurve3(from, door));
-    path.add(new THREE.LineCurve3(door, inside));
-    const length = path.getLength();
-    const state = { t: 0 };
-    const tangent = new THREE.Vector3();
-    return new Promise<void>((resolve) => {
-      autoWalk = gsap.to(state, {
-        t: 1,
-        duration: THREE.MathUtils.clamp(length / SPEED, 0.6, 3.2),
-        ease: 'power1.inOut',
-        onUpdate: () => {
-          path.getPointAt(state.t, citizen.position);
-          path.getTangentAt(Math.min(state.t, 0.999), tangent);
-          heading.value = Math.atan2(tangent.x, tangent.z);
-          stride += 0.25;
-          // Into the shadow of the doorway.
-          const fade = THREE.MathUtils.smoothstep(state.t, 0.8, 1);
-          citizen.scale.setScalar(1 - fade * 0.15);
-          citizen.visible = fade < 0.98;
-        },
-        onComplete: resolve,
-      });
-    });
+    return walker.follow([door, door.clone().setZ(FRONT - 0.9)], { intoDoorway: true });
   };
 
   const reset = () => {
-    autoWalk?.kill();
-    autoWalk = null;
+    walker.halt();
     entering = false;
-    stroll = null;
-    keys.clear();
     indexed = null;
     pointed = null;
     outside();
-    heading.value = citizen.rotation.y;
+    walker.face(citizen.rotation.y);
     view.x = citizen.position.x;
     refocus();
     if (!running) render();
@@ -794,36 +611,8 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   };
 
   const step = (dt: number) => {
-    if (entering) {
-      citizen.rotation.y += angleTo(citizen.rotation.y, heading.value) * Math.min(1, dt * 10);
-      citizen.position.y = Math.abs(Math.sin(stride)) * 0.06;
-      return;
-    }
-    // Keys, or a spot on the street to make for.
-    const want = new THREE.Vector3();
-    keys.forEach((k) => {
-      const [dx, dz] = KEYMAP[k];
-      want.x += dx;
-      want.z += dz;
-    });
-    if (stroll) {
-      want.subVectors(stroll, citizen.position).setY(0);
-      if (want.length() < 0.1) stroll = null;
-    }
-    if (want.lengthSq() > 0) want.normalize().multiplyScalar(SPEED);
-    velocity.lerp(want, Math.min(1, dt * 9));
-    const moving = velocity.length() > 0.05;
-
-    citizen.position.addScaledVector(velocity, dt);
-    clampToStreet(citizen.position);
-    if (moving) {
-      heading.value = Math.atan2(velocity.x, velocity.z);
-      stride += dt * 9;
-    }
-    citizen.rotation.y += angleTo(citizen.rotation.y, heading.value) * Math.min(1, dt * 10);
-    citizen.position.y = moving ? Math.abs(Math.sin(stride)) * 0.06 : citizen.position.y * 0.8;
-    citizen.rotation.z = moving ? Math.sin(stride) * 0.04 : 0;
-
+    walker.step(dt);
+    if (entering) return;
     nearOrator = Math.hypot(citizen.position.x - ORATOR.x, citizen.position.z - ORATOR.z) < EARSHOT;
 
     // At a door?
@@ -854,8 +643,8 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     camera.lookAt(target);
     // The sky is far off: the world and the stars drift slowly behind the street.
     world.position.set(view.x * 0.82 - 3.6 + halfW * 0.35, 1.2, -16);
-    const pxPerUnit = compositeUniforms.uResolution.value.x / (halfW * 2);
-    compositeUniforms.uStarShift.value.set(view.x * 0.12 * pxPerUnit, 0);
+    const pxPerUnit = passes.uniforms.uResolution.value.x / (halfW * 2);
+    passes.uniforms.uStarShift.value.set(view.x * 0.12 * pxPerUnit, 0);
   };
 
   /* ── The focused place's label: pinned over the top of its building ── */
@@ -892,31 +681,13 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   let raf = 0;
   const timer = new THREE.Timer();
   let clock = 0;
-  const ribbonInv = new THREE.Matrix4();
 
   const render = () => {
     camera.updateMatrixWorld(true);
-    ribbonUniforms.uObjectInverse.value.copy(ribbonInv.copy(ribbon.matrixWorld).invert());
+    banner.update();
     shared.uLight.value.set(lamp.x * 1.5 + 0.25, lamp.y * 1.2 + 0.3, 0.8).normalize();
-    compositeUniforms.uReveal.value = shared.uReveal.value;
-
-    // 1 · ink
-    renderer.setRenderTarget(inkTarget);
-    renderer.setClearColor(0x000000, 0);
-    camera.layers.enable(1);
-    renderer.render(scene, camera);
-
-    // 2 · normals + depth (solid forms only)
-    scene.overrideMaterial = normalMat;
-    renderer.setRenderTarget(normalTarget);
-    camera.layers.disable(1);
-    renderer.render(scene, camera);
-    scene.overrideMaterial = null;
-    camera.layers.enable(1);
-
-    // 3 · paper
-    renderer.setRenderTarget(null);
-    renderer.render(quadScene, quadCamera);
+    passes.uniforms.uReveal.value = shared.uReveal.value;
+    passes.render(scene);
   };
 
   const tick = (now: number) => {
@@ -955,18 +726,15 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   const intro = (after: Promise<void> = Promise.resolve()) => {
     if (reducedMotion) return;
     shared.uReveal.value = 0;
-    ribbonUniforms.uReveal.value = 0;
+    banner.uniforms.uReveal.value = 0;
     after.then(() => {
       gsap.to(shared.uReveal, { value: 1, duration: 3.2, ease: 'power1.out', delay: 0.4 });
-      gsap.to(ribbonUniforms.uReveal, { value: 1, duration: 2.4, ease: 'power1.inOut', delay: 1.2 });
+      gsap.to(banner.uniforms.uReveal, { value: 1, duration: 2.4, ease: 'power1.inOut', delay: 1.2 });
     });
   };
 
   window.addEventListener('resize', resize);
   window.addEventListener('pointermove', onPointerMove, { passive: true });
-  window.addEventListener('keydown', onKeyDown);
-  window.addEventListener('keyup', onKeyUp);
-  window.addEventListener('blur', onBlur);
   canvas.addEventListener('pointerdown', onDown);
   canvas.addEventListener('pointerup', onUp);
   canvas.addEventListener('pointerleave', onLeave);
@@ -988,13 +756,10 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     intro,
     dispose() {
       stop();
-      autoWalk?.kill();
-      gsap.killTweensOf([shared.uReveal, ribbonUniforms.uReveal, ...Object.values(places).map((p) => p.glow)]);
+      gsap.killTweensOf([shared.uReveal, banner.uniforms.uReveal, ...Object.values(places).map((p) => p.glow)]);
       window.removeEventListener('resize', resize);
       window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('keyup', onKeyUp);
-      window.removeEventListener('blur', onBlur);
+      walker.dispose();
       canvas.removeEventListener('pointerdown', onDown);
       canvas.removeEventListener('pointerup', onUp);
       canvas.removeEventListener('pointerleave', onLeave);
@@ -1003,11 +768,10 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
       scene.traverse((o) => {
         if (o instanceof THREE.Mesh || o instanceof THREE.Line) o.geometry.dispose();
       });
-      quad.geometry.dispose();
+      banner.dispose();
+      passes.dispose();
       materials.forEach((m) => m.dispose());
       textures.forEach((t) => t.dispose());
-      inkTarget.dispose();
-      normalTarget.dispose();
       renderer.dispose();
     },
   };

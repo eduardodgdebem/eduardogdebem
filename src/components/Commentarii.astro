@@ -3,6 +3,7 @@
 import type { CollectionEntry } from 'astro:content';
 import Codex from '../layouts/Codex.astro';
 import Plate from './Plate.astro';
+import Library, { type LibraryRoll } from './Library.astro';
 import { plateForTags, subjectBanner } from '../scripts/codex/catalogue';
 import { SITE_TITLE } from '../consts';
 
@@ -29,13 +30,19 @@ const roman = (n: number) =>
   ).out;
 
 const date = (d: Date) => `${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}, ${roman(d.getFullYear())}`;
+// Every chapter as a roll in the library, in the order they were written.
+const rolls: LibraryRoll[] = posts
+  .toSorted((a, b) => (chapters.get(a.id) ?? 0) - (chapters.get(b.id) ?? 0))
+  .map((p) => ({ id: p.id, numeral: roman(chapters.get(p.id) ?? 1), title: p.data.title, date: date(p.data.pubDate), href: `/blog/${p.id}/` }));
+const rollOf = new Map(rolls.map((r, i) => [r.href, i]));
+
 const title = activeTag ? `De ${activeTag} — Commentarii — ${SITE_TITLE}` : `Commentarii — ${SITE_TITLE}`;
 const description = activeTag ? `Field notes on ${activeTag}.` : 'Field notes: what I built, read and learned, written down as I go.';
 ---
 
 <Codex title={title} description={description} folio={activeTag ? 7 : 5}>
   <Fragment slot="verso">
-    <Plate plate={activeTag ? plateForTags([activeTag]) : 'stilus'} banner={activeTag ? subjectBanner(activeTag) : 'Commentarii'} />
+    {activeTag ? <Plate plate={plateForTags([activeTag])} banner={subjectBanner(activeTag)} /> : <Library rolls={rolls} banner="Commentarii" />}
   </Fragment>
 
   <Fragment slot="recto">
@@ -55,7 +62,7 @@ const description = activeTag ? `Field notes on ${activeTag}.` : 'Field notes: w
     <ol class="chapters">
       {posts.map((post) => (
         <li>
-          <a href={`/blog/${post.id}/`} class="chapter">
+          <a href={`/blog/${post.id}/`} class="chapter" data-roll={activeTag ? undefined : rollOf.get(`/blog/${post.id}/`)}>
             <span class="cap">Caput {roman(chapters.get(post.id) ?? 1)}</span>
             <span class="title">{post.data.title}</span>
             <span class="date"><time datetime={post.data.pubDate.toISOString()}>{date(post.data.pubDate)}</time></span>
@@ -152,7 +159,8 @@ const description = activeTag ? `Field notes on ${activeTag}.` : 'Field notes: w
   }
 
   .chapter:hover .title,
-  .chapter:focus-visible .title {
+  .chapter:focus-visible .title,
+  .chapter.is-lit .title {
     color: var(--rubric);
   }
 
