@@ -20,6 +20,7 @@ import {
   stall,
   statua,
   templum,
+  laurea,
   tholos,
   togatus,
   vexillum,
@@ -340,6 +341,8 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
 
   const citizenGlow = { value: 0 };
   const citizen = build(togatus('walker'), [0, 0], Math.PI, material(citizenGlow));
+  // Crowned in red laurel, so the reader can find himself in the crowd.
+  citizen.add(new THREE.Mesh(merge(laurea()), material({ value: 1 })));
   // Back on the street where we went in, if we went in somewhere this visit.
   const outside = () => {
     let from: Place | null = null;

@@ -528,3 +528,41 @@ export function foculus() {
   parts.push(lathe([[0, 0.8], [0.12, 0.8], [0.26, 0.92], [0.27, 0.98], [0, 0.94]], 20));
   return { parts, flame: new THREE.Vector3(0, 0.98, 0) };
 }
+
+/**
+ * A laurel wreath for the reader's citizen: two branches of leaves round the
+ * head from the back, meeting short of the brow, the ties hanging behind.
+ * Sized for togatus() (the head at y ≈ 1.56); the front is +z.
+ */
+export function laurea() {
+  const parts: THREE.BufferGeometry[] = [];
+  const y = 1.6;
+  const r = 0.128;
+  const up = new THREE.Vector3(0, 1, 0);
+  const at = (a: number) => new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r);
+  const BACK = -Math.PI / 2;
+  const GAP = 0.42; // either side of the brow, left bare
+  for (const side of [1, -1]) {
+    // Round from the back to the front, one branch each way.
+    const end = BACK + side * (Math.PI - GAP);
+    const band: [number, number, number][] = [];
+    for (let k = 0; k <= 16; k++) band.push(at(BACK + ((end - BACK) * k) / 16).toArray() as [number, number, number]);
+    parts.push(tube(band, 0.006, 32, 4));
+    const LEAVES = 10;
+    for (let k = 0; k < LEAVES; k++) {
+      const a = BACK + ((end - BACK) * (k + 0.5)) / LEAVES;
+      const radial = new THREE.Vector3(Math.cos(a), 0, Math.sin(a));
+      const along = new THREE.Vector3(-Math.sin(a), 0, Math.cos(a)).multiplyScalar(side);
+      // Each leaf points along the branch toward the brow, raised, alternately out and in.
+      const out = k % 2 ? 0.014 : -0.002;
+      const dir = along.clone().addScaledVector(up, 0.8).addScaledVector(radial, out * 20).normalize();
+      const leaf = new THREE.SphereGeometry(1, 8, 6).scale(0.017, 0.042, 0.009);
+      leaf.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(up, dir));
+      leaf.translate(...at(a).addScaledVector(radial, out).add(new THREE.Vector3(0, 0.012 + (k % 2) * 0.006, 0)).toArray());
+      parts.push(leaf);
+    }
+  }
+  // The ties, hanging at the back of the head.
+  for (const s of [-1, 1]) parts.push(tube([[0, y, -r], [s * 0.025, y - 0.07, -r - 0.025], [s * 0.04, y - 0.16, -r - 0.02]], 0.006, 12, 4));
+  return parts;
+}

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { gsap } from 'gsap';
-import { arcus, cypress, matrona, statua, togatus } from './forum-models';
+import { arcus, cypress, laurea, matrona, statua, togatus } from './forum-models';
 import { buildModel, type PlateId } from './models';
 import { basis, bench, capsa, medicus, pavingRings, porticus } from './plaza-models';
 import { createBanner, createInk, createPasses, fine, inscriptionTexture, merge } from './passes';
@@ -215,6 +215,7 @@ export function createPlaza(canvas: HTMLCanvasElement, { monuments, name, reduce
   /* ── The citizen, in through the arch ── */
 
   const citizen = new THREE.Mesh(figures.civis, material());
+  citizen.add(new THREE.Mesh(merge(laurea()), material({ value: 1 }))); // his red laurel, as on the street
   scene.add(citizen);
   const obstacles = () => [
     { at: new THREE.Vector3(), r: 1.6 },

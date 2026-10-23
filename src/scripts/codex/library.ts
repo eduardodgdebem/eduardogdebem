@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { gsap } from 'gsap';
-import { matrona, togatus } from './forum-models';
+import { laurea, matrona, togatus } from './forum-models';
 import {
   CABINET,
   MENSA,
@@ -340,6 +340,7 @@ export function createLibrary(canvas: HTMLCanvasElement, { rolls, name, reducedM
   /* ── The citizen, in from the street ── */
 
   const citizen = new THREE.Mesh(figures.civis, material());
+  citizen.add(new THREE.Mesh(merge(laurea()), material({ value: 1 }))); // his red laurel, as on the street
   scene.add(citizen);
   const obstacles = [
     ...tables.map((tx) => ({ x0: tx - MENSA.w / 2 - 0.3, x1: tx + MENSA.w / 2 + 0.3, z0: tableZ - MENSA.d / 2 - 0.9, z1: tableZ + MENSA.d / 2 + 0.9 })),
