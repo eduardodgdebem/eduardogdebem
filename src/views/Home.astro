@@ -250,9 +250,16 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
   }
 
 
+  // Once he's on his way to a door, more taps change nothing.
+  let going = false;
   for (const a of links) {
     const place = a.dataset.place as Place;
-    const on = () => forum?.highlight(place);
+    // Only a mouse's hover, or the keyboard's focus, lights the building. On a
+    // touch screen a hover that changes the page makes iOS Safari take the
+    // first tap as the hover, and the link isn't followed.
+    const on = (e: Event) => {
+      if (e instanceof PointerEvent ? e.pointerType === 'mouse' : a.matches(':focus-visible')) forum?.highlight(place);
+    };
     const off = () => forum?.highlight(null);
     a.addEventListener('pointerenter', on);
     a.addEventListener('focus', on);
@@ -260,6 +267,7 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
     a.addEventListener('blur', off);
     a.addEventListener('click', (e) => {
       if (!forum || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      if (going) return e.preventDefault();
       // Nobody to watch him walk there (scrolled away, on a phone): just turn the page.
       if (!inView(canvas)) return;
       // Off-site (the workshop): the new tab must open from the click itself,
@@ -269,12 +277,17 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
         return;
       }
       e.preventDefault();
+      going = true;
       forum.walk(place).then(() => location.assign(a.href));
     });
   }
 
   // Back from the next page through the back/forward cache: the citizen is home again.
-  window.addEventListener('pageshow', (e) => e.persisted && forum?.reset());
+  window.addEventListener('pageshow', (e) => {
+    if (!e.persisted) return;
+    going = false;
+    forum?.reset();
+  });
 
   /* ── Jellyfin: cover engraving and marginal note ── */
 
