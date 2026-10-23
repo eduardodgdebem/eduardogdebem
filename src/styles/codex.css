@@ -421,6 +421,73 @@
   }
 }
 
+/* ── The language toggle, and the quill that rewrites the page ── */
+
+.lang {
+  display: flex;
+  gap: 0.1rem;
+  margin-left: 1rem;
+  font-family: 'IM Fell English SC', serif;
+}
+
+.lang button {
+  font: inherit;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  padding: 0 0.35rem;
+  color: var(--ink-soft);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.lang button:hover {
+  color: var(--ink);
+}
+
+.lang button[aria-pressed='true'] {
+  color: var(--rubric);
+  border-color: var(--rule);
+}
+
+/* Words being replaced lift off the page… */
+.quill-out {
+  opacity: 0;
+  transition: opacity 0.18s ease-in;
+}
+
+/* …and the new ones are inked in, one letter after another. */
+.quill {
+  display: inline;
+  animation: quill 0.32s ease-out var(--d, 0ms) both;
+}
+
+@keyframes quill {
+  from {
+    opacity: 0;
+    filter: blur(1.5px);
+    text-shadow: 0 0 0.12em currentColor;
+  }
+  60% {
+    opacity: 1;
+    filter: none;
+  }
+  to {
+    opacity: 1;
+    text-shadow: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quill,
+  .quill-out {
+    animation: none;
+    transition: none;
+    opacity: 1;
+  }
+}
+
 /* ── Book typography ── */
 
 .rubric {
@@ -864,6 +931,19 @@ html:active-view-transition-type(back)::view-transition-new(recto) {
   .book .verso .folio,
   .book .recto .running .mark-text {
     display: none;
+  }
+
+  /* The nav and the language toggle share one line: set them closer. */
+  .recto .running {
+    letter-spacing: 0.05em;
+  }
+
+  .running-nav {
+    gap: 0.8rem;
+  }
+
+  .lang {
+    margin-left: 0.4rem;
   }
 
   /* One column: the top of the screen is the verso's, so it carries both. */

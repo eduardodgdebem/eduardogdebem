@@ -6,6 +6,7 @@ import Plate from './Plate.astro';
 import Library, { type LibraryRoll } from './Library.astro';
 import { plateForTags, subjectBanner } from '../scripts/codex/catalogue';
 import { SITE_TITLE } from '../consts';
+import { en } from '../i18n/strings';
 
 interface Props {
   posts: CollectionEntry<'blog'>[];
@@ -48,11 +49,11 @@ const description = activeTag ? `Field notes on ${activeTag}.` : 'Field notes: w
   <Fragment slot="recto">
     <header class="head">
       <p class="rubric">Liber I</p>
-      <h1>{activeTag ? <>Field notes <span class="de">de {activeTag}</span></> : 'Field notes'}</h1>
-      <p class="intro">What I built, read and learned, written down as I go.</p>
+      <h1><span data-i18n="notes.title">{en('notes.title')}</span>{activeTag && <> <span class="de">de {activeTag}</span></>}</h1>
+      <p class="intro" data-i18n="notes.intro">{en('notes.intro')}</p>
       <nav class="subjects" aria-label="Subjects">
-        <span class="subjects-label">Subjects:</span>
-        <a href="/blog" class="subject" aria-current={!activeTag ? 'page' : undefined}>all</a>
+        <span class="subjects-label" data-i18n="notes.subjects">{en('notes.subjects')}</span>
+        <a href="/blog" class="subject" aria-current={!activeTag ? 'page' : undefined} data-i18n="notes.all">{en('notes.all')}</a>
         {allTags.map((t) => (
           <a href={`/blog/tag/${t}/`} class="subject" aria-current={t === activeTag ? 'page' : undefined}>{t}</a>
         ))}
@@ -77,7 +78,7 @@ const description = activeTag ? `Field notes on ${activeTag}.` : 'Field notes: w
       ))}
     </ol>
 
-    {posts.length === 0 && <p class="empty">Nothing written on this yet.</p>}
+    {posts.length === 0 && <p class="empty" data-i18n="notes.empty">{en('notes.empty')}</p>}
     <p class="fleuron" aria-hidden="true">❦</p>
   </Fragment>
 </Codex>

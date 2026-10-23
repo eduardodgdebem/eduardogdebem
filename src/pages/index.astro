@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import Codex from '../layouts/Codex.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import { en } from '../i18n/strings';
 
 const posts = (await getCollection('blog'))
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
@@ -19,13 +20,9 @@ const roman = (n: number) =>
     { n, out: '' },
   ).out;
 
-// The places in the forum on the left page, each standing for a page.
-const PLACES = {
-  forum: { latin: 'Via Sacra', note: 'walk the street, and go in at a door to turn the page.' },
-  bibliotheca: { latin: 'Bibliotheca', page: 'Field notes', note: 'the library, where the field notes are kept.' },
-  fabrica: { latin: 'Fabrica', page: 'Workshop · GitHub', note: 'the forge: the workshop, on GitHub.' },
-  statua: { latin: 'Statua', page: 'Of the author', note: 'the author, in stone and at length.' },
-};
+// The places in the forum on the left page, each standing for a page. Their
+// notes are in src/i18n/strings.ts, under place.<id>.
+const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabrica', statua: 'Statua' };
 ---
 
 <Codex title={SITE_TITLE} description={SITE_DESCRIPTION} folio={1} fit>
@@ -45,47 +42,40 @@ const PLACES = {
       </div>
       <figcaption class="plate-caption" data-places={JSON.stringify(PLACES)}>
         <span class="tab">Tab. I</span>
-        <span class="cap-latin" data-cap-latin>{PLACES.forum.latin}</span>
-        <span class="cap-note" data-cap-note>{PLACES.forum.note}</span>
+        <span class="cap-latin" data-cap-latin>{PLACES.forum}</span>
+        <span class="cap-note" data-cap-note>{en('place.forum')}</span>
       </figcaption>
     </figure>
 
     <p class="plate-nav">
-      <span class="hint"><kbd>←</kbd><kbd>→</kbd> or <kbd>A</kbd><kbd>D</kbd> to walk · <kbd>Enter</kbd> at a door to go in · or click a building</span>
+      <span class="hint" data-i18n-html="home.hint" set:html={en('home.hint')} />
     </p>
-    <p class="touch-hint">Tap the street to walk there, or a building to go in.</p>
+    <p class="touch-hint" data-i18n="home.touch">{en('home.touch')}</p>
   </Fragment>
 
   <!-- Recto: who this is and how to reach him, the index, and what he is listening to -->
   <Fragment slot="recto">
     <header class="author">
       <h1>Eduardo de Bem</h1>
-      <p class="role">Full stack developer · Florianópolis, Brazil</p>
+      <p class="role" data-i18n="home.role">{en('home.role')}</p>
       <p class="links">
-        <a href="mailto:eduardogdebem@gmail.com">Email</a>
+        <a href="mailto:eduardogdebem@gmail.com" data-i18n="link.email">{en('link.email')}</a>
         <a href="https://linkedin.com/in/eduardogdebem" target="_blank" rel="noopener noreferrer">LinkedIn</a>
         <a href="https://github.com/eduardodgdebem" target="_blank" rel="noopener noreferrer">GitHub</a>
-        <a href="/about#correspondence">Contact</a>
+        <a href="/about#correspondence" data-i18n="link.contact">{en('link.contact')}</a>
       </p>
     </header>
 
     <div class="bio">
-      <p class="lede">
-        <span class="initial">I</span> work at Zallpy, where right now I'm writing data pipelines for BMW Europe in
-        Node.js and PostgreSQL. Before that I built the Angular front end of a BMW USA financial platform and got its
-        load time from over ten seconds to under one.
-      </p>
-      <p class="more">
-        I started out at eTopocart, on maps and very large tables for city halls. I'm finishing Computer Science at
-        UNISUL in {roman(2026)}. I played the violin for years; now I only listen.
-      </p>
+      <p class="lede" data-i18n-html="home.lede" set:html={en('home.lede')} />
+      <p class="more" data-i18n="home.more">{en('home.more')}</p>
     </div>
 
     <nav class="contents" aria-label="Contents">
       <p class="rubric">Index</p>
       <ol>
         <li class="chapter">
-          <a href="/blog" data-place="bibliotheca"><span class="num">I.</span><span class="label">Field notes</span><span class="leader"></span><span class="pg">all</span></a>
+          <a href="/blog" data-place="bibliotheca"><span class="num">I.</span><span class="label" data-i18n="home.index.notes">{en('home.index.notes')}</span><span class="leader"></span><span class="pg" data-i18n="home.index.notes.pg">{en('home.index.notes.pg')}</span></a>
           <ol class="sub">
             {posts.map((p) => (
               <li>
@@ -95,13 +85,13 @@ const PLACES = {
           </ol>
         </li>
         <li class="chapter">
-          <a href="/about" data-place="statua"><span class="num">II.</span><span class="label">Of the author, at length</span><span class="leader"></span><span class="pg">about</span></a>
+          <a href="/about" data-place="statua"><span class="num">II.</span><span class="label" data-i18n="home.index.author">{en('home.index.author')}</span><span class="leader"></span><span class="pg" data-i18n="home.index.author.pg">{en('home.index.author.pg')}</span></a>
         </li>
         <li class="chapter">
-          <a href="https://github.com/eduardodgdebem" target="_blank" rel="noopener noreferrer" data-place="fabrica"><span class="num">III.</span><span class="label">Workshop</span><span class="leader"></span><span class="pg">github</span></a>
+          <a href="https://github.com/eduardodgdebem" target="_blank" rel="noopener noreferrer" data-place="fabrica"><span class="num">III.</span><span class="label" data-i18n="home.index.workshop">{en('home.index.workshop')}</span><span class="leader"></span><span class="pg">github</span></a>
         </li>
         <li class="chapter">
-          <a href="/about#correspondence"><span class="num">IV.</span><span class="label">Correspondence</span><span class="leader"></span><span class="pg">contact</span></a>
+          <a href="/about#correspondence"><span class="num">IV.</span><span class="label" data-i18n="home.index.letters">{en('home.index.letters')}</span><span class="leader"></span><span class="pg" data-i18n="home.index.letters.pg">{en('home.index.letters.pg')}</span></a>
         </li>
       </ol>
     </nav>
@@ -129,6 +119,7 @@ const PLACES = {
   import { createCoverEngraving } from '../scripts/codex/cover';
   import { createForum, type Place } from '../scripts/codex/forum';
   import { SPEECHES } from '../scripts/codex/orator';
+  import { onLang, pick, t } from '../scripts/codex/lang';
   import { inView } from '../scripts/codex/visible';
   import { bookOpened } from '../scripts/codex/opening';
 
@@ -144,7 +135,7 @@ const PLACES = {
   /* ── The forum: hover a place (here or in the index) to pick it out; go to it to turn the page ── */
 
   const caption = document.querySelector<HTMLElement>('.plate-caption')!;
-  const PLACES: Record<Place | 'forum', { latin: string; note: string; page?: string }> = JSON.parse(caption.dataset.places!);
+  const PLACES: Record<Place | 'forum', string> = JSON.parse(caption.dataset.places!);
   const tag = document.querySelector<HTMLElement>('[data-tag]')!;
   const tagLatin = tag.querySelector<HTMLElement>('[data-tag-latin]')!;
   const tagPage = tag.querySelector<HTMLElement>('[data-tag-page]')!;
@@ -159,11 +150,14 @@ const PLACES = {
   let speech = Math.floor(Math.random() * SPEECHES.length);
   let listening = false;
   let nextSpeech: ReturnType<typeof setTimeout> | undefined;
-  const speak = () => {
-    const { text, by } = SPEECHES[speech];
-    speech = (speech + 1) % SPEECHES.length;
+  const say = () => {
+    const { text, by } = pick(SPEECHES[speech], SPEECHES[speech].pt);
     tagPage.textContent = `“${text}”`;
     tagBy.textContent = `— ${by}`;
+  };
+  const speak = () => {
+    speech = (speech + 1) % SPEECHES.length;
+    say();
     clearTimeout(nextSpeech);
     nextSpeech = setTimeout(speak, 8000);
   };
@@ -175,10 +169,12 @@ const PLACES = {
   // The index's chapter line for each place, lit when its building is hovered in the scene.
   const chapterFor = (place: Place | null) => links.find((a) => a.dataset.place === place && !a.closest('.sub'));
 
+  let described: [Place | null, boolean] = [null, false];
   const describe = (place: Place | null, atDoor = false) => {
-    const entry = PLACES[place ?? 'forum'];
-    cap.latin.textContent = entry.latin;
-    cap.note.textContent = atDoor ? `${entry.note} ${touch ? 'Tap its label to go in.' : 'Press Enter to go in.'}` : entry.note;
+    described = [place, atDoor];
+    const note = t(`place.${place ?? 'forum'}`);
+    cap.latin.textContent = PLACES[place ?? 'forum'];
+    cap.note.textContent = atDoor ? `${note} ${t(touch ? 'home.door.touch' : 'home.door.key')}` : note;
   };
 
   const forum = createForum(canvas, {
@@ -190,36 +186,47 @@ const PLACES = {
       links.forEach((a) => a.classList.toggle('is-lit', a === chapterFor(place)));
     },
     onEnter: (place) => chapterFor(place)?.click(),
-    onTag: (subject, x, y) => {
-      tag.classList.toggle('is-shown', !!subject);
-      tagged = subject;
-      tag.classList.toggle('is-actionable', !!subject && subject !== 'orator');
-      tagAct.textContent = subject && subject !== 'orator' ? 'Tap here to go in ›' : '';
-      const orator = subject === 'orator';
-      tag.classList.toggle('is-speech', orator);
-      if (orator !== listening) {
-        listening = orator;
-        if (orator) speak();
-        else clearTimeout(nextSpeech);
-      }
-      if (!subject) return;
-      if (!orator) {
-        tagLatin.textContent = PLACES[subject].latin;
-        tagPage.textContent = PLACES[subject].page ?? '';
-        tagBy.textContent = '';
-      } else {
-        tagLatin.textContent = 'Orator';
-      }
-      // Kept inside the plate; it flips below its building near the top edge.
-      const w = tag.offsetWidth;
-      const frame = tag.parentElement!.clientWidth;
-      tag.style.left = `${Math.min(Math.max(x, w / 2 + 6), frame - w / 2 - 6)}px`;
-      tag.style.top = `${y}px`;
-      tag.classList.toggle('is-below', y < tag.offsetHeight + 70);
-    },
+    onTag: (subject, x, y) => showTag(subject, x, y),
   });
   if (!forum) root.classList.add('no-webgl');
   forum?.intro(bookOpened());
+
+  function showTag(subject: Place | 'orator' | null, x: number, y: number) {
+    shownTag = [subject, x, y];
+    tag.classList.toggle('is-shown', !!subject);
+    tagged = subject;
+    tag.classList.toggle('is-actionable', !!subject && subject !== 'orator');
+    tagAct.textContent = subject && subject !== 'orator' ? t('home.act') : '';
+    const orator = subject === 'orator';
+    tag.classList.toggle('is-speech', orator);
+    if (orator !== listening) {
+      listening = orator;
+      if (orator) speak();
+      else clearTimeout(nextSpeech);
+    }
+    if (!subject) return;
+    if (!orator) {
+      tagLatin.textContent = PLACES[subject];
+      tagPage.textContent = t(`place.${subject}.page`);
+      tagBy.textContent = '';
+    } else {
+      tagLatin.textContent = 'Orator';
+    }
+    // Kept inside the plate; it flips below its building near the top edge.
+    const w = tag.offsetWidth;
+    const frame = tag.parentElement!.clientWidth;
+    tag.style.left = `${Math.min(Math.max(x, w / 2 + 6), frame - w / 2 - 6)}px`;
+    tag.style.top = `${y}px`;
+    tag.classList.toggle('is-below', y < tag.offsetHeight + 70);
+  }
+  let shownTag: [Place | 'orator' | null, number, number] = [null, 0, 0];
+
+  // Another language: the caption, and any label showing, in it.
+  onLang(() => {
+    describe(...described);
+    showTag(...shownTag);
+    if (listening) say();
+  });
 
   for (const a of links) {
     const place = a.dataset.place as Place;

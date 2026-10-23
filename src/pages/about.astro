@@ -2,30 +2,25 @@
 import Plaza, { type PlazaMonument } from '../components/Plaza.astro';
 import Codex from '../layouts/Codex.astro';
 import { SITE_TITLE } from '../consts';
+import { en, type StringKey } from '../i18n/strings';
 
 const EMAIL = 'eduardogdebem@gmail.com';
 const LINKEDIN = 'https://linkedin.com/in/eduardogdebem';
 const GITHUB = 'https://github.com/eduardodgdebem';
 
-const notes: [string, string[]][] = [
-  ['Currently', ['Full stack at Zallpy', 'Data pipelines for BMW Europe', 'Finishing CS at UNISUL']],
-  ['Reading', ['Sci-fi', 'Fantasy', 'Whatever catches me']],
-  ['Racing', ['Formula 1', 'Constructor standings > driver standings']],
-  ['Fighting', ['MMA', 'Boxing', 'Combat sports in general']],
-  ['Music', ['Played the violin for years', 'Still listens']],
-  ['Tongues', ['Portuguese — native', 'English — advanced', 'Spanish — intermediate']],
+// The marginal notes, each standing as a monument in the plaza on the left
+// page. Their heads and items are in src/i18n/strings.ts, under note.<key>.
+const NOTES: { key: string; plate: PlazaMonument['plate']; inscription: string }[] = [
+  { key: 'currently', plate: 'machina', inscription: 'OFFICINA' },
+  { key: 'reading', plate: 'liber', inscription: 'LIBRI' },
+  { key: 'racing', plate: 'currus', inscription: 'CIRCVS' },
+  { key: 'fighting', plate: 'galea', inscription: 'PVGNA' },
+  { key: 'music', plate: 'fides', inscription: 'MVSICA' },
+  { key: 'tongues', plate: 'stilus', inscription: 'LINGVAE' },
 ];
-
-// Each note stands as a monument in the plaza on the left page.
-const MONUMENT: Record<string, Pick<PlazaMonument, 'plate' | 'inscription'>> = {
-  Currently: { plate: 'machina', inscription: 'OFFICINA' },
-  Reading: { plate: 'liber', inscription: 'LIBRI' },
-  Racing: { plate: 'currus', inscription: 'CIRCVS' },
-  Fighting: { plate: 'galea', inscription: 'PVGNA' },
-  Music: { plate: 'fides', inscription: 'MVSICA' },
-  Tongues: { plate: 'stilus', inscription: 'LINGVAE' },
-};
-const monuments: PlazaMonument[] = notes.map(([head, items]) => ({ ...MONUMENT[head], head, text: items.join(' · ') }));
+const head = (key: string) => `note.${key}` as StringKey;
+const items = (key: string) => `note.${key}.items` as StringKey;
+const monuments: PlazaMonument[] = NOTES.map(({ key, plate, inscription }) => ({ key, plate, inscription }));
 ---
 
 <Codex
@@ -41,66 +36,37 @@ const monuments: PlazaMonument[] = notes.map(([head, items]) => ({ ...MONUMENT[h
     <p class="rubric">Liber II · De auctore</p>
     <h1>Eduardo de Bem</h1>
     <p class="reach">
-      <a href={`mailto:${EMAIL}`}>Email</a>
+      <a href={`mailto:${EMAIL}`} data-i18n="link.email">{en('link.email')}</a>
       <a href={LINKEDIN} target="_blank" rel="noopener noreferrer">LinkedIn</a>
       <a href={GITHUB} target="_blank" rel="noopener noreferrer">GitHub</a>
-      <a href="#correspondence">All contact details ↓</a>
+      <a href="#correspondence" data-i18n="about.all">{en('about.all')}</a>
     </p>
 
     <div class="codex-prose">
-      <p>
-        Hi, I'm Eduardo, a full stack developer in Florianópolis. I work at Zallpy, where I started as a front-end intern in 2024
-        and I'm now a mid-level developer. These days I'm on a BMW Europe project, writing the back-end pipelines that
-        pull data in, transform it and run the background jobs around it, in Node.js, PostgreSQL and BullMQ.
-      </p>
-      <p>
-        Before that I was on BMW USA's financial platform, building the Angular front end as micro frontends on top
-        of .NET and MuleSoft services. The part I'm proudest of is the load time: it went from over ten seconds to
-        under one. I also built Dema, a platform in React, NestJS, RabbitMQ and PostgreSQL that shows people in
-        Brazil the social programs they can get, and suggests careers from a personality test and what's on offer in
-        their city.
-      </p>
-      <p>
-        My first job as a developer was at eTopocart in Criciúma, on a geoprocessing platform that city halls around
-        Brazil use. It was mostly maps and a lot of data: I made the map views render faster, built tables that hold
-        more than ten thousand rows without choking, and moved report generation onto AWS Lambda.
-      </p>
-      <p>
-        In 2023 I took a year off and lived between the US and Europe, mostly to get my English where I wanted it.
-        I'm finishing Computer Science at UNISUL this year. Until July I also volunteered on TEKTAI, an augmented
-        reality project for students there, which is where I learned enough WebGL to draw the plates in this book.
-      </p>
-      <p>I played the violin for years. I don't anymore, but I still listen to a lot of music.</p>
-
-      <h2>What I work with</h2>
-      <p>
-        Mostly TypeScript: Angular or React on the front, Node.js, NestJS or .NET on the back. PostgreSQL and SQL
-        Server for data, RabbitMQ and BullMQ for queues, AWS Lambda and API Gateway when it runs in the cloud. I'm
-        happy to learn whatever else a project needs.
-      </p>
+      {(['about.p1', 'about.p2', 'about.p3', 'about.p4', 'about.p5'] as const).map((k) => <p data-i18n={k}>{en(k)}</p>)}
+      <h2 data-i18n="about.stack.head">{en('about.stack.head')}</h2>
+      <p data-i18n="about.stack">{en('about.stack')}</p>
     </div>
 
     <h2 class="rubric notes-head">Marginalia</h2>
     <dl class="notes">
-      {notes.map(([head, items], i) => (
+      {NOTES.map(({ key }, i) => (
         <div data-monument={i}>
-          <dt>{head}</dt>
-          <dd>{items.join(' · ')}</dd>
+          <dt data-i18n={head(key)}>{en(head(key))}</dt>
+          <dd data-i18n={items(key)}>{en(items(key))}</dd>
         </div>
       ))}
     </dl>
 
     <section class="correspondence" id="correspondence" aria-labelledby="correspondence-head">
-      <h2 class="rubric notes-head" id="correspondence-head">Correspondence</h2>
-      <p class="contact">
-        For a role, a project, or a question about something I wrote, email is the quickest way to reach me.
-      </p>
+      <h2 class="rubric notes-head" id="correspondence-head" data-i18n="letters.head">{en('letters.head')}</h2>
+      <p class="contact" data-i18n="letters.intro">{en('letters.intro')}</p>
       <dl class="letters">
         <div>
-          <dt>Email</dt>
+          <dt data-i18n="link.email">{en('link.email')}</dt>
           <dd>
             <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
-            <button type="button" class="copy" data-copy={EMAIL}>Copy</button>
+            <button type="button" class="copy" data-copy={EMAIL} data-i18n="letters.copy">{en('letters.copy')}</button>
           </dd>
         </div>
         <div>
@@ -112,16 +78,16 @@ const monuments: PlazaMonument[] = notes.map(([head, items]) => ({ ...MONUMENT[h
           <dd><a href={GITHUB} target="_blank" rel="noopener noreferrer">github.com/eduardodgdebem</a></dd>
         </div>
         <div>
-          <dt>Based in</dt>
-          <dd>Florianópolis, Brazil · UTC−3</dd>
+          <dt data-i18n="letters.based">{en('letters.based')}</dt>
+          <dd data-i18n="letters.based.value">{en('letters.based.value')}</dd>
         </div>
         <div>
-          <dt>Speaks</dt>
-          <dd>Portuguese, English, Spanish</dd>
+          <dt data-i18n="letters.speaks">{en('letters.speaks')}</dt>
+          <dd data-i18n="letters.speaks.value">{en('letters.speaks.value')}</dd>
         </div>
       </dl>
       <p class="write">
-        <a class="write-button" href={`mailto:${EMAIL}?subject=${encodeURIComponent('Hello Eduardo')}`}>Write to me</a>
+        <a class="write-button" href={`mailto:${EMAIL}?subject=${encodeURIComponent('Hello Eduardo')}`} data-i18n="letters.write">{en('letters.write')}</a>
       </p>
     </section>
     <p class="fleuron" aria-hidden="true">❦</p>
@@ -129,17 +95,19 @@ const monuments: PlazaMonument[] = notes.map(([head, items]) => ({ ...MONUMENT[h
 </Codex>
 
 <script>
+  import { t } from '../scripts/codex/lang';
+
   // Copy the address, for readers whose mailto links go nowhere.
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-copy]')) {
     button.addEventListener('click', async () => {
       try {
         await navigator.clipboard.writeText(button.dataset.copy!);
-        button.textContent = 'Copied';
+        button.textContent = t('letters.copied');
       } catch {
-        button.textContent = 'Press ⌘C';
+        button.textContent = t('letters.copy.key');
         getSelection()?.selectAllChildren(button.previousElementSibling!);
       }
-      setTimeout(() => (button.textContent = 'Copy'), 2000);
+      setTimeout(() => (button.textContent = t('letters.copy')), 2000);
     });
   }
 </script>

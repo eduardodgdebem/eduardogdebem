@@ -3,6 +3,7 @@
 // The citizen walks the reading room; every post is a roll on the shelves.
 // Rolls are linked to the chapter list on the same spread by index: an element
 // with `data-roll={i}` lights roll i.
+import { en } from '../i18n/strings';
 
 export interface LibraryRoll {
   id: string;
@@ -35,18 +36,17 @@ const { rolls, banner } = Astro.props;
   <figcaption class="plate-caption">
     <span class="tab">Tab. IV</span>
     <span class="cap-latin">Bibliotheca</span>
-    <span class="cap-note">the reading room; every red-tagged roll is a chapter.</span>
+    <span class="cap-note" data-i18n="library.note">{en('library.note')}</span>
   </figcaption>
 </figure>
-<p class="touch-hint">Tap the floor to walk there, or a roll to read it.</p>
-<p class="library-hint">
-  <kbd>←</kbd><kbd>→</kbd> or <kbd>A</kbd><kbd>D</kbd> to walk · <kbd>Enter</kbd> at a roll to read it · or click one
-</p>
+<p class="touch-hint" data-i18n="library.touch">{en('library.touch')}</p>
+<p class="library-hint" data-i18n-html="library.hint" set:html={en('library.hint')} />
 
 <script>
   import { createLibrary, type Subject } from '../scripts/codex/library';
   import { bookOpened } from '../scripts/codex/opening';
   import { inView } from '../scripts/codex/visible';
+  import { onLang, t } from '../scripts/codex/lang';
   import type { LibraryRoll } from './Library.astro';
 
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -72,9 +72,9 @@ const { rolls, banner } = Astro.props;
     library.open(i).then(() => location.assign(href));
   };
 
-  const LABELS: Record<Exclude<Subject, number>, [string, string, string]> = {
-    exitus: ['Exitus', 'back out to the Via Sacra', touch ? '' : 'press Enter'],
-    cogitator: ['Cogitator', 'a thinker, some eighteen centuries early', 'after Rodin'],
+  const LABELS: Record<Exclude<Subject, number>, () => [string, string, string]> = {
+    exitus: () => ['Exitus', t('exitus.page'), touch ? '' : t('exitus.key')],
+    cogitator: () => ['Cogitator', t('cogitator.page'), t('cogitator.by')],
   };
 
   // On touch screens the label at a roll (or the door) is the way in.
@@ -92,28 +92,34 @@ const { rolls, banner } = Astro.props;
     onFocus: (i) => links.forEach((a) => a.classList.toggle('is-lit', a === linkFor(i))),
     onOpen: read,
     onExit: () => (library ? library.leave().then(() => location.assign('/')) : location.assign('/')),
-    onTag: (subject, x, y) => {
-      tag.classList.toggle('is-shown', subject !== null);
-      if (subject === null) return (tagged = null);
-      const [latin, page, by] =
-        typeof subject === 'number' ? [`Caput ${rolls[subject].numeral}`, rolls[subject].title, rolls[subject].date] : LABELS[subject];
-      tagLatin.textContent = latin;
-      tagPage.textContent = page;
-      tagBy.textContent = by;
-      tagged = subject;
-      const act = typeof subject === 'number' ? 'Tap here to read it ›' : subject === 'exitus' ? 'Tap here to leave ›' : '';
-      tag.classList.toggle('is-actionable', !!act);
-      tagAct.textContent = act;
-      // Kept inside the plate; it flips below its subject near the top edge.
-      const w = tag.offsetWidth;
-      const frame = tag.parentElement!.clientWidth;
-      tag.style.left = `${Math.min(Math.max(x, w / 2 + 6), frame - w / 2 - 6)}px`;
-      tag.style.top = `${y}px`;
-      tag.classList.toggle('is-below', y < tag.offsetHeight + 70);
-    },
+    onTag: (subject, x, y) => showTag(subject, x, y),
   });
   if (!library) document.documentElement.classList.add('no-webgl');
   library?.intro(bookOpened());
+
+  let shownTag: [Subject | null, number, number] = [null, 0, 0];
+  function showTag(subject: Subject | null, x: number, y: number) {
+    shownTag = [subject, x, y];
+    tag.classList.toggle('is-shown', subject !== null);
+    if (subject === null) return (tagged = null);
+    const [latin, page, by] =
+      typeof subject === 'number' ? [`Caput ${rolls[subject].numeral}`, rolls[subject].title, rolls[subject].date] : LABELS[subject]();
+    tagLatin.textContent = latin;
+    tagPage.textContent = page;
+    tagBy.textContent = by;
+    tagged = subject;
+    const act = typeof subject === 'number' ? t('library.read') : subject === 'exitus' ? t('exitus.act') : '';
+    tag.classList.toggle('is-actionable', !!act);
+    tagAct.textContent = act;
+    // Kept inside the plate; it flips below its subject near the top edge.
+    const w = tag.offsetWidth;
+    const frame = tag.parentElement!.clientWidth;
+    tag.style.left = `${Math.min(Math.max(x, w / 2 + 6), frame - w / 2 - 6)}px`;
+    tag.style.top = `${y}px`;
+    tag.classList.toggle('is-below', y < tag.offsetHeight + 70);
+  }
+  // Another language: any label showing, in it.
+  onLang(() => showTag(...shownTag));
 
   // The chapter list on the facing page draws out its roll.
   for (const a of links) {
