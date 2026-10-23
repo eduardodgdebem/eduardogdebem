@@ -17,7 +17,7 @@ import {
   rollParts,
   spiral,
 } from './library-models';
-import { createBanner, createInk, createPasses, fine, inscriptionTexture, merge } from './passes';
+import { createBanner, createInk, createPasses, fine, inscriptionTexture, merge, plateZoom } from './passes';
 import { createWalker } from './walker';
 
 // The field notes' plate: inside the Bibliotheca. The reader's citizen comes in
@@ -442,7 +442,9 @@ export function createLibrary(canvas: HTMLCanvasElement, { rolls, name, reducedM
     const x = ((e.clientX - r.left) / r.width) * 2 - 1;
     const y = -(((e.clientY - r.top) / r.height) * 2 - 1);
     const inside = Math.abs(x) <= 1 && Math.abs(y) <= 1;
-    tiltTarget.set(inside ? x : 0, inside ? y : 0);
+    // The view leans toward a mouse only: a finger would leave it leaning wherever it last touched.
+    const leaning = inside && e.pointerType === 'mouse';
+    tiltTarget.set(leaning ? x : 0, leaning ? y : 0);
     if (e.pointerType !== 'mouse' || busy) return;
     let subject: Subject | null = null;
     if (inside) {
@@ -554,16 +556,20 @@ export function createLibrary(canvas: HTMLCanvasElement, { rolls, name, reducedM
 
   let halfW = FIT_W / 2;
   let halfH = FIT_H / 2;
-  const view = { x: citizen.position.x };
+  const view = { x: citizen.position.x, z: 0 };
+  let zoom = 1;
   const target = new THREE.Vector3();
   const lean = new THREE.Vector3();
   const follow = (dt: number) => {
     const goal = listed !== null && !busy ? posts[listed].x : citizen.position.x;
     const limit = Math.max(0, half + 0.6 - halfW);
     const x = THREE.MathUtils.clamp(goal, -limit, limit);
-    view.x += (x - view.x) * (reducedMotion ? 1 : 1 - Math.exp(-dt * 3));
+    const k = reducedMotion ? 1 : 1 - Math.exp(-dt * 3);
+    view.x += (x - view.x) * k;
+    // Closed in on a phone: follow him from the shelves to the front of the room too.
+    view.z += ((zoom < 1 ? (citizen.position.z - VIEW_Z) * 0.5 : 0) - view.z) * k;
     if (!reducedMotion) tilt.lerp(tiltTarget, 1 - Math.exp(-dt * 4));
-    target.set(view.x, VIEW_Y, VIEW_Z);
+    target.set(view.x, VIEW_Y, VIEW_Z + view.z);
     lean.set(tilt.x * 0.1, -tilt.y * 0.055, 0).add(VIEW_DIR).normalize();
     camera.position.copy(target).addScaledVector(lean, VIEW_DIST);
     camera.lookAt(target);
@@ -577,7 +583,8 @@ export function createLibrary(canvas: HTMLCanvasElement, { rolls, name, reducedM
     if (!w || !h) return;
     passes.setSize(w, h);
     const aspect = w / h;
-    halfH = Math.max(FIT_H / 2, FIT_W / 2 / aspect);
+    zoom = plateZoom(w);
+    halfH = Math.max((FIT_H * zoom) / 2, (FIT_W * zoom) / 2 / aspect);
     halfW = halfH * aspect;
     Object.assign(camera, { left: -halfW, right: halfW, top: halfH, bottom: -halfH });
     camera.updateProjectionMatrix();

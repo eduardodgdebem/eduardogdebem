@@ -21,7 +21,7 @@ const roman = (n: number) =>
 
 // The places in the forum on the left page, each standing for a page.
 const PLACES = {
-  forum: { latin: 'Via Sacra', note: 'walk the street; at a door, press Enter to go in and turn the page.' },
+  forum: { latin: 'Via Sacra', note: 'walk the street, and go in at a door to turn the page.' },
   bibliotheca: { latin: 'Bibliotheca', page: 'Field notes', note: 'the library, where the field notes are kept.' },
   fabrica: { latin: 'Fabrica', page: 'Workshop · GitHub', note: 'the forge: the workshop, on GitHub.' },
   statua: { latin: 'Statua', page: 'Of the author', note: 'the author, in stone and at length.' },
@@ -40,6 +40,7 @@ const PLACES = {
           <span class="tag-latin" data-tag-latin></span>
           <span class="tag-page" data-tag-page></span>
           <span class="tag-by" data-tag-by></span>
+          <span class="tag-act" data-tag-act></span>
         </div>
       </div>
       <figcaption class="plate-caption" data-places={JSON.stringify(PLACES)}>
@@ -52,6 +53,7 @@ const PLACES = {
     <p class="plate-nav">
       <span class="hint"><kbd>←</kbd><kbd>→</kbd> or <kbd>A</kbd><kbd>D</kbd> to walk · <kbd>Enter</kbd> at a door to go in · or click a building</span>
     </p>
+    <p class="touch-hint">Tap the street to walk there, or a building to go in.</p>
   </Fragment>
 
   <!-- Recto: who this is and how to reach him, the index, and what he is listening to -->
@@ -131,6 +133,8 @@ const PLACES = {
 
   const root = document.documentElement;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // No hover, no keyboard: labels are tapped instead of Enter pressed.
+  const touch = matchMedia('(hover: none)').matches;
   const canvas = document.getElementById('engraving') as HTMLCanvasElement;
 
   // The banderole and the inscriptions letter with the page fonts, so wait for them.
@@ -144,6 +148,10 @@ const PLACES = {
   const tagLatin = tag.querySelector<HTMLElement>('[data-tag-latin]')!;
   const tagPage = tag.querySelector<HTMLElement>('[data-tag-page]')!;
   const tagBy = tag.querySelector<HTMLElement>('[data-tag-by]')!;
+  const tagAct = tag.querySelector<HTMLElement>('[data-tag-act]')!;
+  // On touch screens the label at a door is the way in.
+  let tagged: Place | 'orator' | null = null;
+  tag.addEventListener('click', () => tagged && tagged !== 'orator' && chapterFor(tagged)?.click());
 
   // The orator: a new speech each time the citizen comes within earshot, and
   // another every little while he stays to listen.
@@ -169,7 +177,7 @@ const PLACES = {
   const describe = (place: Place | null, atDoor = false) => {
     const entry = PLACES[place ?? 'forum'];
     cap.latin.textContent = entry.latin;
-    cap.note.textContent = atDoor ? `${entry.note} Press Enter to go in.` : entry.note;
+    cap.note.textContent = atDoor ? `${entry.note} ${touch ? 'Tap its label to go in.' : 'Press Enter to go in.'}` : entry.note;
   };
 
   const forum = createForum(canvas, {
@@ -183,6 +191,9 @@ const PLACES = {
     onEnter: (place) => chapterFor(place)?.click(),
     onTag: (subject, x, y) => {
       tag.classList.toggle('is-shown', !!subject);
+      tagged = subject;
+      tag.classList.toggle('is-actionable', !!subject && subject !== 'orator');
+      tagAct.textContent = subject && subject !== 'orator' ? 'Tap here to go in ›' : '';
       const orator = subject === 'orator';
       tag.classList.toggle('is-speech', orator);
       if (orator !== listening) {

@@ -387,6 +387,40 @@
   }
 }
 
+/* On touch screens there's no hover and no Enter key: a label that can be
+   acted on (a door, a roll) says so, and is tapped to act. */
+.tag-act {
+  display: none;
+  margin-top: 0.15rem;
+  font-family: 'IM Fell English SC', serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  color: var(--rubric);
+}
+
+.touch-hint {
+  display: none;
+}
+
+@media (hover: none) {
+  .place-tag.is-actionable {
+    pointer-events: auto;
+    cursor: pointer;
+  }
+
+  .place-tag.is-actionable .tag-act {
+    display: block;
+  }
+
+  .touch-hint {
+    display: block;
+    margin: 0.4rem 12px 0;
+    font-style: italic;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+}
+
 /* ── Book typography ── */
 
 .rubric {
@@ -817,9 +851,14 @@ html:active-view-transition-type(back)::view-transition-new(recto) {
     flex: none;
   }
 
+  /* Taller than wide on a phone: more room for the scene, and it reads at a
+     glance. The width is set outright (the page less the frame's 12px
+     margins): with only an aspect ratio, Safari sizes the frame wider than
+     the page and it sits off to the right. */
   .book .plate-frame {
     flex: none;
-    aspect-ratio: 1;
+    width: calc(100% - 24px);
+    aspect-ratio: 4 / 5;
   }
 
   .book .verso .folio,

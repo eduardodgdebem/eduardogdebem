@@ -236,3 +236,12 @@ export function createBanner(camera: THREE.Camera, name: string, light: { value:
     },
   };
 }
+
+/* ── Small screens ── */
+
+/**
+ * How much of a walkable scene to show for a plate this wide (CSS px): on a
+ * phone the plate is half the width, so the view closes in, and follows the
+ * citizen up and down the scene as well as along it.
+ */
+export const plateZoom = (width: number) => (width < 560 ? 0.7 : 1);

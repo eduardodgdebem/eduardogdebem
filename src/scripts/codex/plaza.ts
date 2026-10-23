@@ -3,7 +3,7 @@ import { gsap } from 'gsap';
 import { arcus, cypress, laurea, matrona, statua, togatus } from './forum-models';
 import { buildModel, type PlateId } from './models';
 import { basis, bench, capsa, medicus, pavingRings, porticus } from './plaza-models';
-import { createBanner, createInk, createPasses, fine, inscriptionTexture, merge } from './passes';
+import { createBanner, createInk, createPasses, fine, inscriptionTexture, merge, plateZoom } from './passes';
 import { createWalker } from './walker';
 
 // The about page's plate: the author's plaza. The citizen comes in from the
@@ -26,6 +26,8 @@ export type Subject = number | 'statua' | 'exitus' | 'capsa' | 'medicus';
 export interface Plaza {
   /** Pick a monument out and bring it into view (null: none). */
   highlight(index: number | null): void;
+  /** Turn a monument's object once round. */
+  turn(index: number): void;
   /** Walk out through the arch; resolves at the threshold. */
   leave(): Promise<void>;
   reset(): void;
@@ -319,7 +321,9 @@ export function createPlaza(canvas: HTMLCanvasElement, { monuments, name, reduce
     const x = ((e.clientX - r.left) / r.width) * 2 - 1;
     const y = -(((e.clientY - r.top) / r.height) * 2 - 1);
     const inside = Math.abs(x) <= 1 && Math.abs(y) <= 1;
-    tiltTarget.set(inside ? x : 0, inside ? y : 0);
+    // The view leans toward a mouse only: a finger would leave it leaning wherever it last touched.
+    const leaning = inside && e.pointerType === 'mouse';
+    tiltTarget.set(leaning ? x : 0, leaning ? y : 0);
     if (e.pointerType !== 'mouse' || busy) return;
     const subject = inside ? pickAt(e) : null;
     canvas.style.cursor = subject !== null ? 'pointer' : '';
@@ -473,6 +477,7 @@ export function createPlaza(canvas: HTMLCanvasElement, { monuments, name, reduce
   let halfW = FIT_W / 2;
   let halfH = FIT_H / 2;
   const view = new THREE.Vector2(citizen.position.x, citizen.position.z);
+  let zoom = 1;
   const target = new THREE.Vector3();
   const lean = new THREE.Vector3();
   const follow = (dt: number) => {
@@ -496,7 +501,8 @@ export function createPlaza(canvas: HTMLCanvasElement, { monuments, name, reduce
     if (!w || !h) return;
     passes.setSize(w, h);
     const aspect = w / h;
-    halfH = Math.max(FIT_H / 2, FIT_W / 2 / aspect);
+    zoom = plateZoom(w);
+    halfH = Math.max((FIT_H * zoom) / 2, (FIT_W * zoom) / 2 / aspect);
     halfW = halfH * aspect;
     Object.assign(camera, { left: -halfW, right: halfW, top: halfH, bottom: -halfH });
     camera.updateProjectionMatrix();
@@ -619,6 +625,7 @@ export function createPlaza(canvas: HTMLCanvasElement, { monuments, name, reduce
 
   return {
     highlight,
+    turn: turnOnce,
     leave,
     reset,
     intro,

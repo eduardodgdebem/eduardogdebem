@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { gsap } from 'gsap';
-import { createBanner, createInk, createPasses, fine, inscriptionTexture, merge } from './passes';
+import { createBanner, createInk, createPasses, fine, inscriptionTexture, merge, plateZoom } from './passes';
 import { createWalker } from './walker';
 import {
   arcus,
@@ -476,13 +476,15 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
 
   let halfW = FIT_W / 2;
   let halfH = FIT_H / 2;
+  let zoom = 1;
   const resize = () => {
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
     if (!w || !h) return;
     passes.setSize(w, h);
     const aspect = w / h;
-    halfH = Math.max(FIT_H / 2, FIT_W / 2 / aspect);
+    zoom = plateZoom(w);
+    halfH = Math.max((FIT_H * zoom) / 2, (FIT_W * zoom) / 2 / aspect);
     halfW = halfH * aspect;
     Object.assign(camera, { left: -halfW, right: halfW, top: halfH, bottom: -halfH });
     camera.updateProjectionMatrix();
@@ -532,8 +534,9 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     const x = ((e.clientX - r.left) / r.width) * 2 - 1;
     const y = -(((e.clientY - r.top) / r.height) * 2 - 1);
     const inside = Math.abs(x) <= 1 && Math.abs(y) <= 1;
-    // Over the plate, the view leans a little toward the pointer.
-    if (inside) tiltTarget.set(x, y);
+    // Over the plate, the view leans a little toward a mouse (a finger would
+    // leave it leaning wherever it last touched).
+    if (inside && e.pointerType === 'mouse') tiltTarget.set(x, y);
     else tiltTarget.set(0, 0);
     if (e.pointerType !== 'mouse' || entering) return;
     const hit = inside ? pick(e) : null;
@@ -628,7 +631,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
 
   /* ── The view follows the citizen (or the place named in the index) ── */
 
-  const view = { x: citizen.position.x };
+  const view = { x: citizen.position.x, z: 0 };
   const target = new THREE.Vector3();
   const tilt = new THREE.Vector2();
   const tiltTarget = new THREE.Vector2();
@@ -637,8 +640,11 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     const goal = indexed && !entering ? AT[indexed] : citizen.position.x;
     const limit = END + 4 - halfW;
     const x = THREE.MathUtils.clamp(goal, -limit, limit);
-    view.x += (x - view.x) * (reducedMotion ? 1 : 1 - Math.exp(-dt * 3));
-    target.set(view.x, VIEW_Y, VIEW_Z);
+    const k = reducedMotion ? 1 : 1 - Math.exp(-dt * 3);
+    view.x += (x - view.x) * k;
+    // Closed in on a phone: follow him across the street too.
+    view.z += ((zoom < 1 ? citizen.position.z * 0.6 : 0) - view.z) * k;
+    target.set(view.x, VIEW_Y, VIEW_Z + view.z);
     // A few degrees of tilt toward the pointer: round the street, and up or down it.
     if (!reducedMotion) tilt.lerp(tiltTarget, 1 - Math.exp(-dt * 4));
     lean.set(tilt.x * 0.1, -tilt.y * 0.055, 0).add(VIEW_DIR).normalize();
