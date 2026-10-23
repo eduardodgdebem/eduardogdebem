@@ -58,6 +58,18 @@ const nav = [
 <!doctype html>
 <html lang={lang === 'pt' ? 'pt-BR' : 'en'} data-folio={folio}>
   <head>
+    <!--
+      The opt-in to page turns between documents (Chrome 126+, Safari 18.2+;
+      others just navigate). It must be inline, first in the head: in the
+      built site, read from the bundled stylesheet it came too late for the
+      arriving page, and every turn was dropped. The turns themselves are in
+      codex.css.
+    -->
+    <style is:inline>
+      @view-transition {
+        navigation: auto;
+      }
+    </style>
     <BaseHead title={title} description={description} image={image} noindex={noindex} schema={schema} canonical={canonical} lang={lang} alternates={alternates} />
     <script is:inline>
       // The first page of a visit arrives as a closed book (Binding.astro).

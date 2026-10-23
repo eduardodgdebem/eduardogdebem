@@ -32,6 +32,8 @@ Page corners (`Corner.astro`, `corners.ts`, styles in `codex.css`): the top-left
 
 Opening: the first page of a visit arrives as a closed book. An inline script in `Codex.astro` sets `html.opening` before first paint (once per tab via `sessionStorage['codex-opened']`, never under reduced motion); `Binding.astro` is the board, whose gilt sigil tools in while the page loads; `opening.ts` swings it open. Plate intros wait on `bookOpened()`. To replay it, open the site in a new tab. Fade the board's faces, never `.board` itself: opacity flattens `preserve-3d` and the mirrored front shows through.
 
+**Gotcha:** the `@view-transition { navigation: auto }` opt-in must stay inline, first in `<head>` (`Codex.astro`). Put it in the bundled stylesheet and the dev server still turns pages, because it inlines CSS, but the production build drops every turn: the arriving page sees the opt-in too late. Test page turns on a production build (`npm run build`, then serve `dist/client` with `npx serve`), not only in dev.
+
 **Gotcha:** in the page-turn CSS, back rules must use the full `animation:` shorthand. The forward rules' `animation: none` also resets `animation-duration` to 0, so a back rule that only sets `animation-name` runs instantly.
 
 The Dead Reckoning notes below describe the previous design and are kept for history.
