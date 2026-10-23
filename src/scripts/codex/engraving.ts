@@ -28,13 +28,14 @@ interface Options {
   onContextLost?: () => void;
 }
 
-const PAPER = 0xefe6d0;
-const INK = 0x1b2419;
+export const PAPER = 0xefe6d0;
+export const INK = 0x1b2419;
+export const RUBRIC = 0x9b2d20;
 
 // sRGB values passed straight through to the canvas.
-const raw = (hex: number) => new THREE.Color().setHex(hex, THREE.LinearSRGBColorSpace);
+export const raw = (hex: number) => new THREE.Color().setHex(hex, THREE.LinearSRGBColorSpace);
 
-const engraveVertex = /* glsl */ `
+export const engraveVertex = /* glsl */ `
   uniform mat4 uObjectInverse;
   varying vec3 vObj;
   varying vec3 vNormal;
@@ -51,12 +52,14 @@ const engraveVertex = /* glsl */ `
   }
 `;
 
-const engraveFragment = /* glsl */ `
+export const engraveFragment = /* glsl */ `
   uniform vec3 uLight;      // view space
   uniform float uFreq;      // lines per unit
   uniform float uReveal;    // 0 = blank plate, 1 = fully engraved
   uniform sampler2D uText;  // lettering, for the banderole
   uniform float uHasText;
+  uniform float uGlow;      // 1 = picked out in red (a hovered building)
+  uniform float uPale;      // lightens a surface's shading (ground under fine joints); unset = 0
   varying vec3 vObj;
   varying vec3 vNormal;
   varying vec3 vView;
@@ -83,6 +86,9 @@ const engraveFragment = /* glsl */ `
     // A little fill so faces turned from the lamp still read as form, not solid ink.
     float tone = clamp(0.22 + lambert * 0.9 - rim * 0.4, 0.0, 1.0);
     float dark = pow(1.0 - tone, 0.85);
+    dark *= 1.0 - uPale;
+    // Picked out: cut a little deeper.
+    dark = mix(dark, min(1.0, dark * 1.2 + 0.12), uGlow);
 
     // Swelling, slightly wavering lines, as a burin leaves them.
     float wobble = sin(dot(vObj, vec3(1.7, 0.3, 2.3)) * 3.0) * 0.18;
@@ -98,28 +104,33 @@ const engraveFragment = /* glsl */ `
     ink *= smoothstep(0.0, 0.12, dark);
 
     // Lettering on the front of the banderole, cut left to right; the ribbon's
-    // own hatching is kept light so the name reads.
+    // own hatching is kept light so the name reads. Red in the lettering
+    // (initials, fleurons) rides in the red channel to the paper pass.
+    float red = uGlow;
     if (uHasText > 0.5) {
-      float letters = gl_FrontFacing ? texture2D(uText, vUv).a : 0.0;
-      letters *= step(vUv.x, uReveal * 1.15 - 0.08);
+      vec4 tx = gl_FrontFacing ? texture2D(uText, vUv) : vec4(0.0);
+      float letters = tx.a * step(vUv.x, uReveal * 1.15 - 0.08);
       ink = max(ink * 0.6, letters);
+      red = max(red, tx.r * letters);
     }
-    gl_FragColor = vec4(vec3(0.0), ink);
+    // Red ink in r, coverage in a.
+    gl_FragColor = vec4(red, 0.0, 0.0, ink);
   }
 `;
 
-const compositeVertex = /* glsl */ `
+export const compositeVertex = /* glsl */ `
   varying vec2 vUv;
   void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }
 `;
 
-const compositeFragment = /* glsl */ `
+export const compositeFragment = /* glsl */ `
   uniform sampler2D tInk;
   uniform sampler2D tNormal;
   uniform sampler2D tDepth;
   uniform vec2 uResolution;
   uniform float uNear;
   uniform float uFar;
+  uniform float uOrtho;     // 1 for an orthographic camera: depth is already linear
   uniform float uPixel;
   uniform float uReveal;
   uniform vec3 uPaper;
@@ -134,6 +145,7 @@ const compositeFragment = /* glsl */ `
     return mix(mix(hash(i), hash(i + vec2(1, 0)), u.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), u.x), u.y);
   }
   float linearDepth(vec2 uv) {
+    if (uOrtho > 0.5) return uNear + texture2D(tDepth, uv).x * (uFar - uNear);
     float z = texture2D(tDepth, uv).x * 2.0 - 1.0;
     return (2.0 * uNear * uFar) / (uFar + uNear - z * (uFar - uNear));
   }
@@ -165,8 +177,11 @@ const compositeFragment = /* glsl */ `
     vec3 col = uPaper * (0.955 + 0.06 * grain);
     col *= 1.0 - 0.12 * pow(length(vUv - 0.5) * 1.3, 3.0);
 
-    // Ink: hatching and rings from the first pass, overprinted on the paper.
-    float ink = texture2D(tInk, vUv).a;
+    // Ink: hatching and rings from the first pass, overprinted on the paper;
+    // its red channel says where the ink is rubric instead of black.
+    vec4 inkSample = texture2D(tInk, vUv);
+    float ink = inkSample.a;
+    vec3 inkColour = mix(uInk, uRed, inkSample.r);
 
     // Outlines from normal and depth discontinuities.
     float o = 1.2 * uPixel;
@@ -187,47 +202,102 @@ const compositeFragment = /* glsl */ `
     float coverage = clamp(max(max(ink, edge), s), 0.0, 1.0);
     // Ink sits a little unevenly on the plate.
     coverage *= 0.86 + 0.14 * noise(px * 0.35);
-    col = mix(col, uInk, coverage);
+    col = mix(col, inkColour, coverage);
     gl_FragColor = vec4(col, 1.0);
   }
 `;
 
-/** Name set in Fell small caps, black on transparent, for the banderole's middle stretch. */
-function letteringTexture(text: string) {
+/**
+ * The banderole's lettering, black on transparent: the name in Fell small
+ * caps with rubricated initials, a fleuron either side, and ruled edges the
+ * length of the ribbon. Red is drawn pure red; the shader reads it as rubric.
+ */
+export function letteringTexture(text: string) {
   const canvas = document.createElement('canvas');
   canvas.width = 2400;
   canvas.height = 200;
   const ctx = canvas.getContext('2d')!;
-  ctx.fillStyle = '#000';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  const spaced = text.toUpperCase().split('').join('\u200A');
-  let size = 150;
-  ctx.font = `${size}px "IM Fell English SC", serif`;
-  // Fit the lettering to the flat middle of the ribbon (its ends twist away).
-  const max = canvas.width * 0.62;
-  const width = ctx.measureText(spaced).width;
+  const BLACK = '#000';
+  const RED = '#f00';
+  const mid = canvas.height / 2;
+
+  // Ruled edges, a heavy rule and a hairline, as on an engraved scroll.
+  ctx.fillStyle = BLACK;
+  for (const [y, h] of [[8, 4], [18, 1.6], [canvas.height - 22, 1.6], [canvas.height - 12, 4]] as const) ctx.fillRect(0, y, canvas.width, h);
+
+  // Set the name glyph by glyph so the initials can be larger and red.
+  const glyphs = [...text.toUpperCase()];
+  const initial = (k: number) => glyphs[k] !== ' ' && (k === 0 || glyphs[k - 1] === ' ');
+  let size = 132;
+  const layout = (sz: number) => {
+    const track = sz * 0.1;
+    return glyphs.map((c, k) => {
+      const s = initial(k) ? sz * 1.22 : sz;
+      ctx.font = `${s}px "IM Fell English SC", serif`;
+      return { c, s, w: c === ' ' ? sz * 0.42 : ctx.measureText(c).width + track };
+    });
+  };
+  // Fit to the flat middle of the ribbon (its ends twist away).
+  const max = canvas.width * 0.56;
+  let set = layout(size);
+  let width = set.reduce((a, g) => a + g.w, 0);
   if (width > max) {
     size *= max / width;
-    ctx.font = `${size}px "IM Fell English SC", serif`;
+    set = layout(size);
+    width = set.reduce((a, g) => a + g.w, 0);
   }
-  ctx.fillText(spaced, canvas.width / 2, canvas.height / 2 + size * 0.06);
-  // Flourish rules either side of the name.
-  const half = Math.min(max, ctx.measureText(spaced).width) / 2;
-  ctx.fillRect(canvas.width / 2 - half - 170, canvas.height / 2 - 1.5, 120, 3);
-  ctx.fillRect(canvas.width / 2 + half + 50, canvas.height / 2 - 1.5, 120, 3);
+  ctx.textBaseline = 'alphabetic';
+  let x = (canvas.width - width) / 2;
+  const base = mid + size * 0.36;
+  set.forEach((g, k) => {
+    ctx.font = `${g.s}px "IM Fell English SC", serif`;
+    ctx.fillStyle = initial(k) ? RED : BLACK;
+    ctx.fillText(g.c, x, base);
+    x += g.w;
+  });
+
+  // Fleurons, then a tapering rule out toward each tail.
+  ctx.font = `${size * 0.8}px "IM Fell English", serif`;
+  ctx.textAlign = 'center';
+  for (const side of [-1, 1]) {
+    const fx = canvas.width / 2 + side * (width / 2 + size * 0.75);
+    ctx.fillStyle = RED;
+    ctx.fillText('\u2766', fx, base - size * 0.05);
+    ctx.fillStyle = BLACK;
+    const from = fx + side * size * 0.7;
+    ctx.beginPath();
+    ctx.moveTo(from, mid - 3);
+    ctx.lineTo(from + side * 260, mid);
+    ctx.lineTo(from, mid + 3);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(from + side * 280, mid, 5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   const texture = new THREE.CanvasTexture(canvas);
   texture.anisotropy = 8;
   return texture;
 }
 
-/** A ribbon bowed toward the viewer, its ends twisting back as banderoles do in old plates. */
-function banderole(width = 7.6, height = 0.66) {
-  const geo = new THREE.PlaneGeometry(1, 1, 220, 6);
+/**
+ * A ribbon bowed toward the viewer, its ends twisting back as banderoles do in
+ * old plates, and cut into swallowtails.
+ */
+export function banderole(width = 7.6, height = 0.66) {
+  const geo = new THREE.PlaneGeometry(1, 1, 220, 8);
   const p = geo.attributes.position as THREE.BufferAttribute;
+  const TAIL = 0.05;
   for (let i = 0; i < p.count; i++) {
-    const u = p.getX(i) + 0.5;
     const v = p.getY(i);
+    let u = p.getX(i) + 0.5;
+    // Swallowtail: near each end, the middle of the ribbon is cut back in a V.
+    // Remapped over the last stretch, so the columns never cross.
+    const e = Math.min(u, 1 - u);
+    if (e < TAIL) {
+      const e2 = e + ((TAIL - e) / TAIL) * 0.035 * (1 - 2 * Math.abs(v));
+      u = u < 0.5 ? e2 : 1 - e2;
+    }
     const s = u * 2 - 1;
     const x = s * width * 0.5;
     const y = -3.05 + 0.16 * Math.sin(u * Math.PI * 3) + 0.25 * s * s;
@@ -267,6 +337,7 @@ export function createEngraving(canvas: HTMLCanvasElement, { name, plates = PLAT
     uObjectInverse: { value: new THREE.Matrix4() },
     uText: { value: null as THREE.Texture | null },
     uHasText: { value: 0 },
+    uGlow: { value: 0 },
   };
   const engrave = new THREE.ShaderMaterial({
     uniforms: engraveUniforms,
@@ -327,6 +398,7 @@ export function createEngraving(canvas: HTMLCanvasElement, { name, plates = PLAT
     uObjectInverse: { value: new THREE.Matrix4() },
     uText: { value: nameTexture },
     uHasText: { value: 1 },
+    uGlow: { value: 0 },
   };
   const ribbonMat = new THREE.ShaderMaterial({
     uniforms: ribbonUniforms,
@@ -350,11 +422,12 @@ export function createEngraving(canvas: HTMLCanvasElement, { name, plates = PLAT
     uResolution: { value: new THREE.Vector2(1, 1) },
     uNear: { value: camera.near },
     uFar: { value: camera.far },
+    uOrtho: { value: 0 },
     uPixel: { value: pixel },
     uReveal: { value: 1 },
     uPaper: { value: raw(PAPER) },
     uInk: { value: raw(INK) },
-    uRed: { value: raw(0x9b2d20) },
+    uRed: { value: raw(RUBRIC) },
   };
   const quad = new THREE.Mesh(
     new THREE.PlaneGeometry(2, 2),

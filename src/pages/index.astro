@@ -1,8 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
 import Codex from '../layouts/Codex.astro';
-import { CATALOGUE } from '../scripts/codex/catalogue';
-import { PLATES } from '../scripts/codex/models';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 
 const posts = (await getCollection('blog'))
@@ -21,32 +19,33 @@ const roman = (n: number) =>
     { n, out: '' },
   ).out;
 
-const plates = PLATES.map((id) => CATALOGUE[id]);
+// The places in the forum on the left page, each standing for a page.
+const PLACES = {
+  forum: { latin: 'Via Sacra', note: 'walk the street; go in at a door to turn the page.' },
+  bibliotheca: { latin: 'Bibliotheca', note: 'the library, where the field notes are kept.' },
+  fabrica: { latin: 'Fabrica', note: 'the forge: the workshop, on GitHub.' },
+  statua: { latin: 'Statua', note: 'the author, in stone and at length.' },
+};
 ---
 
 <Codex title={SITE_TITLE} description={SITE_DESCRIPTION} folio={1} fit>
-  <!-- Verso: the engraved plate, with the name lettered on its banderole -->
+  <!-- Verso: the forum, engraved, with the name lettered on its banderole -->
   <Fragment slot="verso">
     <figure class="plate">
       <div class="plate-frame">
         <canvas id="engraving" class="plate-canvas" aria-hidden="true"></canvas>
         <div class="plate-fallback" aria-hidden="true"><span>Eduardo de Bem</span></div>
       </div>
-      <figcaption class="plate-caption" data-plates={JSON.stringify(plates)}>
-        <span class="tab">Tab. <span data-cap-numeral>{plates[0].numeral}</span></span>
-        <span class="cap-latin" data-cap-latin>{plates[0].latin}</span>
-        <span class="cap-note" data-cap-note>{plates[0].note}</span>
+      <figcaption class="plate-caption" data-places={JSON.stringify(PLACES)}>
+        <span class="tab">Tab. I</span>
+        <span class="cap-latin" data-cap-latin>{PLACES.forum.latin}</span>
+        <span class="cap-note" data-cap-note>{PLACES.forum.note}</span>
       </figcaption>
     </figure>
 
-    <div class="plate-nav" role="group" aria-label="Choose a plate">
-      {plates.map((p, i) => (
-        <button type="button" data-plate={i} aria-pressed={i === 0 ? 'true' : 'false'} aria-label={`Plate ${p.numeral}: ${p.latin}`}>
-          {p.numeral}
-        </button>
-      ))}
-      <span class="hint">move the lamp with your cursor · drag to turn</span>
-    </div>
+    <p class="plate-nav">
+      <span class="hint"><kbd>←</kbd><kbd>→</kbd> or <kbd>A</kbd><kbd>D</kbd> to walk · <kbd>↑</kbd> at a door to go in · or click</span>
+    </p>
   </Fragment>
 
   <!-- Recto: of the author, the index, and what he is listening to -->
@@ -69,20 +68,20 @@ const plates = PLATES.map((id) => CATALOGUE[id]);
       <p class="rubric">Index</p>
       <ol>
         <li class="chapter">
-          <a href="/blog"><span class="num">I.</span><span class="label">Field notes</span><span class="leader"></span><span class="pg">all</span></a>
+          <a href="/blog" data-place="bibliotheca"><span class="num">I.</span><span class="label">Field notes</span><span class="leader"></span><span class="pg">all</span></a>
           <ol class="sub">
             {posts.map((p) => (
               <li>
-                <a href={`/blog/${p.id}/`}><span class="label">{p.data.title}</span><span class="leader"></span><span class="pg">{roman(p.data.pubDate.getFullYear())}</span></a>
+                <a href={`/blog/${p.id}/`} data-place="bibliotheca"><span class="label">{p.data.title}</span><span class="leader"></span><span class="pg">{roman(p.data.pubDate.getFullYear())}</span></a>
               </li>
             ))}
           </ol>
         </li>
         <li class="chapter">
-          <a href="/about"><span class="num">II.</span><span class="label">Of the author, at length</span><span class="leader"></span><span class="pg">about</span></a>
+          <a href="/about" data-place="statua"><span class="num">II.</span><span class="label">Of the author, at length</span><span class="leader"></span><span class="pg">about</span></a>
         </li>
         <li class="chapter">
-          <a href="https://github.com/eduardodgdebem" target="_blank" rel="noopener noreferrer"><span class="num">III.</span><span class="label">Workshop</span><span class="leader"></span><span class="pg">github</span></a>
+          <a href="https://github.com/eduardodgdebem" target="_blank" rel="noopener noreferrer" data-place="fabrica"><span class="num">III.</span><span class="label">Workshop</span><span class="leader"></span><span class="pg">github</span></a>
         </li>
       </ol>
     </nav>
@@ -108,59 +107,70 @@ const plates = PLATES.map((id) => CATALOGUE[id]);
 <script>
   import { gsap } from 'gsap';
   import { createCoverEngraving } from '../scripts/codex/cover';
-  import { createEngraving } from '../scripts/codex/engraving';
+  import { createForum, type Place } from '../scripts/codex/forum';
   import { bookOpened } from '../scripts/codex/opening';
 
   const root = document.documentElement;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const canvas = document.getElementById('engraving') as HTMLCanvasElement;
 
-  // The banderole letters with the page font, so wait for it.
-  await document.fonts.load('150px "IM Fell English SC"').catch(() => undefined);
-  const plate = createEngraving(canvas, {
-    name: 'Eduardo de Bem',
-    reducedMotion: reduced,
-    onContextLost: () => root.classList.add('no-webgl'),
-  });
-  if (!plate) root.classList.add('no-webgl');
-  plate?.intro(bookOpened());
+  // The banderole and the inscriptions letter with the page fonts, so wait for them.
+  await Promise.all([document.fonts.load('150px "IM Fell English SC"'), document.fonts.load('600 80px Cinzel')]).catch(() => undefined);
 
-  /* ── Plates ── */
+  /* ── The forum: hover a place (here or in the index) to pick it out; go to it to turn the page ── */
 
   const caption = document.querySelector<HTMLElement>('.plate-caption')!;
-  const plates: { numeral: string; latin: string; note: string }[] = JSON.parse(caption.dataset.plates!);
-  const buttons = [...document.querySelectorAll<HTMLButtonElement>('[data-plate]')];
+  const PLACES: Record<Place | 'forum', { latin: string; note: string }> = JSON.parse(caption.dataset.places!);
   const cap = {
-    numeral: caption.querySelector<HTMLElement>('[data-cap-numeral]')!,
     latin: caption.querySelector<HTMLElement>('[data-cap-latin]')!,
     note: caption.querySelector<HTMLElement>('[data-cap-note]')!,
   };
-  let index = 0;
-  let auto: gsap.core.Tween | null = null;
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('a[data-place]')];
+  // The index's chapter line for each place, lit when its building is hovered in the scene.
+  const chapterFor = (place: Place | null) => links.find((a) => a.dataset.place === place && !a.closest('.sub'));
 
-  const select = (i: number) => {
-    if (i === index) return;
-    index = i;
-    plate?.show(i);
-    buttons.forEach((b, k) => b.setAttribute('aria-pressed', String(k === i)));
-    const apply = () => {
-      cap.numeral.textContent = plates[i].numeral;
-      cap.latin.textContent = plates[i].latin;
-      cap.note.textContent = plates[i].note;
-    };
-    if (reduced) apply();
-    else gsap.timeline().to(caption, { autoAlpha: 0, duration: 0.5, onComplete: apply }).to(caption, { autoAlpha: 1, duration: 1.2 }, 1.4);
-    schedule();
+  const describe = (place: Place | null, atDoor = false) => {
+    const entry = PLACES[place ?? 'forum'];
+    cap.latin.textContent = entry.latin;
+    cap.note.textContent = atDoor ? `${entry.note} Go up, or press Enter, to go in.` : entry.note;
   };
 
-  const schedule = () => {
-    auto?.kill();
-    if (!reduced) auto = gsap.delayedCall(11, () => select((index + 1) % plates.length));
-  };
-  buttons.forEach((b, i) => b.addEventListener('click', () => select(i)));
-  canvas.addEventListener('pointerdown', schedule);
-  document.addEventListener('visibilitychange', () => (document.hidden ? auto?.pause() : auto?.resume()));
-  schedule();
+  const forum = createForum(canvas, {
+    name: 'Eduardo de Bem',
+    reducedMotion: reduced,
+    onContextLost: () => root.classList.add('no-webgl'),
+    onFocus: (place, atDoor) => {
+      describe(place, atDoor);
+      links.forEach((a) => a.classList.toggle('is-lit', a === chapterFor(place)));
+    },
+    onEnter: (place) => chapterFor(place)?.click(),
+  });
+  if (!forum) root.classList.add('no-webgl');
+  forum?.intro(bookOpened());
+
+  for (const a of links) {
+    const place = a.dataset.place as Place;
+    const on = () => forum?.highlight(place);
+    const off = () => forum?.highlight(null);
+    a.addEventListener('pointerenter', on);
+    a.addEventListener('focus', on);
+    a.addEventListener('pointerleave', off);
+    a.addEventListener('blur', off);
+    a.addEventListener('click', (e) => {
+      if (!forum || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      // Off-site (the workshop): the new tab must open from the click itself,
+      // so the citizen walks over while it does, then comes back.
+      if (a.target === '_blank') {
+        forum.walk(place).then(() => setTimeout(() => forum.reset(), 600));
+        return;
+      }
+      e.preventDefault();
+      forum.walk(place).then(() => location.assign(a.href));
+    });
+  }
+
+  // Back from the next page through the back/forward cache: the citizen is home again.
+  window.addEventListener('pageshow', (e) => e.persisted && forum?.reset());
 
   /* ── Jellyfin: cover engraving and marginal note ── */
 
@@ -210,7 +220,7 @@ const plates = PLATES.map((id) => CATALOGUE[id]);
   // Kept alive when the page goes into the back/forward cache.
   window.addEventListener('pagehide', (e) => {
     if (e.persisted) return;
-    plate?.dispose();
+    forum?.dispose();
     cover?.dispose();
   });
 </script>
@@ -225,25 +235,14 @@ const plates = PLATES.map((id) => CATALOGUE[id]);
     margin: 0.5rem 12px 0;
   }
 
-  .plate-nav button {
-    font-family: 'IM Fell English SC', serif;
-    font-size: 1rem;
-    min-width: 2.4rem;
-    padding: 0.2rem 0.6rem;
-    background: none;
-    border: 1px solid transparent;
-    color: var(--ink-soft);
-    cursor: pointer;
-  }
-
-  .plate-nav button:hover {
-    color: var(--ink);
-    border-color: var(--rule);
-  }
-
-  .plate-nav button[aria-pressed='true'] {
-    color: var(--rubric);
-    border-color: var(--rubric);
+  .hint kbd {
+    font-family: inherit;
+    font-style: normal;
+    font-size: 0.8em;
+    padding: 0 0.3em;
+    margin: 0 0.1em;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
   }
 
   .hint {
@@ -279,6 +278,11 @@ const plates = PLATES.map((id) => CATALOGUE[id]);
 
   .chapter > a {
     font-size: 1.1rem;
+  }
+
+  /* Lit from the forum: its building is under the pointer. */
+  .contents a.is-lit {
+    color: var(--rubric);
   }
 
   .sub {
