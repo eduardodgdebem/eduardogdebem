@@ -1,7 +1,7 @@
 ---
 import Plaza, { type PlazaMonument } from '../components/Plaza.astro';
 import Codex from '../layouts/Codex.astro';
-import { SITE_TITLE } from '../consts';
+import { CV_PDF, SITE_TITLE } from '../consts';
 import { en, type StringKey } from '../i18n/strings';
 import { PERSON, SITE_URL } from '../seo';
 
@@ -41,6 +41,7 @@ const monuments: PlazaMonument[] = NOTES.map(({ key, plate, inscription }) => ({
       <a href={`mailto:${EMAIL}`} data-i18n="link.email">{en('link.email')}</a>
       <a href={LINKEDIN} target="_blank" rel="noopener noreferrer">LinkedIn</a>
       <a href={GITHUB} target="_blank" rel="noopener noreferrer">GitHub</a>
+      <a href={CV_PDF} download data-i18n="link.cv">{en('link.cv')}</a>
       <a href="#correspondence" data-i18n="about.all">{en('about.all')}</a>
     </p>
 
@@ -78,6 +79,10 @@ const monuments: PlazaMonument[] = NOTES.map(({ key, plate, inscription }) => ({
         <div>
           <dt>GitHub</dt>
           <dd><a href={GITHUB} target="_blank" rel="noopener noreferrer">github.com/eduardodgdebem</a></dd>
+        </div>
+        <div>
+          <dt data-i18n="letters.cv">{en('letters.cv')}</dt>
+          <dd><a href={CV_PDF} download data-i18n="letters.cv.value">{en('letters.cv.value')}</a></dd>
         </div>
         <div>
           <dt data-i18n="letters.based">{en('letters.based')}</dt>

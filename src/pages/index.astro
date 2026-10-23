@@ -1,7 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import Codex from '../layouts/Codex.astro';
-import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import { CV_PDF, SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 import { en } from '../i18n/strings';
 import { PERSON, WEBSITE } from '../seo';
 
@@ -69,6 +69,7 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
         <a href="mailto:eduardogdebem@gmail.com" data-i18n="link.email">{en('link.email')}</a>
         <a href="https://linkedin.com/in/eduardogdebem" target="_blank" rel="noopener noreferrer">LinkedIn</a>
         <a href="https://github.com/eduardodgdebem" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href={CV_PDF} download data-i18n="link.cv">{en('link.cv')}</a>
         <a href="/about/#correspondence" data-i18n="link.contact">{en('link.contact')}</a>
       </p>
     </header>

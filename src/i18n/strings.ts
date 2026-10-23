@@ -8,6 +8,7 @@ const EN = {
 
   'link.email': 'Email',
   'link.contact': 'Contact',
+  'link.cv': 'CV',
 
   'home.role': 'Full stack developer · Florianópolis, Brazil',
   'home.lede':
@@ -86,6 +87,8 @@ const EN = {
   'letters.copied': 'Copied',
   'letters.copy.key': 'Press ⌘C',
   'letters.write': 'Write to me',
+  'letters.cv': 'CV',
+  'letters.cv.value': 'Download it (PDF, in English)',
   'plaza.note': 'the author’s square; a monument for each of his concerns.',
   'plaza.hint':
     '<kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to walk · up to a monument to read it · <kbd>Enter</kbd> to turn it',
@@ -110,6 +113,7 @@ const PT: Record<StringKey, string> = {
 
   'link.email': 'E-mail',
   'link.contact': 'Contato',
+  'link.cv': 'Currículo',
 
   'home.role': 'Desenvolvedor full stack · Florianópolis, Brasil',
   'home.lede':
@@ -188,6 +192,8 @@ const PT: Record<StringKey, string> = {
   'letters.copied': 'Copiado',
   'letters.copy.key': 'Aperte ⌘C',
   'letters.write': 'Escreva para mim',
+  'letters.cv': 'Currículo',
+  'letters.cv.value': 'Baixar (PDF, em inglês)',
   'plaza.note': 'a praça do autor; um monumento para cada um dos seus interesses.',
   'plaza.hint':
     '<kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> ou <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> para andar · chegue num monumento para lê-lo · <kbd>Enter</kbd> para girá-lo',
