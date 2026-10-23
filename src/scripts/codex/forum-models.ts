@@ -428,3 +428,103 @@ export function pavingLines(halfLength: number, halfWidth: number, walk: number)
 export function planet() {
   return [new THREE.SphereGeometry(4, 48, 32)];
 }
+
+/* ─── Townspeople ─── */
+
+/** A matron in stola and palla: slimmer, longer, the palla drawn over the head. */
+export function matrona() {
+  const parts: THREE.BufferGeometry[] = [];
+  parts.push(lathe([[0, 0], [0.24, 0], [0.25, 0.1], [0.2, 0.6], [0.18, 1.0], [0.2, 1.22], [0.11, 1.32], [0, 1.33]]));
+  parts.push(cyl(0.05, 0.05, 0.08, 0, 1.3, 0, 10));
+  parts.push(new THREE.SphereGeometry(0.11, 16, 12).translate(0, 1.48, 0.01));
+  // The palla: a hood over the head, falling down the back.
+  parts.push(new THREE.SphereGeometry(0.135, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.6).translate(0, 1.49, -0.015));
+  parts.push(tube([[-0.13, 1.45, -0.05], [-0.2, 1.1, -0.1], [-0.22, 0.7, -0.05]], 0.05));
+  parts.push(tube([[0.13, 1.45, -0.05], [0.2, 1.1, -0.1], [0.22, 0.7, -0.05]], 0.05));
+  parts.push(tube([[-0.2, 1.18, 0.02], [0, 1.0, 0.18], [0.2, 1.18, 0.02]], 0.05));
+  return parts;
+}
+
+/** A legionary: tunic and mail, crested helmet, the curved shield and a pilum. */
+export function miles() {
+  const parts: THREE.BufferGeometry[] = [];
+  for (const x of [-0.08, 0.08]) parts.push(cyl(0.05, 0.045, 0.5, x, 0, 0, 10));
+  parts.push(lathe([[0.1, 0.45], [0.25, 0.45], [0.22, 0.7], [0.21, 1.0], [0.24, 1.2], [0.12, 1.3], [0, 1.31]]));
+  parts.push(new THREE.TorusGeometry(0.2, 0.03, 6, 20).rotateX(Math.PI / 2).translate(0, 0.78, 0));
+  parts.push(new THREE.SphereGeometry(0.115, 16, 12).translate(0, 1.44, 0.01));
+  parts.push(new THREE.SphereGeometry(0.13, 16, 10, 0, Math.PI * 2, 0, Math.PI * 0.55).translate(0, 1.47, 0));
+  parts.push(box(0.03, 0.12, 0.26, 0, 1.64, 0));
+  // Scutum on the left arm, pilum upright in the right hand.
+  parts.push(new THREE.CylinderGeometry(0.62, 0.62, 0.9, 16, 1, true, -0.4, 0.8).rotateY(-Math.PI / 2).translate(0.3, 0.85, 0.05));
+  parts.push(cyl(0.015, 0.015, 1.9, 0.3, 0.1, 0.15, 6));
+  parts.push(new THREE.ConeGeometry(0.03, 0.18, 6).translate(0.3, 2.09, 0.15));
+  return parts;
+}
+
+/* ─── More of the city ─── */
+
+/** A great temple on a high podium, for the back of the forum. */
+export function templum() {
+  const parts: THREE.BufferGeometry[] = [];
+  const podium = 1.4;
+  parts.push(box(6.2, podium, 7.4, 0, podium / 2, -0.6));
+  parts.push(box(6.5, 0.14, 7.7, 0, podium + 0.07, -0.6));
+  const st = steps(4.2, 1.6, 7, podium / 7, 0);
+  for (const g of st.parts) parts.push(g.translate(0, 0, 3.6));
+  const y = podium + 0.14;
+  const h = 3.2;
+  parts.push(box(4.6, h, 4.6, 0, y + h / 2, -1.8));
+  for (let i = 0; i < 6; i++) for (const z of [2.3, 1.2]) parts.push(...column(-2.5 + i * 1.0, z, h, 0.17, y));
+  for (const x of [-2.5, 2.5]) for (const z of [0.1, -1.0, -2.1, -3.2]) parts.push(...column(x, z, h, 0.17, y));
+  parts.push(box(5.6, 0.32, 6.8, 0, y + h + 0.16, -0.5));
+  const gable = new THREE.Shape();
+  gable.moveTo(-2.95, 0);
+  gable.lineTo(2.95, 0);
+  gable.lineTo(0, 1.05);
+  gable.closePath();
+  parts.push(prism(gable, 6.8).translate(0, y + h + 0.32, -0.5));
+  return { parts, front: 4.4 };
+}
+
+/** A market stall: posts, a counter, a slanting awning, amphorae beside it. */
+export function stall() {
+  const parts: THREE.BufferGeometry[] = [];
+  for (const x of [-0.8, 0.8]) for (const z of [-0.4, 0.4]) parts.push(cyl(0.03, 0.03, 1.5, x, 0, z, 6));
+  parts.push(box(1.7, 0.08, 0.9, 0, 0.8, 0));
+  parts.push(box(1.6, 0.7, 0.05, 0, 0.42, -0.42));
+  parts.push(box(1.9, 0.04, 1.2, 0, 0, 0).rotateX(-0.28).translate(0, 1.55, 0.05));
+  // Wares on the counter.
+  for (let k = 0; k < 4; k++) parts.push(new THREE.SphereGeometry(0.08, 10, 8).translate(-0.5 + k * 0.33, 0.9, 0.1));
+  const amphora = lathe([[0, 0], [0.04, 0.02], [0.13, 0.25], [0.12, 0.45], [0.05, 0.55], [0.04, 0.68], [0.06, 0.7], [0, 0.7]], 16);
+  for (const [x, z] of [[1.05, 0.2], [1.2, -0.1], [1.05, -0.35]]) parts.push(amphora.clone().translate(x, 0, z));
+  amphora.dispose();
+  return parts;
+}
+
+/** A fountain basin with a jet column. */
+export function fons() {
+  const parts: THREE.BufferGeometry[] = [];
+  parts.push(lathe([[0, 0], [0.9, 0], [0.95, 0.35], [0.85, 0.38], [0.8, 0.12], [0, 0.12]], 32));
+  parts.push(cyl(0.1, 0.14, 0.9, 0, 0.12, 0, 12));
+  parts.push(lathe([[0, 0.95], [0.35, 0.95], [0.38, 1.08], [0.32, 1.1], [0, 1.02]], 24));
+  return parts;
+}
+
+/** A standard: pole, crossbar, and a hanging cloth (returned separately, to be dyed and to wave). */
+export function vexillum() {
+  const pole = [cyl(0.03, 0.035, 2.9, 0, 0, 0, 8), box(0.95, 0.04, 0.04, 0, 2.62, 0), new THREE.TorusGeometry(0.12, 0.025, 6, 20).translate(0, 3.0, 0)];
+  pole.push(cyl(0.12, 0.16, 0.12, 0, 0, 0, 10));
+  const cloth = new THREE.PlaneGeometry(0.85, 1.05, 6, 10).translate(0, 2.6 - 0.525, 0.03);
+  return { pole, cloth };
+}
+
+/** A brazier on a tripod; the flame is drawn as lines in forum.ts. */
+export function foculus() {
+  const parts: THREE.BufferGeometry[] = [];
+  for (let k = 0; k < 3; k++) {
+    const a = (k / 3) * Math.PI * 2;
+    parts.push(tube([[Math.cos(a) * 0.28, 0, Math.sin(a) * 0.28], [Math.cos(a) * 0.16, 0.45, Math.sin(a) * 0.16], [Math.cos(a) * 0.2, 0.85, Math.sin(a) * 0.2]], 0.02, 12, 5));
+  }
+  parts.push(lathe([[0, 0.8], [0.12, 0.8], [0.26, 0.92], [0.27, 0.98], [0, 0.94]], 20));
+  return { parts, flame: new THREE.Vector3(0, 0.98, 0) };
+}

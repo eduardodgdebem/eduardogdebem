@@ -21,12 +21,19 @@ import {
   curia,
   cypress,
   fabrica,
+  foculus,
+  fons,
   insula,
+  matrona,
+  miles,
   pavingLines,
   planet,
+  stall,
   statua,
+  templum,
   tholos,
   togatus,
+  vexillum,
 } from './forum-models';
 
 // The home plate: the Via Sacra, engraved with the same three passes as
@@ -59,6 +66,8 @@ interface Options {
   onFocus?: (place: Place | null, atDoor: boolean) => void;
   /** The citizen is to go in at a place: clicked in the scene, or walked into. */
   onEnter?: (place: Place) => void;
+  /** Where to pin the focused place's label, in CSS px within the canvas (null: hide it). */
+  onTag?: (place: Place | null, x: number, y: number) => void;
 }
 
 /* ── The street ── */
@@ -129,7 +138,7 @@ const angleTo = (from: number, to: number) => {
   return d;
 };
 
-export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, onContextLost, onFocus, onEnter }: Options): Forum | null {
+export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, onContextLost, onFocus, onEnter, onTag }: Options): Forum | null {
   let renderer: THREE.WebGLRenderer;
   try {
     renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false });
@@ -196,7 +205,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   // back edge there is only sky.
   const slab = material({ value: 0 });
   (slab as THREE.ShaderMaterial).uniforms.uPale = { value: 0.55 };
-  build([new THREE.BoxGeometry(66, 0.8, 13.5).translate(0, -0.4, -0.25)], [0, 0], 0, slab);
+  build([new THREE.BoxGeometry(66, 0.8, 17.6).translate(0, -0.4, -2.3)], [0, 0], 0, slab);
   scene.add(fine(new THREE.LineSegments(pavingLines(END + 6, STREET, WALK), jointMat)));
 
   // North frontage, west to east.
@@ -209,6 +218,39 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   backRow(insula(3.0, 3), -25.6);
   backRow(insula(3.6, 2), 26.4);
   for (const x of [-3.7, -0.3]) build(cypress(2.9), [x, FRONT - 1.0]);
+  // Narrow houses filling the gaps in the frontage.
+  backRow(insula(1.4, 3), -15.4);
+  backRow(insula(1.5, 2), -9.6);
+  backRow(insula(1.6, 3), 14.2);
+  backRow(insula(3.0, 3), -29.6);
+  backRow(insula(3.0, 2), 29.8);
+
+  // Behind the frontage: a second row of houses, kept low so the sky still shows,
+  // and a great temple over the basilica. Nothing stands behind the statue, so
+  // it reads against the sky.
+  const BACK = FRONT - 4;
+  const deep = (built: { parts: THREE.BufferGeometry[]; front: number }, x: number, size = 1) => {
+    const mesh = build(built.parts, [x, BACK - built.front * size]);
+    mesh.scale.setScalar(size);
+    return mesh;
+  };
+  deep(templum(), 7.6, 0.85);
+  // Behind the statue, a garden kept low: an exedra with its bench, and cypresses.
+  build(
+    [
+      new THREE.CylinderGeometry(2.6, 2.6, 1.1, 40, 1, true, -Math.PI / 2, Math.PI).rotateY(Math.PI).translate(0, 0.55, 0),
+      new THREE.CylinderGeometry(2.75, 2.75, 0.1, 40, 1, false, -Math.PI / 2, Math.PI).rotateY(Math.PI).translate(0, 1.15, 0),
+      new THREE.CylinderGeometry(2.3, 2.3, 0.42, 40, 1, false, -Math.PI / 2, Math.PI).rotateY(Math.PI).translate(0, 0.21, 0),
+    ],
+    [-2, BACK - 2.2],
+  );
+  for (const [x, z] of [[-5.4, -1.2], [-4.6, -3.2], [1.4, -1.2], [0.6, -3.2], [-3.3, -4.6], [-0.7, -4.6], [2.6, -2.4], [-6.6, -2.4]]) {
+    build(cypress(1.5 + Math.abs(x % 1) * 0.6), [x, BACK + z]);
+  }
+  for (const [x, w, n] of [
+    [-27, 3.6, 3], [-22.4, 4.2, 2], [-17.6, 3.8, 3], [-13, 4.0, 2], [-8.6, 3.4, 3],
+    [13.6, 3.4, 2], [18.2, 4.2, 3], [23, 3.8, 2], [27.8, 4.4, 3],
+  ] as const) deep(insula(w, n), x);
 
   // The arches across the street: Titus's at the west end, Severus's at the east.
   for (const [bays, x] of [[1, -END], [3, END]] as const) {
@@ -223,6 +265,10 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   // The south side is kept low so the street can be seen: cypresses and a column.
   build(columnaHonoraria(), [-9, 4.0]);
   for (const x of [-21, -15, -4.5, 7.5, 14.5, 20]) build(cypress(2.6 + (Math.abs(x) % 3) * 0.3), [x, 3.9]);
+  // Market stalls facing the street, a fountain, and the speaker's platform.
+  for (const x of [-17, -12.6, 10.6]) build(stall(), [x, 3.75], Math.PI);
+  build(fons(), [2.6, 4.0]);
+  build([new THREE.BoxGeometry(1.6, 0.45, 1.0).translate(0, 0.225, 0), new THREE.BoxGeometry(1.75, 0.08, 1.15).translate(0, 0.49, 0)], [-6.4, 3.2]);
 
   /* ── The places ── */
 
@@ -232,13 +278,42 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   const proxyMat = new THREE.MeshBasicMaterial();
   materials.push(proxyMat);
 
+  // The three that are pages stand a little larger than the rest, and fly red standards.
+  const GRAND = 1.12;
+  const dyed = material({ value: 1 });
+  const cloths: { mesh: THREE.Mesh; base: Float32Array; phase: number }[] = [];
+  const flames: { line: THREE.Line; at: THREE.Vector3; phase: number }[] = [];
+  const flameMat = new THREE.LineBasicMaterial({ color: 0xff0000 }); // red, read as rubric by the paper pass
+  materials.push(flameMat);
+
   const addPlace = (id: Place, built: { parts: THREE.BufferGeometry[] }, front: number, panel: { text: string; y: number; z: number; w: number; h: number }) => {
     const glow = { value: 0 };
-    const mesh = build(built.parts, [AT[id], FRONT - front], 0, material(glow));
+    const mesh = build(built.parts, [AT[id], FRONT - front * GRAND], 0, material(glow));
+    mesh.scale.setScalar(GRAND);
     inscribe(mesh, panel.text, panel.w, panel.h, (g) => g.translate(0, panel.y, panel.z + 0.012), glow);
     // A box to pick it by, on a layer that is never drawn.
     mesh.geometry.computeBoundingBox();
-    const b = mesh.geometry.boundingBox!;
+    const b = mesh.geometry.boundingBox!.clone();
+    b.min.multiplyScalar(GRAND);
+    b.max.multiplyScalar(GRAND);
+    const half = (b.max.x - b.min.x) / 2;
+    for (const side of [-1, 1]) {
+      const std = vexillum();
+      build(std.pole, [AT[id] + side * (half + 0.3), FRONT + 0.15]);
+      const cloth = new THREE.Mesh(std.cloth, dyed);
+      cloth.position.set(AT[id] + side * (half + 0.3), 0, FRONT + 0.15);
+      cloth.frustumCulled = false;
+      scene.add(cloth);
+      cloths.push({ mesh: cloth, base: Float32Array.from(std.cloth.attributes.position.array), phase: Math.random() * 6 });
+      const fire = foculus();
+      const at = new THREE.Vector3(AT[id] + side * (half - 0.35), 0, FRONT + 0.75);
+      build(fire.parts, [at.x, at.z]);
+      for (let k = 0; k < 4; k++) {
+        const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(Array.from({ length: 6 }, () => new THREE.Vector3())), flameMat);
+        scene.add(fine(line));
+        flames.push({ line, at: at.clone().add(fire.flame), phase: k * 1.7 + side });
+      }
+    }
     const proxy = new THREE.Mesh(new THREE.BoxGeometry(...b.getSize(new THREE.Vector3()).toArray()), proxyMat);
     proxy.position.copy(b.getCenter(new THREE.Vector3())).add(mesh.position);
     proxy.layers.set(2);
@@ -261,29 +336,57 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   scene.add(ground);
   pickables.push(ground);
 
-  // Smoke from the forge chimney: a few wavering threads, redrawn each frame.
-  const chimney = forge.chimney.clone().add(places.fabrica.mesh.position);
+  // Smoke: threads from the forge chimney, redrawn each frame.
   const SMOKE_POINTS = 36;
-  const smoke = Array.from({ length: 3 }, () => {
-    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(Array.from({ length: SMOKE_POINTS }, () => chimney.clone())), fineMat);
-    scene.add(fine(line));
-    return line;
-  });
+  const chimney = forge.chimney.clone().multiplyScalar(GRAND).add(places.fabrica.mesh.position);
+  const sources: [THREE.Vector3, number][] = [[chimney, 3]];
+  const smoke = sources.flatMap(([from, n]) =>
+    Array.from({ length: n }, (_, k) => {
+      const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(Array.from({ length: SMOKE_POINTS }, () => from.clone())), fineMat);
+      scene.add(fine(line));
+      return { line, from, k: n === 1 ? 1 : k, height: n === 1 ? 1.6 : 2.4 };
+    }),
+  );
   const drawSmoke = (t: number) => {
-    smoke.forEach((line, k) => {
+    smoke.forEach(({ line, from, k, height }, j) => {
       const p = line.geometry.attributes.position as THREE.BufferAttribute;
       for (let i = 0; i < SMOKE_POINTS; i++) {
         const f = i / (SMOKE_POINTS - 1);
         const drift = f * f * 1.6;
         p.setXYZ(
           i,
-          chimney.x + Math.sin(t * 0.9 + f * 5 + k * 2.1) * 0.18 * f + drift * 0.9 + (k - 1) * 0.06,
-          chimney.y + f * 2.4,
-          chimney.z + Math.cos(t * 0.7 + f * 4 + k) * 0.12 * f - drift * 0.3,
+          from.x + Math.sin(t * 0.9 + f * 5 + k * 2.1 + j) * 0.18 * f + drift * 0.9 + (k - 1) * 0.06,
+          from.y + f * height,
+          from.z + Math.cos(t * 0.7 + f * 4 + k + j) * 0.12 * f - drift * 0.3,
         );
       }
       p.needsUpdate = true;
     });
+  };
+
+  // The standards stir; the braziers' flames lick and flicker.
+  const drawLife = (t: number) => {
+    for (const { mesh, base, phase } of cloths) {
+      const p = mesh.geometry.attributes.position as THREE.BufferAttribute;
+      for (let i = 0; i < p.count; i++) {
+        const x = base[i * 3];
+        const y = base[i * 3 + 1];
+        const hang = (2.6 - y) / 1.05; // 0 at the crossbar, 1 at the hem
+        p.setZ(i, base[i * 3 + 2] + Math.sin(t * 2.2 + y * 4 + x * 3 + phase) * 0.07 * hang);
+        p.setX(i, x + Math.sin(t * 1.3 + phase) * 0.04 * hang);
+      }
+      p.needsUpdate = true;
+      mesh.geometry.computeVertexNormals();
+    }
+    for (const { line, at, phase } of flames) {
+      const p = line.geometry.attributes.position as THREE.BufferAttribute;
+      const tall = 0.35 + 0.12 * Math.sin(t * 7 + phase * 3);
+      for (let i = 0; i < 6; i++) {
+        const f = i / 5;
+        p.setXYZ(i, at.x + Math.sin(t * 9 + f * 6 + phase) * 0.07 * f + Math.cos(phase) * 0.12 * (1 - f), at.y + f * tall, at.z + Math.sin(phase) * 0.12 * (1 - f));
+      }
+      p.needsUpdate = true;
+    }
   };
 
   /* ── A ringed world, hung in the sky; it keeps its place as the view moves ── */
@@ -325,6 +428,111 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     citizen.scale.setScalar(1);
   };
   outside();
+
+  /* ── Townspeople: passers-by, a squad on the march, a crowd round an orator ── */
+
+  const FIGURES = {
+    civis: merge(togatus('walker')),
+    orator: merge(togatus('orator')),
+    matrona: merge(matrona()),
+    miles: merge(miles()),
+  };
+  type Kind = keyof typeof FIGURES;
+  const person = (kind: Kind, x: number, z: number, facing: number, size = 1) => {
+    const m = new THREE.Mesh(FIGURES[kind], stone);
+    m.position.set(x, 0, z);
+    m.rotation.y = facing;
+    m.scale.setScalar(size);
+    scene.add(m);
+    return m;
+  };
+  const rand = (() => {
+    let seed = 7;
+    return () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  })();
+
+  type Passer = { mesh: THREE.Mesh; dir: number; speed: number; min: number; max: number; pause: number; stride: number };
+  const passers: Passer[] = [];
+  const pass = (kind: Kind, x: number, z: number, dir: number, speed: number, size = 1, span = 27) => {
+    const mesh = person(kind, x, z, dir > 0 ? Math.PI / 2 : -Math.PI / 2, size);
+    passers.push({ mesh, dir, speed, min: -span, max: span, pause: 0, stride: rand() * 6 });
+  };
+  const KINDS: Kind[] = ['civis', 'matrona', 'civis', 'matrona', 'civis'];
+  for (let i = 0; i < 16; i++) {
+    const lane = rand();
+    // On the roadway they can pass under the arches; on the pavements they keep between them.
+    const onWalk = lane > 0.6;
+    const z = onWalk ? (rand() > 0.5 ? STREET + 0.6 : -STREET - 0.55) : -1.4 + rand() * 3.0;
+    const child = rand() > 0.85;
+    pass(KINDS[i % KINDS.length], -26 + rand() * 52, z, rand() > 0.5 ? 1 : -1, 0.55 + rand() * 0.6, child ? 0.62 : 0.92 + rand() * 0.14, onWalk ? 21 : 27);
+  }
+  // A contubernium on the march, in step.
+  for (let k = 0; k < 4; k++) pass('miles', 8 + k * 0.75, -0.2 + (k % 2) * 0.55, -1, 1.0, 1, 27);
+
+  // Standing: the orator on his platform and his crowd; merchants at their stalls;
+  // two matrons by the fountain; a sentry at each arch.
+  type Stander = { mesh: THREE.Mesh; phase: number; sway: number };
+  const standers: Stander[] = [];
+  const stand = (kind: Kind, x: number, z: number, facing: number, sway = 0.03, size = 1, y = 0) => {
+    const mesh = person(kind, x, z, facing, size);
+    mesh.position.y = y;
+    standers.push({ mesh, phase: rand() * 6, sway });
+  };
+  stand('orator', -6.4, 3.3, Math.PI, 0.12, 1, 0.53);
+  for (const [dx, dz] of [[-1.2, -0.9], [-0.4, -1.2], [0.5, -1.15], [1.25, -0.8], [0.05, -1.75]]) {
+    stand(rand() > 0.4 ? 'civis' : 'matrona', -6.4 + dx, 3.2 + dz, Math.atan2(-dx, -dz), 0.02, 0.9 + rand() * 0.1);
+  }
+  for (const x of [-17, -12.6, 10.6]) {
+    stand(rand() > 0.5 ? 'civis' : 'matrona', x + 0.2, 4.35, Math.PI, 0.03, 0.95);
+    stand('matrona', x - 0.4, 2.85, 0, 0.02, 0.92);
+  }
+  stand('matrona', 1.6, 3.2, Math.PI * 0.75, 0.04, 0.93);
+  stand('matrona', 2.3, 2.85, -Math.PI * 0.9, 0.04, 0.9);
+  for (const x of [-END + 1.4, END - 1.5]) stand('miles', x, -2.5, Math.PI / 2 * Math.sign(-x), 0.01);
+
+  const drawPeople = (dt: number, t: number) => {
+    for (const p of passers) {
+      if (p.pause > 0) {
+        p.pause -= dt;
+        p.mesh.position.y *= 0.8;
+        continue;
+      }
+      p.mesh.position.x += p.dir * p.speed * dt;
+      if (p.mesh.position.x > p.max || p.mesh.position.x < p.min) {
+        p.dir = -p.dir;
+        p.mesh.position.x = THREE.MathUtils.clamp(p.mesh.position.x, p.min, p.max);
+        p.mesh.rotation.y = p.dir > 0 ? Math.PI / 2 : -Math.PI / 2;
+      }
+      // Now and then someone stops to look about.
+      if (rand() < dt * 0.04) p.pause = 1 + rand() * 2.5;
+      p.stride += dt * p.speed * 7;
+      p.mesh.position.y = Math.abs(Math.sin(p.stride)) * 0.05;
+      p.mesh.rotation.z = Math.sin(p.stride) * 0.035;
+    }
+    for (const s of standers) s.mesh.rotation.z = Math.sin(t * 1.3 + s.phase) * s.sway;
+  };
+
+  /* ── Birds wheeling over the roofs ── */
+
+  const birds = Array.from({ length: 9 }, (_, i) => {
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()]), fineMat);
+    scene.add(fine(line));
+    return { line, cx: -20 + (i % 5) * 10 + rand() * 4, cz: FRONT - 2 - rand() * 4, r: 1.5 + rand() * 2.5, y: 7 + rand() * 2, speed: (0.25 + rand() * 0.3) * (i % 2 ? 1 : -1), phase: rand() * 6 };
+  });
+  const drawBirds = (t: number) => {
+    for (const b of birds) {
+      const a = t * b.speed + b.phase;
+      const x = b.cx + Math.cos(a) * b.r;
+      const z = b.cz + Math.sin(a) * b.r * 0.5;
+      const y = b.y + Math.sin(a * 2) * 0.3;
+      const flap = Math.sin(t * 10 + b.phase) * 0.09;
+      const p = b.line.geometry.attributes.position as THREE.BufferAttribute;
+      p.setXYZ(0, x - 0.16, y + flap, z);
+      p.setXYZ(1, x, y - 0.04, z);
+      p.setXYZ(2, x + 0.16, y + flap, z);
+      p.needsUpdate = true;
+    }
+  };
 
   /* ── Banderole: carried with the view, across the head of the plate ── */
 
@@ -640,6 +848,28 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     world.position.set(view.x - 3.6 + halfW * 0.35, 1.2, -16);
   };
 
+  /* ── The focused place's label: pinned over the top of its building ── */
+
+  const anchor = new THREE.Vector3();
+  let pinned = '';
+  const pinTag = () => {
+    if (!onTag) return;
+    if (!focused) {
+      if (pinned) onTag(null, 0, 0);
+      pinned = '';
+      return;
+    }
+    const proxy = pickables.find((m) => m.userData.place === focused)!;
+    const size = (proxy.geometry as THREE.BoxGeometry).parameters.height;
+    anchor.copy(proxy.position).setY(proxy.position.y + size / 2).project(camera);
+    const x = ((anchor.x + 1) / 2) * canvas.clientWidth;
+    const y = ((1 - anchor.y) / 2) * canvas.clientHeight;
+    const key = `${focused}:${x.toFixed(0)}:${y.toFixed(0)}`;
+    if (key === pinned) return;
+    pinned = key;
+    onTag(focused, x, y);
+  };
+
   /* ── Loop ── */
 
   let running = false;
@@ -682,8 +912,12 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     step(dt);
     follow(dt);
     drawSmoke(clock);
+    drawLife(clock);
+    drawBirds(clock);
+    if (!reducedMotion) drawPeople(dt, clock);
     if (!reducedMotion) rings.rotation.y += dt * 0.02;
     render();
+    pinTag();
   };
 
   const start = () => {
@@ -725,6 +959,8 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   canvas.addEventListener('webglcontextlost', onLost);
 
   drawSmoke(0);
+  drawLife(0);
+  drawBirds(0);
   resize();
   follow(1);
   render();

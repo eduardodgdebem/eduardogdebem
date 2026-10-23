@@ -22,9 +22,9 @@ const roman = (n: number) =>
 // The places in the forum on the left page, each standing for a page.
 const PLACES = {
   forum: { latin: 'Via Sacra', note: 'walk the street; go in at a door to turn the page.' },
-  bibliotheca: { latin: 'Bibliotheca', note: 'the library, where the field notes are kept.' },
-  fabrica: { latin: 'Fabrica', note: 'the forge: the workshop, on GitHub.' },
-  statua: { latin: 'Statua', note: 'the author, in stone and at length.' },
+  bibliotheca: { latin: 'Bibliotheca', page: 'Field notes', note: 'the library, where the field notes are kept.' },
+  fabrica: { latin: 'Fabrica', page: 'Workshop · GitHub', note: 'the forge: the workshop, on GitHub.' },
+  statua: { latin: 'Statua', page: 'Of the author', note: 'the author, in stone and at length.' },
 };
 ---
 
@@ -35,6 +35,11 @@ const PLACES = {
       <div class="plate-frame">
         <canvas id="engraving" class="plate-canvas" aria-hidden="true"></canvas>
         <div class="plate-fallback" aria-hidden="true"><span>Eduardo de Bem</span></div>
+        <!-- The label over a building in the forum: what it is, and where it leads. -->
+        <div class="place-tag" data-tag aria-hidden="true">
+          <span class="tag-latin" data-tag-latin></span>
+          <span class="tag-page" data-tag-page></span>
+        </div>
       </div>
       <figcaption class="plate-caption" data-places={JSON.stringify(PLACES)}>
         <span class="tab">Tab. I</span>
@@ -120,7 +125,10 @@ const PLACES = {
   /* ── The forum: hover a place (here or in the index) to pick it out; go to it to turn the page ── */
 
   const caption = document.querySelector<HTMLElement>('.plate-caption')!;
-  const PLACES: Record<Place | 'forum', { latin: string; note: string }> = JSON.parse(caption.dataset.places!);
+  const PLACES: Record<Place | 'forum', { latin: string; note: string; page?: string }> = JSON.parse(caption.dataset.places!);
+  const tag = document.querySelector<HTMLElement>('[data-tag]')!;
+  const tagLatin = tag.querySelector<HTMLElement>('[data-tag-latin]')!;
+  const tagPage = tag.querySelector<HTMLElement>('[data-tag-page]')!;
   const cap = {
     latin: caption.querySelector<HTMLElement>('[data-cap-latin]')!,
     note: caption.querySelector<HTMLElement>('[data-cap-note]')!,
@@ -144,6 +152,18 @@ const PLACES = {
       links.forEach((a) => a.classList.toggle('is-lit', a === chapterFor(place)));
     },
     onEnter: (place) => chapterFor(place)?.click(),
+    onTag: (place, x, y) => {
+      tag.classList.toggle('is-shown', !!place);
+      if (!place) return;
+      tagLatin.textContent = PLACES[place].latin;
+      tagPage.textContent = PLACES[place].page ?? '';
+      // Kept inside the plate; it flips below its building near the top edge.
+      const w = tag.offsetWidth;
+      const frame = tag.parentElement!.clientWidth;
+      tag.style.left = `${Math.min(Math.max(x, w / 2 + 6), frame - w / 2 - 6)}px`;
+      tag.style.top = `${y}px`;
+      tag.classList.toggle('is-below', y < tag.offsetHeight + 70);
+    },
   });
   if (!forum) root.classList.add('no-webgl');
   forum?.intro(bookOpened());
@@ -233,6 +253,87 @@ const PLACES = {
     align-items: center;
     gap: 0.4rem;
     margin: 0.5rem 12px 0;
+  }
+
+  /* The street isn't dragged: the cursor is plain, a hand over a building. */
+  #engraving,
+  #engraving:active {
+    cursor: default;
+  }
+
+  /* ── The label over a building ── */
+
+  .place-tag {
+    position: absolute;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.3rem 0.75rem 0.35rem;
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    box-shadow:
+      0 0 0 3px var(--paper),
+      0 0 0 4px var(--ink),
+      0 6px 14px rgb(40 25 10 / 0.25);
+    line-height: 1.15;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-50%, calc(-100% - 16px)) scale(0.96);
+    transform-origin: 50% 100%;
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  /* A pointer down to the building. */
+  .place-tag::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -9px;
+    width: 10px;
+    height: 10px;
+    background: var(--paper);
+    border-right: 1px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+    transform: translateX(-50%) rotate(45deg);
+  }
+
+  .place-tag.is-shown {
+    opacity: 1;
+    transform: translate(-50%, calc(-100% - 16px));
+  }
+
+  .place-tag.is-below {
+    transform: translate(-50%, 16px);
+    transform-origin: 50% 0;
+  }
+
+  .place-tag.is-below::after {
+    bottom: auto;
+    top: -9px;
+    transform: translateX(-50%) rotate(225deg);
+  }
+
+  .tag-latin {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 1.05rem;
+    letter-spacing: 0.08em;
+    color: var(--rubric);
+  }
+
+  .tag-page {
+    font-style: italic;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .place-tag {
+      transition: none;
+    }
   }
 
   .hint kbd {
