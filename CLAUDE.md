@@ -10,6 +10,8 @@ The whole site is an open book. `src/layouts/Codex.astro` renders every page as 
 
 Plates per page: home cycles I–III (galea, fides, currus); /blog → IV stilus; /about → V sigillum (the logo in wax); subject pages and posts pick by tag via `plateForTags()` (dev → machina, notes → liber, thoughts → hora, tools → circinus; others → liber). To illustrate a new tag, add it to `SUBJECTS` in `catalogue.ts`.
 
+Page corners (`Corner.astro`, styles in `codex.css`) turn back and forward in reading order: Index → De auctore → Commentarii → Caput I … last chapter (a subject page sits beside Commentarii and opens on its first chapter). Pages pass `prev`/`next` to `Codex`. Folios follow the same order (index 1, about 3, blog 5, subjects 7, chapters 10 + 2n), and the turn direction compares folios: `pageswap` stores the folio being left, and `pagereveal` turns backward when the new one is lower. Keep folios in reading order when adding pages.
+
 Opening: the first page of a visit arrives as a closed book. An inline script in `Codex.astro` sets `html.opening` before first paint (once per tab via `sessionStorage['codex-opened']`, never under reduced motion); `Binding.astro` is the board, whose gilt sigil tools in while the page loads; `opening.ts` swings it open. Plate intros wait on `bookOpened()`. To replay it, open the site in a new tab. Fade the board's faces, never `.board` itself: opacity flattens `preserve-3d` and the mirrored front shows through.
 
 **Gotcha:** in the page-turn CSS, back rules must use the full `animation:` shorthand. The forward rules' `animation: none` also resets `animation-duration` to 0, so a back rule that only sets `animation-name` runs instantly.

@@ -164,6 +164,119 @@
   margin-top: clamp(10px, 2vh, 18px);
 }
 
+/* ── Page corners: turn to the previous / next page in reading order ──
+   Resting, a hint of a dog-ear; under the cursor the corner lifts and folds
+   back over the page, showing the leaf beneath. Drawn for the bottom-right
+   corner and mirrored for the bottom-left. */
+
+.corner {
+  position: absolute;
+  bottom: 0;
+  z-index: 6;
+  width: 96px;
+  height: 96px;
+  text-decoration: none;
+  --fold: 12px;
+}
+
+.corner--next {
+  right: 0;
+}
+
+.corner--prev {
+  left: 0;
+}
+
+.corner--portrait {
+  display: none;
+}
+
+.fold {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: var(--fold);
+  height: var(--fold);
+  filter: drop-shadow(-2px -2px 3px rgb(50 30 10 / 0.28));
+  transition:
+    width 0.45s cubic-bezier(0.3, 1.35, 0.5, 1),
+    height 0.45s cubic-bezier(0.3, 1.35, 0.5, 1);
+}
+
+.corner--prev .fold {
+  right: auto;
+  left: 0;
+  transform: scaleX(-1);
+}
+
+/* Where the corner was: the next leaf, in the folded page's shadow. */
+.fold::before,
+.fold::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.fold::before {
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+  background: linear-gradient(to top left, #ddd0b0, #c4b28a 50%);
+}
+
+/* The corner itself, folded back: the crease catches the light, the tip doesn't. */
+.fold::after {
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+  background: linear-gradient(to bottom right, #d9cba8, #f1e9d4 38%, #f8f2e2 48%, #e3d7b8 50%);
+}
+
+.corner-label {
+  position: absolute;
+  right: 12px;
+  bottom: 78px;
+  padding: 0 0.3em;
+  font-style: italic;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  color: var(--rubric);
+  background: var(--paper);
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+  pointer-events: none;
+}
+
+.corner--prev .corner-label {
+  right: auto;
+  left: 12px;
+}
+
+.corner:hover,
+.corner:focus-visible {
+  --fold: 66px;
+}
+
+.corner:active {
+  --fold: 84px;
+}
+
+.corner:hover .corner-label,
+.corner:focus-visible .corner-label {
+  opacity: 1;
+  transform: none;
+}
+
+.codex .corner:focus-visible {
+  outline: none;
+}
+
+/* No hover on touch: a larger dog-ear says the corner can be turned. */
+@media (hover: none) {
+  .corner {
+    --fold: 26px;
+  }
+}
+
 /* ── Book typography ── */
 
 .rubric {
@@ -607,6 +720,15 @@ html:active-view-transition-type(back)::view-transition-new(recto) {
     display: none;
   }
 
+  /* One column: the verso's corner would sit mid-screen, so the recto carries both. */
+  .verso .corner--prev {
+    display: none;
+  }
+
+  .corner--portrait {
+    display: block;
+  }
+
   /* One leaf turning over the whole screen. */
   .verso,
   .recto {
@@ -829,6 +951,11 @@ html.opening .verso {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .fold,
+  .corner-label {
+    transition: none;
+  }
+
   ::view-transition-group(*),
   ::view-transition-old(*),
   ::view-transition-new(*) {

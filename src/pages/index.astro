@@ -24,7 +24,7 @@ const roman = (n: number) =>
 const plates = PLATES.map((id) => CATALOGUE[id]);
 ---
 
-<Codex title={SITE_TITLE} description={SITE_DESCRIPTION} folio={1} fit>
+<Codex title={SITE_TITLE} description={SITE_DESCRIPTION} folio={1} fit next={{ href: '/about', label: 'De auctore' }}>
   <!-- Verso: the engraved plate, with the name lettered on its banderole -->
   <Fragment slot="verso">
     <figure class="plate">

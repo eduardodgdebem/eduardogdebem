@@ -7,6 +7,12 @@ import type { ImageMetadata } from 'astro';
 import BaseHead from '../components/BaseHead.astro';
 import Logo from '../components/Logo.astro';
 import Binding from '../components/Binding.astro';
+import Corner from '../components/Corner.astro';
+
+export interface Turn {
+  href: string;
+  label: string;
+}
 
 interface Props {
   title: string;
@@ -16,9 +22,12 @@ interface Props {
   folio: number;
   /** Fit the spread to one screen even on portrait (the home page). */
   fit?: boolean;
+  /** The pages either side in reading order, turned by their corners. */
+  prev?: Turn;
+  next?: Turn;
 }
 
-const { title, description, image, folio, fit = false } = Astro.props;
+const { title, description, image, folio, fit = false, prev, next } = Astro.props;
 
 const roman = (n: number) =>
   ([['M', 1000], ['CM', 900], ['D', 500], ['CD', 400], ['C', 100], ['XC', 90], ['L', 50], ['XL', 40], ['X', 10], ['IX', 9], ['V', 5], ['IV', 4], ['I', 1]] as const).reduce(
@@ -41,7 +50,7 @@ const nav = [
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-folio={folio}>
   <head>
     <BaseHead title={title} description={description} image={image} />
     <script is:inline>
@@ -57,14 +66,25 @@ const nav = [
       } catch {}
     </script>
     <script is:inline>
-      // Tell the page turn which way to go: back through history, or "up" the
-      // book (post → field notes → index), turns the leaf backward.
+      // Tell the page turn which way to go: back through history, or to a
+      // lower folio, turns the leaf backward. The page being left records its
+      // folio on the way out.
+      window.addEventListener('pageswap', (e) => {
+        if (!e.viewTransition) return;
+        try {
+          sessionStorage.setItem('codex-from-folio', document.documentElement.dataset.folio);
+        } catch {}
+      });
       window.addEventListener('pagereveal', (e) => {
         const vt = e.viewTransition;
         const act = window.navigation && navigation.activation;
         if (!vt || !act || !act.from) return;
+        let from = NaN;
+        try {
+          from = Number(sessionStorage.getItem('codex-from-folio'));
+        } catch {}
         const depth = (u) => new URL(u).pathname.split('/').filter(Boolean).length;
-        let back = depth(act.entry.url) < depth(act.from.url);
+        let back = from ? Number(document.documentElement.dataset.folio) < from : depth(act.entry.url) < depth(act.from.url);
         if (act.navigationType === 'traverse') back = act.entry.index < act.from.index;
         vt.types.add(back ? 'back' : 'forward');
       });
@@ -84,6 +104,7 @@ const nav = [
         <footer class="folio">
           <span>{roman(folio)}</span>
         </footer>
+        {prev && <Corner turn={prev} rel="prev" />}
       </section>
 
       <main class="page recto">
@@ -101,6 +122,9 @@ const nav = [
           <a href="/rss.xml">rss</a>
           <span>{roman(folio + 1)}</span>
         </footer>
+        {/* On portrait the spread is one column: both corners are this page's. */}
+        {prev && <Corner turn={prev} rel="prev" portrait />}
+        {next && <Corner turn={next} rel="next" />}
       </main>
     </div>
     <script>

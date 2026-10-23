@@ -34,7 +34,10 @@ const date = (d: Date) => `${d.toLocaleDateString('en-GB', { day: 'numeric', mon
 const lede = description && !/^lorem ipsum/i.test(description) ? description : null;
 ---
 
-<Codex title={`${title} — ${SITE_TITLE}`} description={description} image={heroImage} folio={10 + chapter * 2}>
+<Codex title={`${title} — ${SITE_TITLE}`} description={description} image={heroImage} folio={10 + chapter * 2}
+  prev={prev ? { href: prev.href, label: prev.title } : { href: '/blog', label: 'Commentarii' }}
+  next={next && { href: next.href, label: next.title }}
+>
   <Fragment slot="verso">
     <a href="/blog" class="back">← Commentarii</a>
     <Plate plate={plateForTags(tags)} banner={`Caput ${roman(chapter)}`} />

@@ -28,12 +28,18 @@ const roman = (n: number) =>
     { n, out: '' },
   ).out;
 
+// Reading order: index → author → field notes → the chapters. A subject sits
+// beside the field notes and opens on its first chapter.
+const first = posts.at(-1);
+const prev = activeTag ? { href: '/blog', label: 'Commentarii' } : { href: '/about', label: 'De auctore' };
+const next = first && { href: `/blog/${first.id}/`, label: `Caput ${roman(chapters.get(first.id) ?? 1)}` };
+
 const date = (d: Date) => `${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}, ${roman(d.getFullYear())}`;
 const title = activeTag ? `De ${activeTag} — Commentarii — ${SITE_TITLE}` : `Commentarii — ${SITE_TITLE}`;
 const description = activeTag ? `Field notes on ${activeTag}.` : 'Field notes: what I built, read and learned, written down as I go.';
 ---
 
-<Codex title={title} description={description} folio={activeTag ? 5 : 3}>
+<Codex title={title} description={description} folio={activeTag ? 7 : 5} prev={prev} next={next}>
   <Fragment slot="verso">
     <Plate plate={activeTag ? plateForTags([activeTag]) : 'stilus'} banner={activeTag ? subjectBanner(activeTag) : 'Commentarii'} />
   </Fragment>
