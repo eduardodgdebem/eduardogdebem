@@ -109,6 +109,7 @@ const plates = PLATES.map((id) => CATALOGUE[id]);
   import { gsap } from 'gsap';
   import { createCoverEngraving } from '../scripts/codex/cover';
   import { createEngraving } from '../scripts/codex/engraving';
+  import { bookOpened } from '../scripts/codex/opening';
 
   const root = document.documentElement;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -122,7 +123,7 @@ const plates = PLATES.map((id) => CATALOGUE[id]);
     onContextLost: () => root.classList.add('no-webgl'),
   });
   if (!plate) root.classList.add('no-webgl');
-  plate?.intro();
+  plate?.intro(bookOpened());
 
   /* ── Plates ── */
 
@@ -199,8 +200,11 @@ const plates = PLATES.map((id) => CATALOGUE[id]);
 
   const turned = !!(window as unknown as { navigation?: { activation?: { from?: unknown } } }).navigation?.activation?.from;
   if (!reduced && !turned) {
-    gsap.from('.recto .page-body > *', { autoAlpha: 0, y: 8, duration: 1.4, stagger: 0.12, ease: 'power2.out', delay: 0.6 });
-    gsap.from('.plate-caption, .plate-nav', { autoAlpha: 0, duration: 1.4, delay: 2.4 });
+    // Under a closed board the right page is already set; only the plate's
+    // furniture waits for the book to open.
+    const opening = root.classList.contains('opening');
+    if (!opening) gsap.from('.recto .page-body > *', { autoAlpha: 0, y: 8, duration: 1.4, stagger: 0.12, ease: 'power2.out', delay: 0.6 });
+    bookOpened().then(() => gsap.from('.plate-caption, .plate-nav', { autoAlpha: 0, duration: 1.4, delay: opening ? 1.2 : 2.4 }));
   }
 
   // Kept alive when the page goes into the back/forward cache.

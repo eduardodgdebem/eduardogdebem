@@ -632,6 +632,197 @@ html:active-view-transition-type(back)::view-transition-new(recto) {
   }
 }
 
+/* ── The binding: the book arrives closed on the first page of a visit ──
+   html.opening is set before first paint by the inline script in Codex.astro;
+   src/scripts/codex/opening.ts swings the board open. */
+
+.binding {
+  display: none;
+}
+
+html.opening .binding {
+  display: block;
+  position: absolute;
+  inset: 0 0 0 50%;
+  z-index: 20;
+  perspective: 2600px;
+  perspective-origin: 0% 50%;
+}
+
+html.opening .book {
+  transform: translateX(-25%);
+  background: transparent;
+  box-shadow: none;
+}
+
+html.opening .book::before {
+  opacity: 0;
+}
+
+html.opening .verso {
+  clip-path: inset(0 0 0 100%);
+}
+
+.book,
+.book::before {
+  transition:
+    box-shadow 0.8s ease,
+    background-color 0.8s ease,
+    opacity 0.8s ease;
+}
+
+.board {
+  position: absolute;
+  inset: -6px -10px -6px 0;
+  transform-origin: 0% 50%;
+  transform-style: preserve-3d;
+}
+
+.board-front,
+.board-back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 2px 6px 6px 2px;
+}
+
+.board-front {
+  display: grid;
+  place-items: center;
+  padding: clamp(18px, 3vw, 40px);
+  background:
+    /* the spine's hinge */
+    linear-gradient(90deg, rgb(0 0 0 / 0.55), rgb(0 0 0 / 0) 4%, rgb(255 255 255 / 0.04) 5%, rgb(0 0 0 / 0) 7%),
+    /* wear at the edges */
+    radial-gradient(ellipse at 50% 45%, rgb(0 0 0 / 0) 55%, rgb(0 0 0 / 0.45)),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    #26301f;
+  box-shadow:
+    0 30px 80px rgb(0 0 0 / 0.65),
+    inset 0 0 0 1px rgb(0 0 0 / 0.5);
+  --gilt: #c9a35a;
+}
+
+/* Two gilt fillets tooled round the board. */
+.board-front::before,
+.board-front::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  border: 1px solid var(--gilt);
+  opacity: 0.75;
+}
+
+.board-front::before {
+  inset: clamp(14px, 2.2vw, 28px);
+}
+
+.board-front::after {
+  inset: clamp(20px, 2.8vw, 36px);
+  border-width: 3px;
+  border-style: double;
+}
+
+.tooling {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(10px, 2vh, 22px);
+  color: var(--gilt);
+  text-shadow: 0 1px 0 rgb(0 0 0 / 0.6);
+}
+
+.board-title {
+  margin: 0;
+  font-family: 'Cinzel', 'IM Fell English SC', serif;
+  font-size: clamp(1.4rem, 2.6vw, 2.6rem);
+  letter-spacing: 0.4em;
+  margin-right: -0.4em;
+  text-transform: uppercase;
+  animation: gilt-in 1.2s 0.2s ease-out both;
+}
+
+.board-year {
+  margin: 0;
+  font-family: 'Cinzel', serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.5em;
+  margin-right: -0.5em;
+  opacity: 0.7;
+  animation: gilt-in 1.2s 1.2s ease-out both;
+}
+
+/* The sigil is tooled in: the outline is pressed first, then the leaf laid. */
+.board-sigil {
+  width: clamp(110px, 16vw, 220px);
+  height: auto;
+  overflow: visible;
+  filter: drop-shadow(0 1px 0 rgb(0 0 0 / 0.7));
+}
+
+.board-sigil path {
+  fill: var(--gilt);
+  fill-opacity: 0;
+  fill-rule: evenodd;
+  stroke: var(--gilt);
+  stroke-width: 2.5;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation:
+    tool 1.3s 0.1s cubic-bezier(0.6, 0, 0.3, 1) forwards,
+    leaf 0.5s 1.3s ease-out forwards,
+    glint 2.4s 1.8s ease-in-out infinite;
+}
+
+@keyframes tool {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes leaf {
+  to {
+    fill-opacity: 1;
+  }
+}
+
+@keyframes glint {
+  50% {
+    fill: #ecd9a0;
+  }
+}
+
+@keyframes gilt-in {
+  from {
+    opacity: 0;
+    letter-spacing: 0.7em;
+  }
+}
+
+/* The inside of the board: endpaper, and the shadow of the page it lay on. */
+.board-back {
+  transform: rotateY(180deg);
+  background:
+    linear-gradient(270deg, rgb(60 40 20 / 0.3), rgb(60 40 20 / 0) 8%),
+    var(--paper);
+  box-shadow: inset 0 0 0 clamp(8px, 1vw, 14px) #26301f;
+}
+
+/* On portrait screens the spread is one column: the board covers it all. */
+@media (max-aspect-ratio: 1/1) {
+  html.opening .binding {
+    inset: 0;
+  }
+
+  html.opening .book {
+    transform: none;
+  }
+
+  html.opening .verso {
+    clip-path: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*),
   ::view-transition-old(*),

@@ -12,7 +12,8 @@ import { PLATES, type PlateId, buildModel, disposeModel } from './models';
 
 export interface Engraving {
   show(index: number): void;
-  intro(): void;
+  /** Blank the plate now and engrave it once `after` resolves. */
+  intro(after?: Promise<void>): void;
   dispose(): void;
 }
 
@@ -521,12 +522,14 @@ export function createEngraving(canvas: HTMLCanvasElement, { name, plates = PLAT
       .to(engraveUniforms.uReveal, { value: 1, duration: 2.2, ease: 'power1.out' });
   };
 
-  const intro = () => {
+  const intro = (after: Promise<void> = Promise.resolve()) => {
     if (reducedMotion) return;
     engraveUniforms.uReveal.value = 0;
     ribbonUniforms.uReveal.value = 0;
-    gsap.to(engraveUniforms.uReveal, { value: 1, duration: 2.8, ease: 'power1.out', delay: 0.5 });
-    gsap.to(ribbonUniforms.uReveal, { value: 1, duration: 2.4, ease: 'power1.inOut', delay: 1.4 });
+    after.then(() => {
+      gsap.to(engraveUniforms.uReveal, { value: 1, duration: 2.8, ease: 'power1.out', delay: 0.5 });
+      gsap.to(ribbonUniforms.uReveal, { value: 1, duration: 2.4, ease: 'power1.inOut', delay: 1.4 });
+    });
   };
 
   window.addEventListener('resize', resize);

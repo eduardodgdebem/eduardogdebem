@@ -10,6 +10,8 @@ The whole site is an open book. `src/layouts/Codex.astro` renders every page as 
 
 Plates per page: home cycles I–III (galea, fides, currus); /blog → IV stilus; /about → V sigillum (the logo in wax); subject pages and posts pick by tag via `plateForTags()` (dev → machina, notes → liber, thoughts → hora, tools → circinus; others → liber). To illustrate a new tag, add it to `SUBJECTS` in `catalogue.ts`.
 
+Opening: the first page of a visit arrives as a closed book. An inline script in `Codex.astro` sets `html.opening` before first paint (once per tab via `sessionStorage['codex-opened']`, never under reduced motion); `Binding.astro` is the board, whose gilt sigil tools in while the page loads; `opening.ts` swings it open. Plate intros wait on `bookOpened()`. To replay it, open the site in a new tab. Fade the board's faces, never `.board` itself: opacity flattens `preserve-3d` and the mirrored front shows through.
+
 **Gotcha:** in the page-turn CSS, back rules must use the full `animation:` shorthand. The forward rules' `animation: none` also resets `animation-duration` to 0, so a back rule that only sets `animation-name` runs instantly.
 
 The Dead Reckoning notes below describe the previous design and are kept for history.

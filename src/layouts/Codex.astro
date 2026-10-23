@@ -6,6 +6,7 @@ import '../styles/codex.css';
 import type { ImageMetadata } from 'astro';
 import BaseHead from '../components/BaseHead.astro';
 import Logo from '../components/Logo.astro';
+import Binding from '../components/Binding.astro';
 
 interface Props {
   title: string;
@@ -44,6 +45,18 @@ const nav = [
   <head>
     <BaseHead title={title} description={description} image={image} />
     <script is:inline>
+      // The first page of a visit arrives as a closed book (Binding.astro).
+      // Set before first paint so the closed board is what paints; if the
+      // opening script never runs, the book opens itself.
+      try {
+        if (!sessionStorage.getItem('codex-opened') && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          sessionStorage.setItem('codex-opened', '1');
+          document.documentElement.classList.add('opening');
+          setTimeout(() => window.__codexOpening || document.documentElement.classList.remove('opening'), 5000);
+        }
+      } catch {}
+    </script>
+    <script is:inline>
       // Tell the page turn which way to go: back through history, or "up" the
       // book (post → field notes → index), turns the leaf backward.
       window.addEventListener('pagereveal', (e) => {
@@ -59,6 +72,7 @@ const nav = [
   </head>
   <body class="codex">
     <div class:list={['book', { 'book--fit': fit }]}>
+      <Binding />
       <section class="page verso">
         <header class="running">
           <a href="/" class="mark" aria-label="Codex Eduardi, home"><Logo size={22} /></a>
@@ -89,5 +103,9 @@ const nav = [
         </footer>
       </main>
     </div>
+    <script>
+      import { openBook } from '../scripts/codex/opening';
+      openBook();
+    </script>
   </body>
 </html>

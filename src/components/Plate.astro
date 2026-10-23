@@ -29,6 +29,7 @@ const { numeral, latin, note } = CATALOGUE[plate];
 <script>
   import { createEngraving } from '../scripts/codex/engraving';
   import type { PlateId } from '../scripts/codex/models';
+  import { bookOpened } from '../scripts/codex/opening';
 
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   await document.fonts.load('150px "IM Fell English SC"').catch(() => undefined);
@@ -41,7 +42,7 @@ const { numeral, latin, note } = CATALOGUE[plate];
       onContextLost: () => document.documentElement.classList.add('no-webgl'),
     });
     if (!plate) document.documentElement.classList.add('no-webgl');
-    plate?.intro();
+    plate?.intro(bookOpened());
     // Kept alive when the page goes into the back/forward cache.
     window.addEventListener('pagehide', (e) => !e.persisted && plate?.dispose());
   }

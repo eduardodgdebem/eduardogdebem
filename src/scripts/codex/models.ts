@@ -215,7 +215,7 @@ const POSE: Record<PlateId, THREE.Euler> = {
   fides: new THREE.Euler(-0.45, 0.35, -0.55),
   currus: new THREE.Euler(0.26, -0.45, 0),
   stilus: new THREE.Euler(0.62, -0.35, 0),
-  sigillum: new THREE.Euler(-0.15, 0.3, 0.04),
+  sigillum: new THREE.Euler(-0.12, 0.18, 0.03),
   machina: new THREE.Euler(-0.12, 0.38, 0.05),
   liber: new THREE.Euler(0.72, -0.2, 0.05),
   hora: new THREE.Euler(0.12, 0.3, 0.06),

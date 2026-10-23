@@ -119,10 +119,19 @@ export function sigillum(): THREE.BufferGeometry[] {
 
   // The sigil itself, standing proud of the wax.
   const shapes = SVGLoader.createShapes(new SVGLoader().parse(`<svg xmlns="http://www.w3.org/2000/svg"><path d="${SIGIL}"/></svg>`).paths[0]);
-  const sigil = extrude(shapes, 0.1, 0.012, 2);
-  sigil.translate(-205.5, -204.5, 0); // centre of the 411×409 viewBox
-  sigil.scale(0.0036, -0.0036, 1); // SVG y points down
-  sigil.translate(0, 0.02, 0.2);
+  // Shape units are SVG units, depth is world units: the bevel needs one of each.
+  const sigil = new THREE.ExtrudeGeometry(shapes, {
+    depth: 0.12,
+    bevelEnabled: true,
+    bevelThickness: 0.02,
+    bevelSize: 2.5,
+    bevelSegments: 2,
+    curveSegments: 32,
+  }).translate(-205.5, -204.5, -0.06); // centre of the 411×409 viewBox
+  // SVG y points down. Flipping z too keeps the determinant positive, so the
+  // winding (and which faces get culled) survives the mirror.
+  sigil.scale(0.0041, -0.0041, -1);
+  sigil.translate(0, -0.02, 0.24);
   parts.push(sigil);
 
   // Laurel: two branches curving up either side, leaves alternating out and in.
