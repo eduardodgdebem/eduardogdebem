@@ -1,7 +1,9 @@
 import * as THREE from 'three';
 import { gsap } from 'gsap';
 import { createBanner, createInk, createPasses, fine, inscriptionTexture, merge, plateZoom } from './passes';
+import { amphitheatrum } from './ludus-models';
 import { createWalker } from './walker';
+import { createZoom } from './zoom';
 import {
   arcus,
   basilica,
@@ -33,7 +35,7 @@ import {
 // buildings are pages (library, statue, forge). Stand at one's door and press
 // Enter, or click the building, to go in, and the page turns.
 
-export type Place = 'bibliotheca' | 'fabrica' | 'statua';
+export type Place = 'bibliotheca' | 'fabrica' | 'statua' | 'amphitheatrum';
 
 export interface Forum {
   /** Pick a place out in red and bring it into view (null: none). */
@@ -69,11 +71,13 @@ const STREET = 1.8; // half-width of the basalt roadway
 const WALK = 1.2; // the pavements either side
 const FRONT = -(STREET + WALK); // where the north frontages stand
 const END = 24; // the arches, at either end
-const BOUNDS = { x: 29, zMin: FRONT + 0.35, zMax: STREET + WALK - 0.4 };
+// The slab runs on past the eastern arch, to the Colosseum.
+const SLAB = 38; // half-length
+const BOUNDS = { x: 33, zMin: FRONT + 0.35, zMax: STREET + WALK - 0.4 };
 const SPEED = 3.4;
 
 // Each place's x along the street; its door is on the pavement in front.
-const AT: Record<Place, number> = { bibliotheca: -12.5, statua: -2, fabrica: 17 };
+const AT: Record<Place, number> = { bibliotheca: -12.5, statua: -2, fabrica: 17, amphitheatrum: 31.5 };
 const doorOf = (place: Place) => new THREE.Vector3(AT[place], 0, FRONT + 0.45);
 const DOOR_REACH = 1.3;
 // The orator's platform on the south pavement; come within earshot to hear him.
@@ -101,6 +105,8 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   }
   const pixel = Math.min(window.devicePixelRatio, 2);
   renderer.setPixelRatio(pixel);
+  // Wheel, pinch or the plate's buttons bring the view closer or further.
+  const zoom = createZoom(canvas, { min: 0.7, max: 2.2, onChange: () => resize() });
 
   const scene = new THREE.Scene();
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 100);
@@ -135,8 +141,8 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   // back edge there is only sky.
   const slab = material({ value: 0 });
   (slab as THREE.ShaderMaterial).uniforms.uPale = { value: 0.55 };
-  build([new THREE.BoxGeometry(66, 0.8, 17.6).translate(0, -0.4, -2.3)], [0, 0], 0, slab);
-  scene.add(fine(new THREE.LineSegments(pavingLines(END + 6, STREET, WALK), jointMat)));
+  build([new THREE.BoxGeometry(SLAB * 2, 0.8, 17.6).translate(0, -0.4, -2.3)], [0, 0], 0, slab);
+  scene.add(fine(new THREE.LineSegments(pavingLines(SLAB - 2, STREET, WALK), jointMat)));
 
   // North frontage, west to east.
   const backRow = (built: { parts: THREE.BufferGeometry[]; front: number }, x: number) => build(built.parts, [x, FRONT - built.front]);
@@ -146,14 +152,12 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   backRow(curia(), 11);
   backRow(insula(3.4, 2), 21.2);
   backRow(insula(3.0, 3), -25.6);
-  backRow(insula(3.6, 2), 26.4);
   for (const x of [-3.7, -0.3]) build(cypress(2.9), [x, FRONT - 1.0]);
   // Narrow houses filling the gaps in the frontage.
   backRow(insula(1.4, 3), -15.4);
   backRow(insula(1.5, 2), -9.6);
   backRow(insula(1.6, 3), 14.2);
   backRow(insula(3.0, 3), -29.6);
-  backRow(insula(3.0, 2), 29.8);
 
   // Behind the frontage: a second row of houses, kept low so the sky still shows,
   // and a great temple over the basilica. Nothing stands behind the statue, so
@@ -179,7 +183,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   }
   for (const [x, w, n] of [
     [-27, 3.6, 3], [-22.4, 4.2, 2], [-17.6, 3.8, 3], [-13, 4.0, 2], [-8.6, 3.4, 3],
-    [13.6, 3.4, 2], [18.2, 4.2, 3], [23, 3.8, 2], [27.8, 4.4, 3],
+    [13.6, 3.4, 2], [18.2, 4.2, 3], [23, 3.8, 2],
   ] as const) deep(insula(w, n), x);
 
   // The arches across the street: Titus's at the west end, Severus's at the east.
@@ -226,7 +230,8 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     const b = mesh.geometry.boundingBox!.clone();
     b.min.multiplyScalar(GRAND);
     b.max.multiplyScalar(GRAND);
-    const half = (b.max.x - b.min.x) / 2;
+    // Standards flank the door; on a building as wide as the Colosseum, they stay near it.
+    const half = Math.min(2.4, (b.max.x - b.min.x) / 2);
     for (const side of [-1, 1]) {
       const std = vexillum();
       build(std.pole, [AT[id] + side * (half + 0.3), FRONT + 0.15]);
@@ -259,6 +264,9 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   addPlace('fabrica', forge, 2.1, { text: 'FABRICA', ...forge.sign });
   const statue = statua();
   addPlace('statua', statue, 0.95, { text: 'EDVARDVS', ...statue.inscription });
+  // Past the Arch of Severus, the games.
+  const arena = amphitheatrum();
+  addPlace('amphitheatrum', arena, arena.front, { text: 'AMPHITHEATRVM', ...arena.panel });
 
   // The street itself can be clicked, to walk there.
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(BOUNDS.x * 2, 12).rotateX(-Math.PI / 2), proxyMat);
@@ -476,15 +484,15 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
 
   let halfW = FIT_W / 2;
   let halfH = FIT_H / 2;
-  let zoom = 1;
+  let small = 1; // closer on a phone's narrow plate
   const resize = () => {
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
     if (!w || !h) return;
     passes.setSize(w, h);
     const aspect = w / h;
-    zoom = plateZoom(w);
-    halfH = Math.max((FIT_H * zoom) / 2, (FIT_W * zoom) / 2 / aspect);
+    small = plateZoom(w);
+    halfH = Math.max((FIT_H * small) / 2, (FIT_W * small) / 2 / aspect) / zoom.value;
     halfW = halfH * aspect;
     Object.assign(camera, { left: -halfW, right: halfW, top: halfH, bottom: -halfH });
     camera.updateProjectionMatrix();
@@ -548,7 +556,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     downAt = { x: e.clientX, y: e.clientY };
   };
   const onUp = (e: PointerEvent) => {
-    if (!downAt || entering) return;
+    if (!downAt || entering || zoom.gesturing) return;
     const moved = Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y);
     downAt = null;
     if (moved > 8) return;
@@ -638,12 +646,13 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   const lean = new THREE.Vector3();
   const follow = (dt: number) => {
     const goal = indexed && !entering ? AT[indexed] : citizen.position.x;
-    const limit = END + 4 - halfW;
+    // As far as the slab goes: past the eastern arch stands the Colosseum.
+    const limit = SLAB - halfW;
     const x = THREE.MathUtils.clamp(goal, -limit, limit);
     const k = reducedMotion ? 1 : 1 - Math.exp(-dt * 3);
     view.x += (x - view.x) * k;
     // Closed in on a phone: follow him across the street too.
-    view.z += ((zoom < 1 ? citizen.position.z * 0.6 : 0) - view.z) * k;
+    view.z += ((small < 1 ? citizen.position.z * 0.6 : 0) - view.z) * k;
     target.set(view.x, VIEW_Y, VIEW_Z + view.z);
     // A few degrees of tilt toward the pointer: round the street, and up or down it.
     if (!reducedMotion) tilt.lerp(tiltTarget, 1 - Math.exp(-dt * 4));
@@ -769,6 +778,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
       window.removeEventListener('resize', resize);
       window.removeEventListener('pointermove', onPointerMove);
       walker.dispose();
+      zoom.dispose();
       canvas.removeEventListener('pointerdown', onDown);
       canvas.removeEventListener('pointerup', onUp);
       canvas.removeEventListener('pointerleave', onLeave);

@@ -5,6 +5,7 @@ import { buildModel, type PlateId } from './models';
 import { basis, bench, capsa, medicus, pavingRings, porticus } from './plaza-models';
 import { createBanner, createInk, createPasses, fine, inscriptionTexture, merge, plateZoom } from './passes';
 import { createWalker } from './walker';
+import { createZoom } from './zoom';
 
 // The about page's plate: the author's plaza. The citizen comes in from the
 // Via Sacra through an arch; the author's statue stands in the middle, ringed
@@ -71,6 +72,8 @@ export function createPlaza(canvas: HTMLCanvasElement, { monuments, name, reduce
   }
   const pixel = Math.min(window.devicePixelRatio, 2);
   renderer.setPixelRatio(pixel);
+  // Wheel, pinch or the plate's buttons bring the view closer or further.
+  const zoom = createZoom(canvas, { min: 0.7, max: 2.4, onChange: () => resize() });
 
   const scene = new THREE.Scene();
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 100);
@@ -336,7 +339,7 @@ export function createPlaza(canvas: HTMLCanvasElement, { monuments, name, reduce
     downAt = { x: e.clientX, y: e.clientY };
   };
   const onUp = (e: PointerEvent) => {
-    if (!downAt || busy) return;
+    if (!downAt || busy || zoom.gesturing) return;
     const moved = Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y);
     downAt = null;
     if (moved > 8) return;
@@ -477,7 +480,7 @@ export function createPlaza(canvas: HTMLCanvasElement, { monuments, name, reduce
   let halfW = FIT_W / 2;
   let halfH = FIT_H / 2;
   const view = new THREE.Vector2(citizen.position.x, citizen.position.z);
-  let zoom = 1;
+  let small = 1; // closer on a phone's narrow plate
   const target = new THREE.Vector3();
   const lean = new THREE.Vector3();
   const follow = (dt: number) => {
@@ -501,8 +504,8 @@ export function createPlaza(canvas: HTMLCanvasElement, { monuments, name, reduce
     if (!w || !h) return;
     passes.setSize(w, h);
     const aspect = w / h;
-    zoom = plateZoom(w);
-    halfH = Math.max((FIT_H * zoom) / 2, (FIT_W * zoom) / 2 / aspect);
+    small = plateZoom(w);
+    halfH = Math.max((FIT_H * small) / 2, (FIT_W * small) / 2 / aspect) / zoom.value;
     halfW = halfH * aspect;
     Object.assign(camera, { left: -halfW, right: halfW, top: halfH, bottom: -halfH });
     camera.updateProjectionMatrix();
@@ -632,6 +635,7 @@ export function createPlaza(canvas: HTMLCanvasElement, { monuments, name, reduce
     dispose() {
       stop();
       walker.dispose();
+      zoom.dispose();
       visit?.kill();
       nextVisit?.kill();
       gsap.killTweensOf([shared.uReveal, banner.uniforms.uReveal, boxReveal, ...mons.flatMap((m) => [m.glow, m.spin])]);

@@ -1,0 +1,47 @@
+---
+// The plate's own controls, in its corner: zoom in and out (the scene listens
+// for `plate:zoom` on its canvas; see src/scripts/codex/zoom.ts), and full
+// screen, which spreads the plate over the whole window.
+import { ICONS } from './icons';
+import { tr, type Lang } from '../i18n/strings';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const s = tr(lang);
+---
+
+<div class="plate-tools" data-plate-tools data-full-label={s('tools.full')} data-exit-label={s('tools.exit')}>
+  <button type="button" data-zoom="1.25" aria-label={s('tools.in')} title={s('tools.in')} set:html={ICONS.plus} />
+  <button type="button" data-zoom="0.8" aria-label={s('tools.out')} title={s('tools.out')} set:html={ICONS.minus} />
+  <button type="button" data-full aria-label={s('tools.full')} title={s('tools.full')} set:html={ICONS.expand} />
+</div>
+
+<script>
+  import { ICONS } from './icons';
+
+  for (const tools of document.querySelectorAll<HTMLElement>('[data-plate-tools]')) {
+    const frame = tools.closest<HTMLElement>('.plate-frame')!;
+    const canvas = frame.querySelector('canvas')!;
+    for (const b of tools.querySelectorAll<HTMLButtonElement>('[data-zoom]')) {
+      b.addEventListener('click', () => canvas.dispatchEvent(new CustomEvent('plate:zoom', { detail: Number(b.dataset.zoom) })));
+    }
+    // Spread out: the plate takes the whole open book, over both pages (on a
+    // phone, where the book is one column, the screen).
+    const full = tools.querySelector<HTMLButtonElement>('[data-full]')!;
+    const setFull = (on: boolean) => {
+      frame.classList.toggle('is-full', on);
+      document.documentElement.classList.toggle('plate-is-full', on);
+      full.innerHTML = on ? ICONS.shrink : ICONS.expand;
+      const label = on ? tools.dataset.exitLabel! : tools.dataset.fullLabel!;
+      full.setAttribute('aria-label', label);
+      full.title = label;
+      // The scene sizes itself on resize.
+      requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
+    };
+    full.addEventListener('click', () => setFull(!frame.classList.contains('is-full')));
+    document.addEventListener('keydown', (e) => e.key === 'Escape' && frame.classList.contains('is-full') && setFull(false));
+  }
+</script>

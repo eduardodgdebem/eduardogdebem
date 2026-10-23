@@ -19,6 +19,7 @@ import {
 } from './library-models';
 import { createBanner, createInk, createPasses, fine, inscriptionTexture, merge, plateZoom } from './passes';
 import { createWalker } from './walker';
+import { createZoom } from './zoom';
 
 // The field notes' plate: inside the Bibliotheca. The reader's citizen comes in
 // from the Via Sacra and walks the reading room (arrow keys, WASD, or a click),
@@ -103,6 +104,8 @@ export function createLibrary(canvas: HTMLCanvasElement, { rolls, name, reducedM
   }
   const pixel = Math.min(window.devicePixelRatio, 2);
   renderer.setPixelRatio(pixel);
+  // Wheel, pinch or the plate's buttons bring the view closer or further.
+  const zoom = createZoom(canvas, { min: 0.7, max: 2.2, onChange: () => resize() });
 
   const scene = new THREE.Scene();
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 100);
@@ -461,7 +464,7 @@ export function createLibrary(canvas: HTMLCanvasElement, { rolls, name, reducedM
     downAt = { x: e.clientX, y: e.clientY };
   };
   const onUp = (e: PointerEvent) => {
-    if (!downAt || busy) return;
+    if (!downAt || busy || zoom.gesturing) return;
     const moved = Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y);
     downAt = null;
     if (moved > 8) return;
@@ -557,7 +560,7 @@ export function createLibrary(canvas: HTMLCanvasElement, { rolls, name, reducedM
   let halfW = FIT_W / 2;
   let halfH = FIT_H / 2;
   const view = { x: citizen.position.x, z: 0 };
-  let zoom = 1;
+  let small = 1; // closer on a phone's narrow plate
   const target = new THREE.Vector3();
   const lean = new THREE.Vector3();
   const follow = (dt: number) => {
@@ -567,7 +570,7 @@ export function createLibrary(canvas: HTMLCanvasElement, { rolls, name, reducedM
     const k = reducedMotion ? 1 : 1 - Math.exp(-dt * 3);
     view.x += (x - view.x) * k;
     // Closed in on a phone: follow him from the shelves to the front of the room too.
-    view.z += ((zoom < 1 ? (citizen.position.z - VIEW_Z) * 0.5 : 0) - view.z) * k;
+    view.z += ((small < 1 ? (citizen.position.z - VIEW_Z) * 0.5 : 0) - view.z) * k;
     if (!reducedMotion) tilt.lerp(tiltTarget, 1 - Math.exp(-dt * 4));
     target.set(view.x, VIEW_Y, VIEW_Z + view.z);
     lean.set(tilt.x * 0.1, -tilt.y * 0.055, 0).add(VIEW_DIR).normalize();
@@ -583,8 +586,8 @@ export function createLibrary(canvas: HTMLCanvasElement, { rolls, name, reducedM
     if (!w || !h) return;
     passes.setSize(w, h);
     const aspect = w / h;
-    zoom = plateZoom(w);
-    halfH = Math.max((FIT_H * zoom) / 2, (FIT_W * zoom) / 2 / aspect);
+    small = plateZoom(w);
+    halfH = Math.max((FIT_H * small) / 2, (FIT_W * small) / 2 / aspect) / zoom.value;
     halfW = halfH * aspect;
     Object.assign(camera, { left: -halfW, right: halfW, top: halfH, bottom: -halfH });
     camera.updateProjectionMatrix();
@@ -731,6 +734,7 @@ export function createLibrary(canvas: HTMLCanvasElement, { rolls, name, reducedM
     dispose() {
       stop();
       walker.dispose();
+      zoom.dispose();
       gsap.killTweensOf([shared.uReveal, banner.uniforms.uReveal, ...posts.flatMap((p) => [p.glow, p.pull])]);
       window.removeEventListener('resize', resize);
       window.removeEventListener('pointermove', onPointerMove);

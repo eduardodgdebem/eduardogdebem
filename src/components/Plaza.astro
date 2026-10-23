@@ -4,6 +4,7 @@
 // with `data-monument={i}` lights monument i.
 import type { PlateId } from '../scripts/codex/models';
 import { tr, type Lang } from '../i18n/strings';
+import PlateTools from './PlateTools.astro';
 
 export interface PlazaMonument {
   /** The marginal note it stands for: its label reads note.<key> and note.<key>.items. */
@@ -33,6 +34,7 @@ const s = tr(lang);
       <span class="tag-by" data-tag-by></span>
       <span class="tag-act" data-tag-act></span>
     </div>
+    <PlateTools lang={lang} />
   </div>
   <figcaption class="plate-caption">
     <span class="tab">Tab. V</span>
@@ -161,7 +163,7 @@ const s = tr(lang);
     color: var(--ink-soft);
   }
 
-  .plaza-hint kbd {
+  .plaza-hint :global(kbd) {
     font-family: inherit;
     font-style: normal;
     font-size: 0.8em;
