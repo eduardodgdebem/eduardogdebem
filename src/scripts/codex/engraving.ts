@@ -19,6 +19,8 @@ export interface Engraving {
 interface Options {
   /** Lettered on the banderole. */
   name: string;
+  /** Plate to open on (index into PLATES). */
+  initial?: number;
   reducedMotion: boolean;
   onContextLost?: () => void;
 }
@@ -236,7 +238,7 @@ function banderole(width = 7.6, height = 0.66) {
   return geo;
 }
 
-export function createEngraving(canvas: HTMLCanvasElement, { name, reducedMotion, onContextLost }: Options): Engraving | null {
+export function createEngraving(canvas: HTMLCanvasElement, { name, initial = 0, reducedMotion, onContextLost }: Options): Engraving | null {
   let renderer: THREE.WebGLRenderer;
   try {
     renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false });
@@ -276,7 +278,7 @@ export function createEngraving(canvas: HTMLCanvasElement, { name, reducedMotion
 
   const turntable = new THREE.Group();
   scene.add(turntable);
-  let current = 0;
+  let current = initial;
   let model = buildModel(PLATES[current], engrave);
   turntable.add(model);
 

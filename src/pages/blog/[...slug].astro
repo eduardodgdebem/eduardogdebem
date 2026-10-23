@@ -3,18 +3,31 @@ import { type CollectionEntry, getCollection, render } from 'astro:content';
 import BlogPost from '../../layouts/BlogPost.astro';
 
 export async function getStaticPaths() {
-	const posts = await getCollection('blog');
-	return posts.map((post) => ({
-		params: { slug: post.id },
-		props: post,
-	}));
+  const posts = (await getCollection('blog')).toSorted((a, b) => a.data.pubDate.valueOf() - b.data.pubDate.valueOf());
+  // Chapter = order of writing; neighbours for the turn-the-page links.
+  return posts.map((post, i) => ({
+    params: { slug: post.id },
+    props: { post, chapter: i + 1, prev: posts[i - 1], next: posts[i + 1] },
+  }));
 }
-type Props = CollectionEntry<'blog'>;
 
-const post = Astro.props;
-const { Content } = await render(post);
+interface Props {
+  post: CollectionEntry<'blog'>;
+  chapter: number;
+  prev?: CollectionEntry<'blog'>;
+  next?: CollectionEntry<'blog'>;
+}
+
+const { post, chapter, prev, next } = Astro.props;
+const { Content, headings } = await render(post);
 ---
 
-<BlogPost {...post.data}>
-	<Content />
+<BlogPost
+  {...post.data}
+  chapter={chapter}
+  headings={headings.filter((h) => h.depth <= 3)}
+  prev={prev && { href: `/blog/${prev.id}/`, title: prev.data.title }}
+  next={next && { href: `/blog/${next.id}/`, title: next.data.title }}
+>
+  <Content />
 </BlogPost>

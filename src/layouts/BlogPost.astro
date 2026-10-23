@@ -1,88 +1,161 @@
 ---
+// A field note as a chapter of the codex: the opener on the left page, the
+// text on the right.
+import type { MarkdownHeading } from 'astro';
 import type { CollectionEntry } from 'astro:content';
-import BaseHead from '../components/BaseHead.astro';
-import Footer from '../components/Footer.astro';
-import FormattedDate from '../components/FormattedDate.astro';
-import Frame from '../components/Frame.astro';
-import Header from '../components/Header.astro';
-import Tag from '../components/Tag.astro';
+import Codex from './Codex.astro';
+import { SITE_TITLE } from '../consts';
 
-type Props = CollectionEntry<'blog'>['data'];
+type Props = CollectionEntry<'blog'>['data'] & {
+  chapter: number;
+  headings: MarkdownHeading[];
+  prev?: { href: string; title: string };
+  next?: { href: string; title: string };
+};
 
-const { title, description, pubDate, updatedDate, tags } = Astro.props;
+const { title, description, pubDate, updatedDate, tags, heroImage, chapter, headings, prev, next } = Astro.props;
+
+const roman = (n: number) =>
+  ([['M', 1000], ['CM', 900], ['D', 500], ['CD', 400], ['C', 100], ['XC', 90], ['L', 50], ['XL', 40], ['X', 10], ['IX', 9], ['V', 5], ['IV', 4], ['I', 1]] as const).reduce(
+    (acc, [s, v]) => {
+      while (acc.n >= v) {
+        acc.out += s;
+        acc.n -= v;
+      }
+      return acc;
+    },
+    { n, out: '' },
+  ).out;
+
+const date = (d: Date) => `${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}, ${roman(d.getFullYear())}`;
+// Descriptions still holding the starter's placeholder aren't worth printing.
+const lede = description && !/^lorem ipsum/i.test(description) ? description : null;
 ---
 
-<html lang="en">
-  <head>
-    <BaseHead title={title} description={description} />
-  </head>
+<Codex title={`${title} — ${SITE_TITLE}`} description={description} image={heroImage} folio={10 + chapter * 2}>
+  <Fragment slot="verso">
+    <header class="opener">
+      <a href="/blog" class="back">← Commentarii</a>
+      <p class="rubric caput">Caput {roman(chapter)}</p>
+      <h1>{title}</h1>
+      <p class="fleuron" aria-hidden="true">❦</p>
+      <p class="date">
+        <time datetime={pubDate.toISOString()}>{date(pubDate)}</time>
+        {updatedDate && <span class="updated">, revised <time datetime={updatedDate.toISOString()}>{date(updatedDate)}</time></span>}
+      </p>
+      {lede && <p class="lede">{lede}</p>}
+      {tags && tags.length > 0 && (
+        <p class="tags">
+          {tags.map((t) => <a href={`/blog/tag/${t}/`} class="subject">{t}</a>)}
+        </p>
+      )}
+    </header>
 
-  <body class="bg-void text-parchment">
-    <Header />
-    <Frame />
+    {headings.length > 1 && (
+      <nav class="contents in-chapter" aria-label="In this chapter">
+        <p class="rubric">In hoc capite</p>
+        <ol>
+          {headings.map((h, i) => (
+            <li class={`d${h.depth}`}>
+              <a href={`#${h.slug}`}><span class="num">{roman(i + 1)}.</span><span class="label">{h.text}</span><span class="leader"></span></a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+    )}
 
-    <main class="relative z-10 pt-28 pb-24 px-8 md:px-14">
-      <article class="max-w-2xl mx-auto">
+    <nav class="turn" aria-label="Other chapters">
+      {prev ? <a href={prev.href} rel="prev">← {prev.title}</a> : <span></span>}
+      {next && <a href={next.href} rel="next">{next.title} →</a>}
+    </nav>
+  </Fragment>
 
-        <!-- Meta -->
-        <div class="flex items-center gap-4 mb-8">
-          <a
-            href="/blog"
-            class="font-mono text-xs text-brush hover:text-signal tracking-widest uppercase transition-colors duration-200"
-          >
-            ← FIELD NOTES
-          </a>
-        </div>
+  <Fragment slot="recto">
+    <article class="codex-prose">
+      <slot />
+    </article>
+    <p class="fleuron explicit" aria-hidden="true">❦ Explicit ❦</p>
+  </Fragment>
+</Codex>
 
-        <!-- Header -->
-        <header class="mb-12">
-          <div class="flex items-center gap-3 mb-6">
-            <span class="w-6 h-px bg-signal"></span>
-            <time class="font-mono text-xs text-brush tracking-wide">
-              <FormattedDate date={pubDate} />
-            </time>
-            {updatedDate && (
-              <span class="font-mono text-xs text-brush tracking-wide">
-                · updated <FormattedDate date={updatedDate} />
-              </span>
-            )}
-          </div>
+<style>
+  .opener {
+    margin-top: clamp(4px, 4vh, 48px);
+    text-align: center;
+  }
 
-          <h1 class="font-display text-5xl md:text-7xl text-parchment tracking-wide leading-none">
-            {title}
-          </h1>
+  .back {
+    display: inline-block;
+    font-style: italic;
+    color: var(--ink-soft);
+    text-decoration: none;
+    margin-bottom: clamp(12px, 4vh, 48px);
+  }
 
-          <div class="w-20 h-px bg-signal mt-8"></div>
+  .caput {
+    letter-spacing: 0.2em;
+  }
 
-          {tags && tags.length > 0 && (
-            <div class="flex gap-2 flex-wrap mt-6">
-              {tags.map((tag) => (
-                <Tag tag={tag} href={`/blog/tag/${tag}`} />
-              ))}
-            </div>
-          )}
-        </header>
+  h1 {
+    font-size: clamp(2rem, 3.4vw, 3.4rem);
+    line-height: 1.05;
+    margin: 0.3rem auto 0;
+    max-width: 18ch;
+    text-wrap: balance;
+  }
 
-        <!-- Content -->
-        <div class="prose">
-          <slot />
-        </div>
+  .date {
+    font-style: italic;
+    color: var(--ink-soft);
+    margin: 0;
+  }
 
-        <!-- Post footer -->
-        <div class="mt-16 pt-8 border-t border-trench flex items-center justify-between">
-          <a
-            href="/blog"
-            class="font-mono text-xs text-brush hover:text-signal tracking-widest uppercase transition-colors duration-200"
-          >
-            ← All entries
-          </a>
-          <span class="font-mono text-xs text-brush tracking-widest">
-            EB
-          </span>
-        </div>
-      </article>
-    </main>
+  .lede {
+    font-size: 1.1rem;
+    font-style: italic;
+    max-width: 38ch;
+    margin: 1rem auto 0;
+  }
 
-    <Footer />
-  </body>
-</html>
+  .tags {
+    display: flex;
+    justify-content: center;
+    gap: 0.8rem;
+    margin: 0.8rem 0 0;
+  }
+
+  .in-chapter {
+    margin-top: clamp(16px, 5vh, 56px);
+  }
+
+  .in-chapter .d3 {
+    padding-left: 3ch;
+    font-size: 0.92rem;
+  }
+
+  .turn {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: auto;
+    padding-top: 1.2rem;
+    font-style: italic;
+    font-size: 0.95rem;
+  }
+
+  .turn a {
+    color: var(--ink-soft);
+    text-decoration: none;
+    max-width: 48%;
+  }
+
+  .turn a[rel='next'] {
+    text-align: right;
+  }
+
+  .explicit {
+    font-family: 'IM Fell English SC', serif;
+    letter-spacing: 0.2em;
+    margin: 1.5rem 0 0.5rem;
+  }
+</style>

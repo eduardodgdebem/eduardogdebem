@@ -1,0 +1,50 @@
+---
+// An engraved plate (src/scripts/codex/engraving.ts) with a lettered banderole.
+// The home page drives its own plate so it can cycle; other pages use this.
+import { PLATES } from '../scripts/codex/models';
+
+interface Props {
+  /** Index into PLATES: 0 galea, 1 fides, 2 currus. */
+  plate: number;
+  /** Lettered on the banderole. */
+  banner: string;
+  numeral: string;
+  latin: string;
+  note: string;
+}
+
+const { plate, banner, numeral, latin, note } = Astro.props;
+const id = PLATES[plate];
+---
+
+<figure class="plate">
+  <div class="plate-frame">
+    <canvas class="plate-canvas" data-engraving data-plate={plate} data-banner={banner} aria-hidden="true"></canvas>
+    <div class="plate-fallback" aria-hidden="true"><span>{banner}</span></div>
+  </div>
+  <figcaption class="plate-caption" data-plate-id={id}>
+    <span class="tab">Tab. {numeral}</span>
+    <span class="cap-latin">{latin}</span>
+    <span class="cap-note">{note}</span>
+  </figcaption>
+</figure>
+
+<script>
+  import { createEngraving } from '../scripts/codex/engraving';
+
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  await document.fonts.load('150px "IM Fell English SC"').catch(() => undefined);
+
+  for (const canvas of document.querySelectorAll<HTMLCanvasElement>('[data-engraving]')) {
+    const plate = createEngraving(canvas, {
+      name: canvas.dataset.banner!,
+      initial: Number(canvas.dataset.plate),
+      reducedMotion: reduced,
+      onContextLost: () => document.documentElement.classList.add('no-webgl'),
+    });
+    if (!plate) document.documentElement.classList.add('no-webgl');
+    plate?.intro();
+    // Kept alive when the page goes into the back/forward cache.
+    window.addEventListener('pagehide', (e) => !e.persisted && plate?.dispose());
+  }
+</script>

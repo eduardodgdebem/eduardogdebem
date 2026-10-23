@@ -1,0 +1,641 @@
+/* ─── Codex: the site as an open book ────────────────────────────────────
+   Shared by every page through src/layouts/Codex.astro. Page-specific
+   styling stays in the page. */
+
+/* Page turns between documents (Chrome 126+, Safari 18.2+; others just navigate). */
+@view-transition {
+  navigation: auto;
+}
+
+.codex {
+  --paper: #efe6d0;
+  --ink: #1b2419;
+  --ink-soft: #4a5243;
+  --rubric: #9b2d20;
+  --rule: #b9a985;
+
+  height: 100svh;
+  overflow: hidden;
+  margin: 0;
+  background:
+    radial-gradient(ellipse at 50% 120%, #2a1d14 0%, transparent 60%),
+    #17110c;
+  color: var(--ink);
+  font-family: 'IM Fell English', Georgia, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.codex ::selection {
+  background: var(--rubric);
+  color: var(--paper);
+}
+
+.codex h1,
+.codex h2,
+.codex h3,
+.codex h4 {
+  font-family: 'IM Fell English', Georgia, serif;
+  font-weight: 400;
+  letter-spacing: normal;
+  line-height: 1.1;
+  color: var(--ink);
+}
+
+.codex a {
+  color: inherit;
+}
+
+.codex a:hover {
+  color: var(--rubric);
+}
+
+.codex a:focus-visible,
+.codex button:focus-visible {
+  outline: 1px solid var(--rubric);
+  outline-offset: 3px;
+}
+
+/* ── The spread ── */
+
+.book {
+  position: fixed;
+  inset: clamp(10px, 2vw, 28px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  background:
+    linear-gradient(90deg, transparent calc(50% - 34px), rgb(60 40 20 / 0.2) 50%, transparent calc(50% + 34px)),
+    var(--paper);
+  box-shadow:
+    0 30px 80px rgb(0 0 0 / 0.6),
+    inset 0 0 120px rgb(120 90 40 / 0.25);
+  border-radius: 3px;
+}
+
+/* Fibres in the stock. */
+.book::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45  0 0 0 0 0.35  0 0 0 0 0.2  0 0 0 0.35 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.page {
+  position: relative;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(18px, 3vh, 34px) clamp(22px, 3.4vw, 56px) clamp(14px, 2.2vh, 26px);
+  background:
+    linear-gradient(90deg, transparent 88%, rgb(60 40 20 / 0.1)),
+    var(--paper);
+}
+
+.recto {
+  background:
+    linear-gradient(90deg, rgb(60 40 20 / 0.12), transparent 12%),
+    var(--paper);
+}
+
+/* Long pages scroll inside the page, not the window. */
+.page-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule) transparent;
+  margin-right: -10px;
+  padding-right: 10px;
+}
+
+.running {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-family: 'IM Fell English SC', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 0.55rem;
+  margin-bottom: clamp(10px, 2vh, 20px);
+}
+
+.running a {
+  text-decoration: none;
+}
+
+.running .mark {
+  color: var(--rubric);
+  display: flex;
+}
+
+.running-nav {
+  display: flex;
+  gap: 1.4rem;
+  margin-left: auto;
+}
+
+.running-nav a[aria-current='page'] {
+  color: var(--rubric);
+}
+
+.folio {
+  flex: none;
+  display: flex;
+  justify-content: space-between;
+  font-family: 'IM Fell English SC', serif;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  border-top: 1px solid var(--rule);
+  padding-top: 0.5rem;
+  margin-top: clamp(10px, 2vh, 18px);
+}
+
+/* ── Book typography ── */
+
+.rubric {
+  font-family: 'IM Fell English SC', serif;
+  color: var(--rubric);
+  letter-spacing: 0.12em;
+  margin: 0 0 0.4rem;
+}
+
+/* Rubricated initial, dropped two lines. */
+.initial {
+  float: left;
+  font-size: 3.4em;
+  line-height: 0.82;
+  padding: 0.06em 0.08em 0 0;
+  color: var(--rubric);
+}
+
+.fleuron {
+  color: var(--rubric);
+  text-align: center;
+  font-size: 1.3rem;
+  margin: 0.6rem 0;
+}
+
+.contents ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.contents a {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5ch;
+  color: var(--ink);
+  text-decoration: none;
+  padding: 0.1rem 0;
+}
+
+.contents .num {
+  font-family: 'IM Fell English SC', serif;
+  color: var(--rubric);
+  min-width: 2.6ch;
+}
+
+.contents .label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.contents .leader {
+  flex: 1;
+  min-width: 2ch;
+  border-bottom: 1px dotted var(--ink-soft);
+  transform: translateY(-0.3em);
+}
+
+.contents .pg {
+  font-family: 'IM Fell English SC', serif;
+  font-size: 0.85em;
+  color: var(--ink-soft);
+}
+
+.contents a:hover .label,
+.contents a:focus-visible .label,
+.contents a[aria-current='page'] .label {
+  color: var(--rubric);
+}
+
+/* Subject tags, set as small caps in brackets. */
+.subject {
+  font-family: 'IM Fell English SC', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  text-decoration: none;
+}
+
+.subject::before { content: '['; color: var(--rule); }
+.subject::after { content: ']'; color: var(--rule); }
+
+a.subject:hover,
+.subject[aria-current='page'] {
+  color: var(--rubric);
+}
+
+/* ── Engraved plates ── */
+
+.plate {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin: 0.2rem 0 0;
+}
+
+/* Plate mark: the dent a copper plate leaves in the paper, plus a ruled border. */
+.plate-frame {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  border: 1px solid var(--ink);
+  outline: 1px solid var(--ink);
+  outline-offset: 5px;
+  box-shadow:
+    0 0 0 11px var(--paper),
+    0 0 0 12px rgb(80 60 30 / 0.28);
+  margin: 12px;
+}
+
+.plate-canvas,
+.plate-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: pan-y;
+  cursor: grab;
+}
+
+.plate-canvas:active {
+  cursor: grabbing;
+}
+
+.plate-fallback {
+  display: none;
+  place-items: end center;
+  padding-bottom: 12%;
+  font-family: 'IM Fell English SC', serif;
+  font-size: 2rem;
+  letter-spacing: 0.14em;
+  background:
+    repeating-linear-gradient(115deg, transparent 0 5px, rgb(27 36 25 / 0.1) 5px 6px),
+    var(--paper);
+}
+
+.no-webgl .plate-fallback {
+  display: grid;
+}
+
+.no-webgl .plate-canvas {
+  display: none;
+}
+
+.plate-caption {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.8rem;
+  margin: 0.6rem 12px 0;
+}
+
+.plate-caption .tab {
+  font-family: 'IM Fell English SC', serif;
+  color: var(--rubric);
+  letter-spacing: 0.08em;
+}
+
+.plate-caption .cap-latin {
+  font-family: 'IM Fell English SC', serif;
+  font-size: 1.25rem;
+  letter-spacing: 0.16em;
+}
+
+.plate-caption .cap-note {
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+/* ── Prose: field notes set as a book ── */
+
+.codex-prose {
+  font-size: clamp(1.02rem, 0.4vw + 0.8rem, 1.18rem);
+  line-height: 1.6;
+  hyphens: auto;
+}
+
+.codex-prose > p:first-of-type::first-letter {
+  float: left;
+  font-size: 3.6em;
+  line-height: 0.8;
+  padding: 0.06em 0.08em 0 0;
+  color: var(--rubric);
+}
+
+.codex-prose p,
+.codex-prose li {
+  text-align: justify;
+  max-width: 62ch;
+}
+
+.codex-prose p {
+  margin: 0 0 0.9em;
+}
+
+.codex-prose h1,
+.codex-prose h2,
+.codex-prose h3 {
+  font-family: 'IM Fell English SC', serif;
+  color: var(--rubric);
+  letter-spacing: 0.08em;
+  font-size: 1.15em;
+  margin: 1.6em 0 0.5em;
+}
+
+.codex-prose h3 {
+  font-size: 1.02em;
+  color: var(--ink);
+}
+
+.codex-prose a {
+  color: var(--rubric);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.codex-prose ul,
+.codex-prose ol {
+  padding-left: 1.6em;
+  margin: 0 0 1em;
+}
+
+.codex-prose ul {
+  list-style: '❧  ';
+}
+
+.codex-prose li::marker {
+  color: var(--rubric);
+}
+
+.codex-prose blockquote {
+  margin: 1em 0;
+  padding: 0 0 0 1em;
+  border-left: 1px solid var(--rubric);
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+.codex-prose code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82em;
+  background: rgb(27 36 25 / 0.06);
+  color: var(--ink);
+  padding: 0.05em 0.3em;
+  border-radius: 0;
+}
+
+.codex-prose pre {
+  background: rgb(27 36 25 / 0.05);
+  border: 1px solid var(--rule);
+  border-left: 2px solid var(--rubric);
+  border-radius: 0;
+  padding: 1em;
+  overflow-x: auto;
+  margin: 1em 0;
+}
+
+.codex-prose pre > code {
+  background: none;
+  padding: 0;
+  font-size: 0.8em;
+}
+
+/* Images printed into the page: ink tones, no colour. */
+.codex-prose img {
+  border-radius: 0;
+  filter: grayscale(1) sepia(0.35) contrast(1.1);
+  mix-blend-mode: multiply;
+}
+
+.codex-prose hr {
+  border: 0;
+  text-align: center;
+  margin: 1.6em 0;
+}
+
+.codex-prose hr::after {
+  content: '❦';
+  color: var(--rubric);
+}
+
+.codex-prose table {
+  border-collapse: collapse;
+}
+
+.codex-prose th,
+.codex-prose td {
+  border-bottom: 1px solid var(--rule);
+}
+
+/* ── Page turn ─────────────────────────────────────────────────────────
+   Forward: the right-hand leaf lifts at the spine and turns over to the left;
+   its back is the next spread's left page. The new right page is already
+   underneath. Back: the left-hand leaf turns over to the right. */
+
+.verso { view-transition-name: verso; }
+.recto { view-transition-name: recto; }
+
+::view-transition-group(verso),
+::view-transition-group(recto),
+::view-transition-group(root) {
+  animation: none;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+
+::view-transition-old(verso),
+::view-transition-new(verso),
+::view-transition-old(recto),
+::view-transition-new(recto) {
+  animation-duration: 0.95s;
+  animation-timing-function: cubic-bezier(0.45, 0.05, 0.3, 1);
+  animation-fill-mode: both;
+  backface-visibility: hidden;
+  mix-blend-mode: normal;
+}
+
+/* Forward (default) */
+::view-transition-old(recto) {
+  z-index: 2;
+  transform-origin: left center;
+  animation-name: leaf-lift-left;
+}
+
+::view-transition-new(recto) {
+  animation: none;
+}
+
+::view-transition-old(verso) {
+  animation: none;
+}
+
+::view-transition-new(verso) {
+  z-index: 2;
+  transform-origin: right center;
+  animation-name: leaf-land-left;
+}
+
+@keyframes leaf-lift-left {
+  from { transform: perspective(2600px) rotateY(0deg); filter: brightness(1); }
+  to { transform: perspective(2600px) rotateY(-180deg); filter: brightness(0.6); }
+}
+
+@keyframes leaf-land-left {
+  from { transform: perspective(2600px) rotateY(180deg); filter: brightness(0.6); }
+  to { transform: perspective(2600px) rotateY(0deg); filter: brightness(1); }
+}
+
+/* Back */
+/* Full shorthands here: the forward rules' `animation: none` also zeroed the duration. */
+html:active-view-transition-type(back)::view-transition-old(verso) {
+  z-index: 2;
+  transform-origin: right center;
+  animation: leaf-lift-right 0.95s cubic-bezier(0.45, 0.05, 0.3, 1) both;
+}
+
+html:active-view-transition-type(back)::view-transition-new(verso) {
+  z-index: auto;
+  animation: none;
+}
+
+html:active-view-transition-type(back)::view-transition-old(recto) {
+  z-index: auto;
+  animation: none;
+}
+
+html:active-view-transition-type(back)::view-transition-new(recto) {
+  z-index: 2;
+  transform-origin: left center;
+  animation: leaf-land-right 0.95s cubic-bezier(0.45, 0.05, 0.3, 1) both;
+}
+
+@keyframes leaf-lift-right {
+  from { transform: perspective(2600px) rotateY(0deg); filter: brightness(1); }
+  to { transform: perspective(2600px) rotateY(180deg); filter: brightness(0.6); }
+}
+
+@keyframes leaf-land-right {
+  from { transform: perspective(2600px) rotateY(-180deg); filter: brightness(0.6); }
+  to { transform: perspective(2600px) rotateY(0deg); filter: brightness(1); }
+}
+
+/* ── Portrait: one page at a time ── */
+
+@media (max-aspect-ratio: 1/1) {
+  .book {
+    grid-template-columns: 1fr;
+    grid-auto-rows: auto;
+    overflow-y: auto;
+    background: var(--paper);
+  }
+
+  /* The home spread fits one screen; other pages scroll as one long page. */
+  .book--fit {
+    overflow: hidden;
+    grid-template-rows: minmax(0, 1.1fr) auto;
+  }
+
+  .page {
+    padding: 14px 20px;
+    background: var(--paper);
+  }
+
+  .page-body {
+    overflow: visible;
+    margin-right: 0;
+    padding-right: 0;
+  }
+
+  /* Scrolling spreads: pages size to their content (flex:1 would contribute 0). */
+  .book:not(.book--fit) {
+    grid-auto-rows: max-content;
+    align-content: start;
+  }
+
+  .book:not(.book--fit) .page,
+  .book:not(.book--fit) .page-body {
+    flex: none;
+    min-height: auto;
+  }
+
+  .book:not(.book--fit) .plate {
+    flex: none;
+  }
+
+  .book:not(.book--fit) .plate-frame {
+    flex: none;
+    aspect-ratio: 1;
+  }
+
+  .book:not(.book--fit) .verso .folio,
+  .book:not(.book--fit) .recto .running .mark-text {
+    display: none;
+  }
+
+  /* One leaf turning over the whole screen. */
+  .verso,
+  .recto {
+    view-transition-name: none;
+  }
+
+  .book {
+    view-transition-name: leaf;
+  }
+
+  ::view-transition-group(leaf) {
+    animation: none;
+  }
+
+  ::view-transition-old(leaf) {
+    z-index: 2;
+    transform-origin: left center;
+    backface-visibility: hidden;
+    animation: leaf-lift-left 0.8s cubic-bezier(0.45, 0.05, 0.3, 1) both;
+  }
+
+  ::view-transition-new(leaf) {
+    animation: none;
+  }
+
+  html:active-view-transition-type(back)::view-transition-old(leaf) {
+    transform-origin: right center;
+    animation: leaf-lift-right 0.8s cubic-bezier(0.45, 0.05, 0.3, 1) both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

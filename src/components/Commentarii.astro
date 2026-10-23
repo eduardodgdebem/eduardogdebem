@@ -1,0 +1,175 @@
+---
+// The field-notes spread, shared by /blog and /blog/tag/[tag].
+import type { CollectionEntry } from 'astro:content';
+import Codex from '../layouts/Codex.astro';
+import Plate from './Plate.astro';
+import { SITE_TITLE } from '../consts';
+
+interface Props {
+  posts: CollectionEntry<'blog'>[];
+  /** Chapter number of every post, oldest first. */
+  chapters: Map<string, number>;
+  allTags: string[];
+  activeTag?: string;
+}
+
+const { posts, chapters, allTags, activeTag } = Astro.props;
+
+const roman = (n: number) =>
+  ([['M', 1000], ['CM', 900], ['D', 500], ['CD', 400], ['C', 100], ['XC', 90], ['L', 50], ['XL', 40], ['X', 10], ['IX', 9], ['V', 5], ['IV', 4], ['I', 1]] as const).reduce(
+    (acc, [s, v]) => {
+      while (acc.n >= v) {
+        acc.out += s;
+        acc.n -= v;
+      }
+      return acc;
+    },
+    { n, out: '' },
+  ).out;
+
+const date = (d: Date) => `${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}, ${roman(d.getFullYear())}`;
+const title = activeTag ? `De ${activeTag} — Commentarii — ${SITE_TITLE}` : `Commentarii — ${SITE_TITLE}`;
+const description = activeTag ? `Field notes on ${activeTag}.` : 'Field notes: what I built, read and learned, written down as I go.';
+---
+
+<Codex title={title} description={description} folio={activeTag ? 5 : 3}>
+  <Fragment slot="verso">
+    <Plate plate={0} banner="Commentarii" numeral="IV" latin="Commentarii" note="notes kept on campaign, as Caesar kept his." />
+  </Fragment>
+
+  <Fragment slot="recto">
+    <header class="head">
+      <p class="rubric">Liber I</p>
+      <h1>{activeTag ? <>Field notes <span class="de">de {activeTag}</span></> : 'Field notes'}</h1>
+      <p class="intro">What I built, read and learned, written down as I go.</p>
+      <nav class="subjects" aria-label="Subjects">
+        <span class="subjects-label">Subjects:</span>
+        <a href="/blog" class="subject" aria-current={!activeTag ? 'page' : undefined}>all</a>
+        {allTags.map((t) => (
+          <a href={`/blog/tag/${t}/`} class="subject" aria-current={t === activeTag ? 'page' : undefined}>{t}</a>
+        ))}
+      </nav>
+    </header>
+
+    <ol class="chapters">
+      {posts.map((post) => (
+        <li>
+          <a href={`/blog/${post.id}/`} class="chapter">
+            <span class="cap">Caput {roman(chapters.get(post.id) ?? 1)}</span>
+            <span class="title">{post.data.title}</span>
+            <span class="date"><time datetime={post.data.pubDate.toISOString()}>{date(post.data.pubDate)}</time></span>
+            {post.data.description && <span class="desc">{post.data.description}</span>}
+          </a>
+          {post.data.tags && post.data.tags.length > 0 && (
+            <p class="tags">
+              {post.data.tags.map((t) => <a href={`/blog/tag/${t}/`} class="subject">{t}</a>)}
+            </p>
+          )}
+        </li>
+      ))}
+    </ol>
+
+    {posts.length === 0 && <p class="empty">Nothing written on this yet.</p>}
+    <p class="fleuron" aria-hidden="true">❦</p>
+  </Fragment>
+</Codex>
+
+<style>
+  .head h1 {
+    font-size: clamp(2.4rem, 3.6vw, 3.6rem);
+    margin: 0 0 0.4rem;
+  }
+
+  .de {
+    font-style: italic;
+    color: var(--rubric);
+  }
+
+  .intro {
+    font-style: italic;
+    color: var(--ink-soft);
+    margin: 0 0 0.8rem;
+  }
+
+  .subjects {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.9rem;
+    align-items: baseline;
+    padding-bottom: 0.9rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .subjects-label {
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  .chapters {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .chapters li {
+    padding: 1rem 0 0.9rem;
+    border-bottom: 1px dotted var(--rule);
+  }
+
+  .chapter {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.1rem 1rem;
+    text-decoration: none;
+  }
+
+  .cap {
+    grid-column: 1 / -1;
+    font-family: 'IM Fell English SC', serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    color: var(--rubric);
+  }
+
+  .title {
+    font-size: 1.45rem;
+    line-height: 1.15;
+  }
+
+  .date {
+    font-style: italic;
+    color: var(--ink-soft);
+    white-space: nowrap;
+    align-self: baseline;
+  }
+
+  .desc {
+    grid-column: 1 / -1;
+    font-style: italic;
+    color: var(--ink-soft);
+    margin-top: 0.15rem;
+  }
+
+  .chapter:hover .title,
+  .chapter:focus-visible .title {
+    color: var(--rubric);
+  }
+
+  .tags {
+    display: flex;
+    gap: 0.7rem;
+    margin: 0.35rem 0 0;
+  }
+
+  .empty {
+    font-style: italic;
+    color: var(--ink-soft);
+    padding: 2rem 0;
+  }
+
+  @media (max-width: 560px) {
+    .chapter {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

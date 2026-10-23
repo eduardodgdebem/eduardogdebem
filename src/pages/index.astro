@@ -1,7 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
-import BaseHead from '../components/BaseHead.astro';
-import Logo from '../components/Logo.astro';
+import Codex from '../layouts/Codex.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 
 const posts = (await getCollection('blog'))
@@ -28,667 +27,375 @@ const plates = [
 ];
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
-  </head>
-  <body class="home">
-    <div class="book">
-      <!-- Verso: the engraved plate, with the name lettered on its banderole -->
-      <section class="page verso" aria-label="Frontispiece">
-        <header class="running">
-          <a href="/" class="mark" aria-label="Home"><Logo size={24} /></a>
-          <span>Codex Eduardi</span>
-        </header>
+<Codex title={SITE_TITLE} description={SITE_DESCRIPTION} folio={1} fit>
+  <!-- Verso: the engraved plate, with the name lettered on its banderole -->
+  <Fragment slot="verso">
+    <figure class="plate">
+      <div class="plate-frame">
+        <canvas id="engraving" class="plate-canvas" aria-hidden="true"></canvas>
+        <div class="plate-fallback" aria-hidden="true"><span>Eduardo de Bem</span></div>
+      </div>
+      <figcaption class="plate-caption" data-plates={JSON.stringify(plates)}>
+        <span class="tab">Tab. <span data-cap-numeral>{plates[0].numeral}</span></span>
+        <span class="cap-latin" data-cap-latin>{plates[0].latin}</span>
+        <span class="cap-note" data-cap-note>{plates[0].note}</span>
+      </figcaption>
+    </figure>
 
-        <figure class="plate">
-          <div class="plate-frame">
-            <canvas id="engraving" aria-hidden="true"></canvas>
-            <div class="plate-fallback" aria-hidden="true">
-              <span>Eduardo de Bem</span>
-            </div>
-          </div>
-          <figcaption class="caption" data-plates={JSON.stringify(plates)}>
-            <span class="tab">Tab. <span data-cap-numeral>{plates[0].numeral}</span></span>
-            <span class="cap-latin" data-cap-latin>{plates[0].latin}</span>
-            <span class="cap-note" data-cap-note>{plates[0].note}</span>
-          </figcaption>
-        </figure>
+    <div class="plate-nav" role="group" aria-label="Choose a plate">
+      {plates.map((p, i) => (
+        <button type="button" data-plate={i} aria-pressed={i === 0 ? 'true' : 'false'} aria-label={`Plate ${p.numeral}: ${p.latin}`}>
+          {p.numeral}
+        </button>
+      ))}
+      <span class="hint">move the lamp with your cursor · drag to turn</span>
+    </div>
+  </Fragment>
 
-        <div class="plate-nav" role="group" aria-label="Choose a plate">
-          {plates.map((p, i) => (
-            <button type="button" data-plate={i} aria-pressed={i === 0 ? 'true' : 'false'} aria-label={`Plate ${p.numeral}: ${p.latin}`}>
-              {p.numeral}
-            </button>
-          ))}
-          <span class="hint">move the lamp with your cursor · drag to turn</span>
-        </div>
-      </section>
-
-      <!-- Recto: of the author, the index, and what he is listening to -->
-      <main class="page recto">
-        <header class="running running-right">
-          <span>De auctore</span>
-        </header>
-
-        <div class="bio">
-          <h1 class="sr-only">Eduardo de Bem</h1>
-          <p class="lede">
-            <span class="initial">F</span>ullstack developer in Florianópolis. By day, Angular micro frontends with
-            .NET and MuleSoft behind them, for a BMW USA financial platform at Zallpy; on the side, React, NestJS,
-            PostgreSQL and RabbitMQ.
-          </p>
-          <p class="more">
-            Before that, geoprocessing at eTopocart, where ten-thousand-row tables taught me that performance problems
-            are more interesting than they look. Years of violin, now only listened to. Computer Science at UNISUL,
-            graduating {roman(2026)}.
-          </p>
-        </div>
-
-        <nav class="contents" aria-label="Contents">
-          <p class="contents-head">Index</p>
-          <ol>
-            <li class="chapter">
-              <a href="/blog"><span class="num">I.</span><span class="label">Field notes</span><span class="leader"></span><span class="pg">all</span></a>
-              <ol class="sub">
-                {posts.map((p) => (
-                  <li>
-                    <a href={`/blog/${p.id}/`}><span class="label">{p.data.title}</span><span class="leader"></span><span class="pg">{roman(p.data.pubDate.getFullYear())}</span></a>
-                  </li>
-                ))}
-              </ol>
-            </li>
-            <li class="chapter">
-              <a href="/about"><span class="num">II.</span><span class="label">Of the author, at length</span><span class="leader"></span><span class="pg">about</span></a>
-            </li>
-            <li class="chapter">
-              <a href="https://github.com/eduardodgdebem" target="_blank" rel="noopener noreferrer"><span class="num">III.</span><span class="label">Workshop</span><span class="leader"></span><span class="pg">github</span></a>
-            </li>
-          </ol>
-        </nav>
-
-        <!-- Jellyfin: the cover, re-drawn as an engraving; hidden if it can't be reached. -->
-        <aside class="listening" data-media hidden aria-label="What I'm listening to and watching">
-          <figure class="cover" data-cover hidden>
-            <canvas id="cover" aria-hidden="true"></canvas>
-          </figure>
-          <div class="listening-text">
-            <p data-slot="listening" hidden>
-              <span class="hand" aria-hidden="true">☞</span> <em data-verb></em><br />
-              <span class="track" data-title></span><br /><span class="by" data-sub></span>
-            </p>
-            <p class="watching" data-slot="watching" hidden>
-              <em data-verb></em> <span data-title></span><span class="by" data-sub></span>
-            </p>
-          </div>
-        </aside>
-
-        <footer class="folio">
-          <span>{roman(new Date().getFullYear())}</span>
-          <a href="/rss.xml">rss</a>
-        </footer>
-      </main>
+  <!-- Recto: of the author, the index, and what he is listening to -->
+  <Fragment slot="recto">
+    <div class="bio">
+      <h1 class="sr-only">Eduardo de Bem</h1>
+      <p class="lede">
+        <span class="initial">F</span>ullstack developer in Florianópolis. By day, Angular micro frontends with .NET
+        and MuleSoft behind them, for a BMW USA financial platform at Zallpy; on the side, React, NestJS, PostgreSQL
+        and RabbitMQ.
+      </p>
+      <p class="more">
+        Before that, geoprocessing at eTopocart, where ten-thousand-row tables taught me that performance problems are
+        more interesting than they look. Years of violin, now only listened to. Computer Science at UNISUL, graduating
+        {roman(2026)}.
+      </p>
     </div>
 
-    <script>
-      import { gsap } from 'gsap';
-      import { createCoverEngraving } from '../scripts/codex/cover';
-      import { createEngraving } from '../scripts/codex/engraving';
+    <nav class="contents" aria-label="Contents">
+      <p class="rubric">Index</p>
+      <ol>
+        <li class="chapter">
+          <a href="/blog"><span class="num">I.</span><span class="label">Field notes</span><span class="leader"></span><span class="pg">all</span></a>
+          <ol class="sub">
+            {posts.map((p) => (
+              <li>
+                <a href={`/blog/${p.id}/`}><span class="label">{p.data.title}</span><span class="leader"></span><span class="pg">{roman(p.data.pubDate.getFullYear())}</span></a>
+              </li>
+            ))}
+          </ol>
+        </li>
+        <li class="chapter">
+          <a href="/about"><span class="num">II.</span><span class="label">Of the author, at length</span><span class="leader"></span><span class="pg">about</span></a>
+        </li>
+        <li class="chapter">
+          <a href="https://github.com/eduardodgdebem" target="_blank" rel="noopener noreferrer"><span class="num">III.</span><span class="label">Workshop</span><span class="leader"></span><span class="pg">github</span></a>
+        </li>
+      </ol>
+    </nav>
 
-      const root = document.documentElement;
-      const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const canvas = document.getElementById('engraving') as HTMLCanvasElement;
+    <!-- Jellyfin: the cover, re-drawn as an engraving; hidden if it can't be reached. -->
+    <aside class="listening" data-media hidden aria-label="What I'm listening to and watching">
+      <figure class="cover" data-cover hidden>
+        <canvas id="cover" aria-hidden="true"></canvas>
+      </figure>
+      <div class="listening-text">
+        <p data-slot="listening" hidden>
+          <span class="hand" aria-hidden="true">☞</span> <em data-verb></em><br />
+          <span class="track" data-title></span><br /><span class="by" data-sub></span>
+        </p>
+        <p class="watching" data-slot="watching" hidden>
+          <em data-verb></em> <span data-title></span><span class="by" data-sub></span>
+        </p>
+      </div>
+    </aside>
+  </Fragment>
+</Codex>
 
-      // The banderole letters with the page font, so wait for it.
-      await document.fonts.load('150px "IM Fell English SC"').catch(() => undefined);
-      const plate = createEngraving(canvas, {
-        name: 'Eduardo de Bem',
-        reducedMotion: reduced,
-        onContextLost: () => root.classList.add('no-webgl'),
+<script>
+  import { gsap } from 'gsap';
+  import { createCoverEngraving } from '../scripts/codex/cover';
+  import { createEngraving } from '../scripts/codex/engraving';
+
+  const root = document.documentElement;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const canvas = document.getElementById('engraving') as HTMLCanvasElement;
+
+  // The banderole letters with the page font, so wait for it.
+  await document.fonts.load('150px "IM Fell English SC"').catch(() => undefined);
+  const plate = createEngraving(canvas, {
+    name: 'Eduardo de Bem',
+    reducedMotion: reduced,
+    onContextLost: () => root.classList.add('no-webgl'),
+  });
+  if (!plate) root.classList.add('no-webgl');
+  plate?.intro();
+
+  /* ── Plates ── */
+
+  const caption = document.querySelector<HTMLElement>('.plate-caption')!;
+  const plates: { numeral: string; latin: string; note: string }[] = JSON.parse(caption.dataset.plates!);
+  const buttons = [...document.querySelectorAll<HTMLButtonElement>('[data-plate]')];
+  const cap = {
+    numeral: caption.querySelector<HTMLElement>('[data-cap-numeral]')!,
+    latin: caption.querySelector<HTMLElement>('[data-cap-latin]')!,
+    note: caption.querySelector<HTMLElement>('[data-cap-note]')!,
+  };
+  let index = 0;
+  let auto: gsap.core.Tween | null = null;
+
+  const select = (i: number) => {
+    if (i === index) return;
+    index = i;
+    plate?.show(i);
+    buttons.forEach((b, k) => b.setAttribute('aria-pressed', String(k === i)));
+    const apply = () => {
+      cap.numeral.textContent = plates[i].numeral;
+      cap.latin.textContent = plates[i].latin;
+      cap.note.textContent = plates[i].note;
+    };
+    if (reduced) apply();
+    else gsap.timeline().to(caption, { autoAlpha: 0, duration: 0.5, onComplete: apply }).to(caption, { autoAlpha: 1, duration: 1.2 }, 1.4);
+    schedule();
+  };
+
+  const schedule = () => {
+    auto?.kill();
+    if (!reduced) auto = gsap.delayedCall(11, () => select((index + 1) % plates.length));
+  };
+  buttons.forEach((b, i) => b.addEventListener('click', () => select(i)));
+  canvas.addEventListener('pointerdown', schedule);
+  document.addEventListener('visibilitychange', () => (document.hidden ? auto?.pause() : auto?.resume()));
+  schedule();
+
+  /* ── Jellyfin: cover engraving and marginal note ── */
+
+  type Entry = { title: string; subtitle: string; image: string | null; live: boolean; paused: boolean } | null;
+  const media = document.querySelector<HTMLElement>('[data-media]')!;
+  const coverFig = document.querySelector<HTMLElement>('[data-cover]')!;
+  const cover = createCoverEngraving(document.getElementById('cover') as HTMLCanvasElement, { reducedMotion: reduced });
+  const VERBS = { listening: ['Nunc audit', 'Nuper audivit'], watching: ['Nunc spectat:', 'Nuper spectavit:'] } as const;
+
+  const refresh = async () => {
+    try {
+      const res = await fetch('/api/now-playing.json');
+      if (!res.ok) throw new Error(String(res.status));
+      const data = (await res.json()) as Record<'listening' | 'watching', Entry>;
+      (['listening', 'watching'] as const).forEach((k) => {
+        const el = media.querySelector<HTMLElement>(`[data-slot="${k}"]`)!;
+        const e = data[k];
+        el.hidden = !e;
+        if (!e) return;
+        el.querySelector('[data-verb]')!.textContent = VERBS[k][e.live && !e.paused ? 0 : 1];
+        el.querySelector('[data-title]')!.textContent = e.title;
+        el.querySelector('[data-sub]')!.textContent = k === 'watching' ? (e.subtitle ? `, ${e.subtitle}` : '') : e.subtitle;
       });
-      if (!plate) root.classList.add('no-webgl');
-      plate?.intro();
-
-      /* ── Plates ── */
-
-      const caption = document.querySelector<HTMLElement>('.caption')!;
-      const plates: { numeral: string; latin: string; note: string }[] = JSON.parse(caption.dataset.plates!);
-      const buttons = [...document.querySelectorAll<HTMLButtonElement>('[data-plate]')];
-      const cap = {
-        numeral: caption.querySelector<HTMLElement>('[data-cap-numeral]')!,
-        latin: caption.querySelector<HTMLElement>('[data-cap-latin]')!,
-        note: caption.querySelector<HTMLElement>('[data-cap-note]')!,
-      };
-      let index = 0;
-      let auto: gsap.core.Tween | null = null;
-
-      const select = (i: number) => {
-        if (i === index) return;
-        index = i;
-        plate?.show(i);
-        buttons.forEach((b, k) => b.setAttribute('aria-pressed', String(k === i)));
-        const apply = () => {
-          cap.numeral.textContent = plates[i].numeral;
-          cap.latin.textContent = plates[i].latin;
-          cap.note.textContent = plates[i].note;
-        };
-        if (reduced) apply();
-        else gsap.timeline().to(caption, { autoAlpha: 0, duration: 0.5, onComplete: apply }).to(caption, { autoAlpha: 1, duration: 1.2 }, 1.4);
-        schedule();
-      };
-
-      const schedule = () => {
-        auto?.kill();
-        if (!reduced) auto = gsap.delayedCall(11, () => select((index + 1) % plates.length));
-      };
-      buttons.forEach((b, i) => b.addEventListener('click', () => select(i)));
-      canvas.addEventListener('pointerdown', schedule);
-      document.addEventListener('visibilitychange', () => (document.hidden ? auto?.pause() : auto?.resume()));
-      schedule();
-
-      /* ── Jellyfin: cover engraving and marginal note ── */
-
-      type Entry = { title: string; subtitle: string; image: string | null; live: boolean; paused: boolean } | null;
-      const media = document.querySelector<HTMLElement>('[data-media]')!;
-      const coverFig = document.querySelector<HTMLElement>('[data-cover]')!;
-      const cover = createCoverEngraving(document.getElementById('cover') as HTMLCanvasElement, { reducedMotion: reduced });
-      const VERBS = { listening: ['Nunc audit', 'Nuper audivit'], watching: ['Nunc spectat:', 'Nuper spectavit:'] } as const;
-
-      const refresh = async () => {
-        try {
-          const res = await fetch('/api/now-playing.json');
-          if (!res.ok) throw new Error(String(res.status));
-          const data = (await res.json()) as Record<'listening' | 'watching', Entry>;
-          (['listening', 'watching'] as const).forEach((k) => {
-            const el = media.querySelector<HTMLElement>(`[data-slot="${k}"]`)!;
-            const e = data[k];
-            el.hidden = !e;
-            if (!e) return;
-            el.querySelector('[data-verb]')!.textContent = VERBS[k][e.live && !e.paused ? 0 : 1];
-            el.querySelector('[data-title]')!.textContent = e.title;
-            el.querySelector('[data-sub]')!.textContent = k === 'watching' ? (e.subtitle ? `, ${e.subtitle}` : '') : e.subtitle;
-          });
-          media.hidden = !data.listening && !data.watching;
-          // Engrave the record's cover; fall back to the watching poster.
-          const art = data.listening?.image ?? data.watching?.image;
-          coverFig.hidden = !art || !cover;
-          if (art && cover) coverFig.hidden = !(await cover.set(art));
-        } catch {
-          media.hidden = true;
-        }
-      };
-      refresh();
-      setInterval(() => !document.hidden && refresh(), 60_000);
-
-      /* ── Arrival ── */
-
-      if (!reduced) {
-        gsap.from('.recto > *', { autoAlpha: 0, y: 8, duration: 1.4, stagger: 0.12, ease: 'power2.out', delay: 0.6 });
-        gsap.from('.caption, .plate-nav', { autoAlpha: 0, duration: 1.4, delay: 2.4 });
-      }
-
-      window.addEventListener('pagehide', () => {
-        plate?.dispose();
-        cover?.dispose();
-      }, { once: true });
-    </script>
-
-    <style>
-      /* ── The codex ── */
-
-      .home {
-        --paper: #efe6d0;
-        --ink: #1b2419;
-        --ink-soft: #4a5243;
-        --rubric: #9b2d20;
-        --rule: #b9a985;
-
-        height: 100svh;
-        overflow: hidden;
-        margin: 0;
-        background:
-          radial-gradient(ellipse at 50% 120%, #2a1d14 0%, transparent 60%),
-          #17110c;
-        color: var(--ink);
-        font-family: 'IM Fell English', Georgia, serif;
-        font-size: 17px;
-      }
-
-      .book {
-        position: fixed;
-        inset: clamp(10px, 2vw, 28px);
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        background:
-          linear-gradient(90deg, transparent calc(50% - 34px), rgb(60 40 20 / 0.2) 50%, transparent calc(50% + 34px)),
-          var(--paper);
-        box-shadow:
-          0 30px 80px rgb(0 0 0 / 0.6),
-          inset 0 0 120px rgb(120 90 40 / 0.25);
-        border-radius: 3px;
-      }
-
-      /* Fibres in the stock. */
-      .book::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        opacity: 0.35;
-        mix-blend-mode: multiply;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45  0 0 0 0 0.35  0 0 0 0 0.2  0 0 0 0.35 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-      }
-
-      .page {
-        position: relative;
-        min-height: 0;
-        display: flex;
-        flex-direction: column;
-        padding: clamp(18px, 3vh, 34px) clamp(22px, 3.4vw, 56px) clamp(14px, 2.2vh, 26px);
-      }
-
-      .running {
-        display: flex;
-        align-items: center;
-        gap: 0.8rem;
-        font-family: 'IM Fell English SC', serif;
-        font-size: 0.85rem;
-        letter-spacing: 0.12em;
-        color: var(--ink-soft);
-        border-bottom: 1px solid var(--rule);
-        padding-bottom: 0.55rem;
-        flex: none;
-      }
-
-      .running-right {
-        justify-content: flex-end;
-      }
-
-      .mark {
-        color: var(--rubric);
-        display: flex;
-      }
-
-      /* ── Verso: the plate ── */
-
-      .verso {
-        gap: 0.7rem;
-      }
-
-      .plate {
-        flex: 1;
-        min-height: 0;
-        display: flex;
-        flex-direction: column;
-        margin: 0.4rem 0 0;
-      }
-
-      /* Plate mark: the dent a copper plate leaves in the paper, plus a ruled border. */
-      .plate-frame {
-        position: relative;
-        flex: 1;
-        min-height: 0;
-        border: 1px solid var(--ink);
-        outline: 1px solid var(--ink);
-        outline-offset: 5px;
-        box-shadow:
-          0 0 0 11px var(--paper),
-          0 0 0 12px rgb(80 60 30 / 0.28);
-        margin: 12px;
-      }
-
-      #engraving,
-      .plate-fallback {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        display: block;
-        touch-action: pan-y;
-        cursor: grab;
-      }
-
-      #engraving:active {
-        cursor: grabbing;
-      }
-
-      .plate-fallback {
-        display: none;
-        place-items: end center;
-        padding-bottom: 12%;
-        font-family: 'IM Fell English SC', serif;
-        font-size: 2rem;
-        letter-spacing: 0.14em;
-        background:
-          repeating-linear-gradient(115deg, transparent 0 5px, rgb(27 36 25 / 0.1) 5px 6px),
-          var(--paper);
-      }
-
-      :global(.no-webgl) .plate-fallback {
-        display: grid;
-      }
-
-      :global(.no-webgl) #engraving {
-        display: none;
-      }
-
-      .caption {
-        display: flex;
-        align-items: baseline;
-        flex-wrap: wrap;
-        gap: 0.2rem 0.8rem;
-        margin: 0.6rem 12px 0;
-      }
-
-      .tab {
-        font-family: 'IM Fell English SC', serif;
-        color: var(--rubric);
-        letter-spacing: 0.08em;
-      }
-
-      .cap-latin {
-        font-family: 'IM Fell English SC', serif;
-        font-size: 1.25rem;
-        letter-spacing: 0.16em;
-      }
-
-      .cap-note {
-        font-style: italic;
-        color: var(--ink-soft);
-      }
-
-      .plate-nav {
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-        margin: 0 12px;
-      }
-
-      .plate-nav button {
-        font-family: 'IM Fell English SC', serif;
-        font-size: 1rem;
-        min-width: 2.4rem;
-        padding: 0.2rem 0.6rem;
-        background: none;
-        border: 1px solid transparent;
-        color: var(--ink-soft);
-        cursor: pointer;
-      }
-
-      .plate-nav button:hover {
-        color: var(--ink);
-        border-color: var(--rule);
-      }
-
-      .plate-nav button[aria-pressed='true'] {
-        color: var(--rubric);
-        border-color: var(--rubric);
-      }
-
-      .hint {
-        margin-left: auto;
-        font-style: italic;
-        font-size: 0.85rem;
-        color: var(--ink-soft);
-      }
-
-      /* ── Recto: of the author ── */
-
-      .recto {
-        gap: clamp(12px, 2.2vh, 26px);
-      }
-
-      .bio {
-        margin-top: clamp(6px, 2vh, 24px);
-      }
-
-      .lede,
-      .more {
-        font-size: clamp(1.02rem, 0.55vw + 0.62rem, 1.22rem);
-        line-height: 1.5;
-        max-width: 54ch;
-        margin: 0 0 0.6rem;
-        hyphens: auto;
-        text-align: justify;
-      }
-
-      .more {
-        color: var(--ink-soft);
-      }
-
-      /* Rubricated initial, dropped two lines. */
-      .initial {
-        float: left;
-        font-size: 3.4em;
-        line-height: 0.82;
-        padding: 0.06em 0.08em 0 0;
-        color: var(--rubric);
-      }
-
-      .contents-head {
-        font-family: 'IM Fell English SC', serif;
-        letter-spacing: 0.14em;
-        color: var(--rubric);
-        margin: 0 0 0.4rem;
-      }
-
-      .contents ol {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-      }
-
-      .contents a {
-        display: flex;
-        align-items: baseline;
-        gap: 0.5ch;
-        color: var(--ink);
-        text-decoration: none;
-        padding: 0.1rem 0;
-      }
-
-      .chapter > a {
-        font-size: 1.1rem;
-      }
-
-      .num {
-        font-family: 'IM Fell English SC', serif;
-        color: var(--rubric);
-        min-width: 2.6ch;
-      }
-
-      .label {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        min-width: 0;
-      }
-
-      .leader {
-        flex: 1;
-        min-width: 2ch;
-        border-bottom: 1px dotted var(--ink-soft);
-        transform: translateY(-0.3em);
-      }
-
-      .pg {
-        font-family: 'IM Fell English SC', serif;
-        font-size: 0.85em;
-        color: var(--ink-soft);
-      }
-
-      .sub {
-        padding-left: 3.1ch !important;
-        margin-bottom: 0.3rem !important;
-      }
-
-      .sub a {
-        font-style: italic;
-        font-size: 0.95rem;
-        color: var(--ink-soft);
-      }
-
-      .contents a:hover .label,
-      .contents a:focus-visible .label {
-        color: var(--rubric);
-      }
-
-      .contents a:focus-visible,
-      .plate-nav button:focus-visible,
-      .folio a:focus-visible,
-      .mark:focus-visible {
-        outline: 1px solid var(--rubric);
-        outline-offset: 3px;
-      }
-
-      /* ── Listening: the engraved cover beside its note ── */
-
-      .listening {
-        display: flex;
-        align-items: center;
-        gap: 1.1rem;
-        margin-top: auto;
-      }
-
-      .listening[hidden],
-      .listening [hidden] {
-        display: none;
-      }
-
-      .cover {
-        flex: none;
-        width: clamp(84px, 13vh, 140px);
-        aspect-ratio: 1;
-        margin: 6px;
-        border: 1px solid var(--ink);
-        outline: 1px solid var(--ink);
-        outline-offset: 3px;
-      }
-
-      #cover {
-        display: block;
-        width: 100%;
-        height: 100%;
-      }
-
-      .listening-text p {
-        margin: 0;
-        line-height: 1.3;
-      }
-
-      .listening em {
-        color: var(--rubric);
-      }
-
-      .hand {
-        color: var(--rubric);
-      }
-
-      .track {
-        font-size: 1.25rem;
-      }
-
-      .by {
-        font-style: italic;
-        color: var(--ink-soft);
-      }
-
-      .watching {
-        margin-top: 0.5rem !important;
-        font-size: 0.92rem;
-        color: var(--ink-soft);
-      }
-
-      .folio {
-        display: flex;
-        justify-content: space-between;
-        font-family: 'IM Fell English SC', serif;
-        font-size: 0.85rem;
-        color: var(--ink-soft);
-        border-top: 1px solid var(--rule);
-        padding-top: 0.5rem;
-        flex: none;
-      }
-
-      .folio a {
-        color: inherit;
-      }
-
-      /* ── Shorter screens: shed the secondary lines first ── */
-
-      @media (max-height: 760px) and (min-aspect-ratio: 1/1) {
-        .more {
-          display: none;
-        }
-      }
-
-      @media (max-height: 680px) and (min-aspect-ratio: 1/1) {
-        .sub li:nth-child(n + 2),
-        .watching {
-          display: none;
-        }
-      }
-
-      /* ── Portrait: plate above, author below, still one screen ── */
-
-      @media (max-aspect-ratio: 1/1) {
-        .book {
-          grid-template-columns: 1fr;
-          grid-template-rows: minmax(0, 1.1fr) auto;
-          background: var(--paper);
-        }
-
-        .page {
-          padding: 12px 18px;
-        }
-
-        .verso .running,
-        .recto .running,
-        .hint,
-        .cap-note,
-        .more,
-        .sub,
-        .watching,
-        .contents-head {
-          display: none;
-        }
-
-        .plate-frame {
-          margin: 8px;
-        }
-
-        .caption {
-          margin-top: 0.3rem;
-        }
-
-        .recto {
-          gap: 10px;
-          padding-top: 4px;
-        }
-
-        .bio {
-          margin-top: 0;
-        }
-
-        .lede {
-          font-size: 0.95rem;
-          line-height: 1.4;
-          margin: 0;
-        }
-
-        .chapter > a {
-          font-size: 1rem;
-        }
-
-        .cover {
-          width: 64px;
-        }
-
-        .track {
-          font-size: 1.05rem;
-        }
-      }
-    </style>
-  </body>
-</html>
+      media.hidden = !data.listening && !data.watching;
+      // Engrave the record's cover; fall back to the watching poster.
+      const art = data.listening?.image ?? data.watching?.image;
+      coverFig.hidden = !art || !cover;
+      if (art && cover) coverFig.hidden = !(await cover.set(art));
+    } catch {
+      media.hidden = true;
+    }
+  };
+  refresh();
+  setInterval(() => !document.hidden && refresh(), 60_000);
+
+  /* ── Arrival (skipped when arriving by page turn: the leaf is the entrance) ── */
+
+  const turned = !!(window as unknown as { navigation?: { activation?: { from?: unknown } } }).navigation?.activation?.from;
+  if (!reduced && !turned) {
+    gsap.from('.recto .page-body > *', { autoAlpha: 0, y: 8, duration: 1.4, stagger: 0.12, ease: 'power2.out', delay: 0.6 });
+    gsap.from('.plate-caption, .plate-nav', { autoAlpha: 0, duration: 1.4, delay: 2.4 });
+  }
+
+  // Kept alive when the page goes into the back/forward cache.
+  window.addEventListener('pagehide', (e) => {
+    if (e.persisted) return;
+    plate?.dispose();
+    cover?.dispose();
+  });
+</script>
+
+<style>
+  /* ── Verso ── */
+
+  .plate-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0.5rem 12px 0;
+  }
+
+  .plate-nav button {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 1rem;
+    min-width: 2.4rem;
+    padding: 0.2rem 0.6rem;
+    background: none;
+    border: 1px solid transparent;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+
+  .plate-nav button:hover {
+    color: var(--ink);
+    border-color: var(--rule);
+  }
+
+  .plate-nav button[aria-pressed='true'] {
+    color: var(--rubric);
+    border-color: var(--rubric);
+  }
+
+  .hint {
+    margin-left: auto;
+    font-style: italic;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+
+  /* ── Recto ── */
+
+  .bio {
+    margin-top: clamp(4px, 1.6vh, 20px);
+  }
+
+  .lede,
+  .more {
+    font-size: clamp(1.02rem, 0.55vw + 0.62rem, 1.22rem);
+    line-height: 1.5;
+    max-width: 54ch;
+    margin: 0 0 0.6rem;
+    hyphens: auto;
+    text-align: justify;
+  }
+
+  .more {
+    color: var(--ink-soft);
+  }
+
+  .contents {
+    margin-top: clamp(10px, 2vh, 24px);
+  }
+
+  .chapter > a {
+    font-size: 1.1rem;
+  }
+
+  .sub {
+    padding-left: 3.1ch !important;
+    margin-bottom: 0.3rem !important;
+  }
+
+  .sub a {
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+  }
+
+  /* ── Listening: the engraved cover beside its note ── */
+
+  .listening {
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+    margin-top: auto;
+    padding-top: 12px;
+  }
+
+  .listening[hidden],
+  .listening [hidden] {
+    display: none;
+  }
+
+  .cover {
+    flex: none;
+    width: clamp(84px, 13vh, 140px);
+    aspect-ratio: 1;
+    margin: 6px;
+    border: 1px solid var(--ink);
+    outline: 1px solid var(--ink);
+    outline-offset: 3px;
+  }
+
+  #cover {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .listening-text p {
+    margin: 0;
+    line-height: 1.3;
+  }
+
+  .listening em,
+  .hand {
+    color: var(--rubric);
+  }
+
+  .track {
+    font-size: 1.25rem;
+  }
+
+  .by {
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  .watching {
+    margin-top: 0.5rem !important;
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+  }
+
+  /* ── Shorter screens: shed the secondary lines first ── */
+
+  @media (max-height: 760px) and (min-aspect-ratio: 1/1) {
+    .more {
+      display: none;
+    }
+  }
+
+  @media (max-height: 680px) and (min-aspect-ratio: 1/1) {
+    .sub li:nth-child(n + 2),
+    .watching {
+      display: none;
+    }
+  }
+
+  /* ── Portrait: plate above, author below, still one screen ── */
+
+  @media (max-aspect-ratio: 1/1) {
+    :global(.book--fit .running),
+    :global(.book--fit .verso .folio),
+    .hint,
+    .cap-note,
+    .more,
+    .sub,
+    .watching,
+    .contents .rubric {
+      display: none;
+    }
+
+    .lede {
+      font-size: 0.95rem;
+      line-height: 1.4;
+      margin: 0;
+    }
+
+    .chapter > a {
+      font-size: 1rem;
+    }
+
+    .contents {
+      margin-top: 8px;
+    }
+
+    .cover {
+      width: 64px;
+    }
+
+    .track {
+      font-size: 1.05rem;
+    }
+  }
+</style>
