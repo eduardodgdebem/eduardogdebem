@@ -1,5 +1,5 @@
 ---
-import Plate from '../components/Plate.astro';
+import Plaza, { type PlazaMonument } from '../components/Plaza.astro';
 import Codex from '../layouts/Codex.astro';
 import { SITE_TITLE } from '../consts';
 
@@ -11,6 +11,17 @@ const notes: [string, string[]][] = [
   ['Music', ['Ex-violinist', 'Still listens']],
   ['Tongues', ['Portuguese — native', 'English — advanced', 'Spanish — intermediate']],
 ];
+
+// Each note stands as a monument in the plaza on the left page.
+const MONUMENT: Record<string, Pick<PlazaMonument, 'plate' | 'inscription'>> = {
+  Currently: { plate: 'machina', inscription: 'OFFICINA' },
+  Reading: { plate: 'liber', inscription: 'LIBRI' },
+  Racing: { plate: 'currus', inscription: 'CIRCVS' },
+  Fighting: { plate: 'galea', inscription: 'PVGNA' },
+  Music: { plate: 'fides', inscription: 'MVSICA' },
+  Tongues: { plate: 'stilus', inscription: 'LINGVAE' },
+};
+const monuments: PlazaMonument[] = notes.map(([head, items]) => ({ ...MONUMENT[head], head, text: items.join(' · ') }));
 ---
 
 <Codex
@@ -19,7 +30,7 @@ const notes: [string, string[]][] = [
   folio={3}
 >
   <Fragment slot="verso">
-    <Plate plate="sigillum" banner="De auctore" />
+    <Plaza monuments={monuments} banner="De auctore" />
   </Fragment>
 
   <Fragment slot="recto">
@@ -63,8 +74,8 @@ const notes: [string, string[]][] = [
 
     <h2 class="rubric notes-head">Marginalia</h2>
     <dl class="notes">
-      {notes.map(([head, items]) => (
-        <div>
+      {notes.map(([head, items], i) => (
+        <div data-monument={i}>
           <dt>{head}</dt>
           <dd>{items.join(' · ')}</dd>
         </div>
@@ -98,6 +109,10 @@ const notes: [string, string[]][] = [
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.7rem 2rem;
     margin: 0;
+  }
+
+  .notes div.is-lit dt {
+    color: var(--rubric);
   }
 
   .notes dt {

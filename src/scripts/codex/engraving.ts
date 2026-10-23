@@ -31,6 +31,7 @@ interface Options {
 export const PAPER = 0xefe6d0;
 export const INK = 0x1b2419;
 export const RUBRIC = 0x9b2d20;
+export const BLUE = 0x1e3a78;
 
 // sRGB values passed straight through to the canvas.
 export const raw = (hex: number) => new THREE.Color().setHex(hex, THREE.LinearSRGBColorSpace);
@@ -59,7 +60,8 @@ export const engraveFragment = /* glsl */ `
   uniform sampler2D uText;  // lettering, for the banderole
   uniform float uHasText;
   uniform float uGlow;      // 1 = picked out in red (a hovered building)
-  uniform float uPale;      // lightens a surface's shading (ground under fine joints); unset = 0
+  uniform float uPale;      // lightens a surface's shading (ground under fine joints)
+  uniform float uBlue;      // 1 = drawn in blue ink (a certain police box)
   varying vec3 vObj;
   varying vec3 vNormal;
   varying vec3 vView;
@@ -113,8 +115,8 @@ export const engraveFragment = /* glsl */ `
       ink = max(ink * 0.6, letters);
       red = max(red, tx.r * letters);
     }
-    // Red ink in r, coverage in a.
-    gl_FragColor = vec4(red, 0.0, 0.0, ink);
+    // Red ink in r, blue ink in g, coverage in a.
+    gl_FragColor = vec4(red, uBlue, 0.0, ink);
   }
 `;
 
@@ -137,6 +139,7 @@ export const compositeFragment = /* glsl */ `
   uniform vec3 uPaper;
   uniform vec3 uInk;
   uniform vec3 uRed;
+  uniform vec3 uBlue;
   varying vec2 vUv;
 
   float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -179,10 +182,10 @@ export const compositeFragment = /* glsl */ `
     col *= 1.0 - 0.12 * pow(length(vUv - 0.5) * 1.3, 3.0);
 
     // Ink: hatching and rings from the first pass, overprinted on the paper;
-    // its red channel says where the ink is rubric instead of black.
+    // its red channel says where the ink is rubric instead of black, its green where it is blue.
     vec4 inkSample = texture2D(tInk, vUv);
     float ink = inkSample.a;
-    vec3 inkColour = mix(uInk, uRed, inkSample.r);
+    vec3 inkColour = mix(mix(uInk, uRed, inkSample.r), uBlue, inkSample.g);
 
     // Outlines from normal and depth discontinuities.
     float o = 1.2 * uPixel;
@@ -339,6 +342,8 @@ export function createEngraving(canvas: HTMLCanvasElement, { name, plates = PLAT
     uText: { value: null as THREE.Texture | null },
     uHasText: { value: 0 },
     uGlow: { value: 0 },
+    uPale: { value: 0 },
+    uBlue: { value: 0 },
   };
   const engrave = new THREE.ShaderMaterial({
     uniforms: engraveUniforms,
@@ -400,6 +405,8 @@ export function createEngraving(canvas: HTMLCanvasElement, { name, plates = PLAT
     uText: { value: nameTexture },
     uHasText: { value: 1 },
     uGlow: { value: 0 },
+    uPale: { value: 0 },
+    uBlue: { value: 0 },
   };
   const ribbonMat = new THREE.ShaderMaterial({
     uniforms: ribbonUniforms,
@@ -429,6 +436,7 @@ export function createEngraving(canvas: HTMLCanvasElement, { name, plates = PLAT
     uPaper: { value: raw(PAPER) },
     uInk: { value: raw(INK) },
     uRed: { value: raw(RUBRIC) },
+    uBlue: { value: raw(BLUE) },
   };
   const quad = new THREE.Mesh(
     new THREE.PlaneGeometry(2, 2),

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {
+  BLUE,
   INK,
   PAPER,
   RUBRIC,
@@ -44,7 +45,9 @@ export function createInk(freq: number): Ink {
   const textures: THREE.Texture[] = [];
   const material = (glow = { value: 0 }, text?: THREE.Texture) => {
     const m = new THREE.ShaderMaterial({
-      uniforms: { ...shared, uGlow: glow, uText: { value: text ?? null }, uHasText: { value: text ? 1 : 0 } },
+      // Every uniform the shader has is set here, even at its default: materials
+      // share one program, and an unset uniform keeps the last material's value.
+      uniforms: { ...shared, uGlow: glow, uText: { value: text ?? null }, uHasText: { value: text ? 1 : 0 }, uPale: { value: 0 }, uBlue: { value: 0 } },
       vertexShader: engraveVertex,
       fragmentShader: engraveFragment,
       side: THREE.DoubleSide,
@@ -133,6 +136,7 @@ export function createPasses(renderer: THREE.WebGLRenderer, camera: THREE.Orthog
     uPaper: { value: raw(PAPER) },
     uInk: { value: raw(INK) },
     uRed: { value: raw(RUBRIC) },
+    uBlue: { value: raw(BLUE) },
   };
   const quadMat = new THREE.ShaderMaterial({ uniforms, vertexShader: compositeVertex, fragmentShader: compositeFragment, depthTest: false, depthWrite: false });
   const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), quadMat);
@@ -199,6 +203,8 @@ export function createBanner(camera: THREE.Camera, name: string, light: { value:
     uText: { value: texture },
     uHasText: { value: 1 },
     uGlow: { value: 0 },
+    uPale: { value: 0 },
+    uBlue: { value: 0 },
   };
   const material = new THREE.ShaderMaterial({ uniforms, vertexShader: engraveVertex, fragmentShader: engraveFragment, side: THREE.DoubleSide });
   const geometry = banderole();

@@ -1,0 +1,156 @@
+---
+// The about page's plate: the author's plaza (src/scripts/codex/plaza.ts).
+// Monuments are linked to the notes on the same spread by index: an element
+// with `data-monument={i}` lights monument i.
+import type { PlateId } from '../scripts/codex/models';
+
+export interface PlazaMonument {
+  plate: PlateId;
+  inscription: string;
+  /** For its label: the note's heading, and what it says. */
+  head: string;
+  text: string;
+}
+
+interface Props {
+  monuments: PlazaMonument[];
+  /** Lettered on the banderole. */
+  banner: string;
+}
+
+const { monuments, banner } = Astro.props;
+---
+
+<figure class="plate">
+  <div class="plate-frame">
+    <canvas class="plate-canvas plaza-canvas" data-plaza data-monuments={JSON.stringify(monuments)} data-banner={banner} aria-hidden="true"></canvas>
+    <div class="plate-fallback" aria-hidden="true"><span>{banner}</span></div>
+    <div class="place-tag" data-tag aria-hidden="true">
+      <span class="tag-latin" data-tag-latin></span>
+      <span class="tag-page" data-tag-page></span>
+      <span class="tag-by" data-tag-by></span>
+    </div>
+  </div>
+  <figcaption class="plate-caption">
+    <span class="tab">Tab. V</span>
+    <span class="cap-latin">Forum auctoris</span>
+    <span class="cap-note">the author’s square; a monument for each of his concerns.</span>
+  </figcaption>
+</figure>
+<p class="plaza-hint">
+  <kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to walk · up to a monument to read it · <kbd>Enter</kbd> to turn it
+</p>
+
+<script>
+  import { createPlaza, type Subject } from '../scripts/codex/plaza';
+  import { bookOpened } from '../scripts/codex/opening';
+  import type { PlazaMonument } from './Plaza.astro';
+
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const canvas = document.querySelector<HTMLCanvasElement>('[data-plaza]')!;
+  const monuments: PlazaMonument[] = JSON.parse(canvas.dataset.monuments!);
+  const tag = canvas.parentElement!.querySelector<HTMLElement>('[data-tag]')!;
+  const tagLatin = tag.querySelector<HTMLElement>('[data-tag-latin]')!;
+  const tagPage = tag.querySelector<HTMLElement>('[data-tag-page]')!;
+  const tagBy = tag.querySelector<HTMLElement>('[data-tag-by]')!;
+  const notes = [...document.querySelectorAll<HTMLElement>('[data-monument]')];
+
+  // What the traveller says, a different thing each visit.
+  const QUIPS = [
+    'Allons-y!',
+    'Geronimo!',
+    'Fantastic!',
+    'Would you like a jelly baby?',
+    'Bow ties are cool.',
+    'Rome! Lovely. Nobody mention the fire.',
+    'Wrong planet, right century. Or the other way round.',
+    'Nice statue. Bit of a likeness, isn’t it?',
+  ];
+  let quip = Math.floor(Math.random() * QUIPS.length);
+
+  const LABELS: Record<Exclude<Subject, number>, () => [string, string, string]> = {
+    statua: () => ['Eduardo de Bem', 'fullstack developer, Florianópolis', 'the author, in stone'],
+    exitus: () => ['Exitus', 'back out to the Via Sacra', 'press Enter'],
+    capsa: () => ['Capsa caerulea', 'bigger on the inside, apparently', 'it wasn’t here a moment ago'],
+    medicus: () => ['Medicus', `“${QUIPS[quip]}”`, 'a traveller'],
+  };
+
+  // The banderole and the inscriptions letter with the page fonts, so wait for them.
+  await Promise.all([document.fonts.load('150px "IM Fell English SC"'), document.fonts.load('600 80px Cinzel')]).catch(() => undefined);
+
+  const plaza = createPlaza(canvas, {
+    monuments: monuments.map(({ plate, inscription }) => ({ plate, inscription })),
+    name: canvas.dataset.banner!,
+    reducedMotion: reduced,
+    eager: new URLSearchParams(location.search).has('tardis'),
+    onContextLost: () => document.documentElement.classList.add('no-webgl'),
+    onFocus: (i) => notes.forEach((n) => n.classList.toggle('is-lit', Number(n.dataset.monument) === i)),
+    onExit: () => (plaza ? plaza.leave().then(() => location.assign('/')) : location.assign('/')),
+    onVisitor: (here) => here && (quip = (quip + 1) % QUIPS.length),
+    onTag: (subject, x, y) => {
+      tag.classList.toggle('is-shown', subject !== null);
+      if (subject === null) return;
+      const m = typeof subject === 'number' ? monuments[subject] : null;
+      const [latin, page, by] = m ? [m.inscription.charAt(0) + m.inscription.slice(1).toLowerCase(), m.head, m.text] : LABELS[subject as Exclude<Subject, number>]();
+      tagLatin.textContent = latin;
+      tagPage.textContent = page;
+      tagBy.textContent = by;
+      // Kept inside the plate; it flips below its subject near the top edge.
+      const w = tag.offsetWidth;
+      const frame = tag.parentElement!.clientWidth;
+      tag.style.left = `${Math.min(Math.max(x, w / 2 + 6), frame - w / 2 - 6)}px`;
+      tag.style.top = `${y}px`;
+      tag.classList.toggle('is-below', y < tag.offsetHeight + 70);
+    },
+  });
+  if (!plaza) document.documentElement.classList.add('no-webgl');
+  plaza?.intro(bookOpened());
+
+  // The notes on the facing page light their monuments.
+  for (const n of notes) {
+    const i = Number(n.dataset.monument);
+    n.addEventListener('pointerenter', () => plaza?.highlight(i));
+    n.addEventListener('pointerleave', () => plaza?.highlight(null));
+  }
+
+  window.addEventListener('pageshow', (e) => e.persisted && plaza?.reset());
+  window.addEventListener('pagehide', (e) => !e.persisted && plaza?.dispose());
+</script>
+
+<style>
+  .plaza-canvas,
+  .plaza-canvas:active {
+    cursor: default;
+  }
+
+  .plate :global(.place-tag) {
+    max-width: min(18rem, 86%);
+    width: max-content;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .plaza-hint {
+    margin: 0.4rem 12px 0;
+    text-align: right;
+    font-style: italic;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+
+  .plaza-hint kbd {
+    font-family: inherit;
+    font-style: normal;
+    font-size: 0.8em;
+    padding: 0 0.3em;
+    margin: 0 0.1em;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+  }
+
+  @media (max-aspect-ratio: 1/1) {
+    .plaza-hint {
+      display: none;
+    }
+  }
+</style>

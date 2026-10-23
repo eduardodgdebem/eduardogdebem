@@ -18,7 +18,7 @@ function prism(shape: THREE.Shape, depth: number) {
 }
 
 /** A column with base and capital, standing on y = 0. */
-function column(x: number, z: number, h: number, r: number, y = 0): THREE.BufferGeometry[] {
+export function column(x: number, z: number, h: number, r: number, y = 0): THREE.BufferGeometry[] {
   return [
     cyl(r * 1.45, r * 1.55, h * 0.05, x, y, z),
     cyl(r * 0.85, r, h * 0.88, x, y + h * 0.05, z),
