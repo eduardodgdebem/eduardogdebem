@@ -146,28 +146,43 @@ const nav = [
           if (el.dataset.i18nHtml) el.innerHTML = value;
           else el.textContent = value;
         };
-        // Every character of an element's text in its own span, each to be inked a moment after the last.
-        const letters = (el, start, step) => {
+        // An element's text cut into pieces, each in its own span, to be inked a
+        // moment after the last: letters for a short line, words for a long
+        // paragraph (thousands of animated letters would stutter).
+        const pieces = (el, start, step, byWord) => {
           const walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
           const nodes = [];
           while (walk.nextNode()) nodes.push(walk.currentNode);
           let i = 0;
           for (const node of nodes) {
             const frag = document.createDocumentFragment();
-            for (const ch of node.textContent) {
-              if (/\s/.test(ch)) {
-                frag.append(ch);
+            for (const piece of node.textContent.split(byWord ? /(\s+)/ : /(\s)/)) {
+              if (!piece) continue;
+              if (/^\s+$/.test(piece)) {
+                frag.append(piece);
                 continue;
               }
-              const span = document.createElement('span');
-              span.className = 'quill';
-              span.style.setProperty('--d', `${Math.round(start + i * step)}ms`);
-              span.textContent = ch;
-              frag.append(span);
-              i++;
+              for (const unit of byWord ? [piece] : [...piece]) {
+                const span = document.createElement('span');
+                // The first word stays inline, so a drop cap (::first-letter) still finds it.
+                span.className = byWord && i > 0 ? 'quill quill-word' : 'quill';
+                span.style.setProperty('--d', `${Math.round(start + i * step)}ms`);
+                span.textContent = unit;
+                frag.append(span);
+                i++;
+              }
             }
             node.replaceWith(frag);
           }
+        };
+        // On screen, and not scrolled out of its page: only that is worth animating.
+        const seen = (el) => {
+          const r = el.getBoundingClientRect();
+          if (!r.width && !r.height) return false;
+          const page = el.closest('.page-body')?.getBoundingClientRect();
+          const top = Math.max(0, page ? page.top : 0);
+          const bottom = Math.min(innerHeight, page ? page.bottom : innerHeight);
+          return r.bottom > top && r.top < bottom;
         };
 
         const apply = (animate) => {
@@ -178,22 +193,23 @@ const nav = [
           let order = 0;
           for (const el of els) {
             const value = content(el);
-            const shown = el.getClientRects().length > 0;
-            if (!animate || reduced || !shown) {
+            if (!animate || reduced || !seen(el)) {
               set(el, value);
               continue;
             }
             // The old words lift off, then the new are written in, top of the page first.
             const start = Math.min(order++ * 55, 900);
-            const length = Math.max(1, value.replace(/<[^>]*>/g, '').length);
-            const step = Math.min(14, 650 / length);
+            const text = value.replace(/<[^>]*>/g, '');
+            const byWord = text.length > 120;
+            const count = Math.max(1, byWord ? text.split(/\s+/).length : text.length);
+            const step = Math.min(byWord ? 45 : 14, 700 / count);
             el.classList.add('quill-out');
             setTimeout(() => {
               set(el, value);
-              letters(el, start, step);
+              pieces(el, start, step, byWord);
               el.classList.remove('quill-out');
               // Back to plain text once dry, so selection and wrapping are as before.
-              setTimeout(() => set(el, value), start + length * step + 400);
+              setTimeout(() => set(el, value), start + count * step + 400);
             }, 180);
           }
         };

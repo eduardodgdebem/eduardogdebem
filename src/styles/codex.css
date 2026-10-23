@@ -457,25 +457,29 @@
   transition: opacity 0.18s ease-in;
 }
 
-/* …and the new ones are inked in, one letter after another. */
+/* …and the new ones are inked in, one after another. Opacity and a small
+   rise only: both are cheap to animate, even for a few hundred at once. */
 .quill {
-  display: inline;
-  animation: quill 0.32s ease-out var(--d, 0ms) both;
+  animation: quill 0.3s ease-out var(--d, 0ms) both;
+}
+
+/* A whole word can rise as it's written; a lone letter only fades in, since
+   letters set as blocks could break a word across lines. */
+.quill-word {
+  display: inline-block;
+  animation-name: quill-word;
 }
 
 @keyframes quill {
   from {
     opacity: 0;
-    filter: blur(1.5px);
-    text-shadow: 0 0 0.12em currentColor;
   }
-  60% {
-    opacity: 1;
-    filter: none;
-  }
-  to {
-    opacity: 1;
-    text-shadow: none;
+}
+
+@keyframes quill-word {
+  from {
+    opacity: 0;
+    transform: translateY(-0.12em);
   }
 }
 
