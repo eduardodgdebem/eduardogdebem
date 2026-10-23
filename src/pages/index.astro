@@ -29,12 +29,12 @@ const PLACES = {
 ---
 
 <Codex title={SITE_TITLE} description={SITE_DESCRIPTION} folio={1} fit>
-  <!-- Verso: the forum, engraved, with the name lettered on its banderole -->
+  <!-- Verso: the forum, engraved, under its banderole -->
   <Fragment slot="verso">
     <figure class="plate">
       <div class="plate-frame">
         <canvas id="engraving" class="plate-canvas" aria-hidden="true"></canvas>
-        <div class="plate-fallback" aria-hidden="true"><span>Eduardo de Bem</span></div>
+        <div class="plate-fallback" aria-hidden="true"><span>Forum</span></div>
         <!-- The label over a building in the forum: what it is, and where it leads. -->
         <div class="place-tag" data-tag aria-hidden="true">
           <span class="tag-latin" data-tag-latin></span>
@@ -54,14 +54,24 @@ const PLACES = {
     </p>
   </Fragment>
 
-  <!-- Recto: of the author, the index, and what he is listening to -->
+  <!-- Recto: who this is and how to reach him, the index, and what he is listening to -->
   <Fragment slot="recto">
+    <header class="author">
+      <h1>Eduardo de Bem</h1>
+      <p class="role">Full stack developer · Florianópolis, Brazil</p>
+      <p class="links">
+        <a href="mailto:eduardogdebem@gmail.com">Email</a>
+        <a href="https://linkedin.com/in/eduardogdebem" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+        <a href="https://github.com/eduardodgdebem" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="/about#correspondence">Contact</a>
+      </p>
+    </header>
+
     <div class="bio">
-      <h1 class="sr-only">Eduardo de Bem</h1>
       <p class="lede">
-        <span class="initial">F</span>ull stack developer in Florianópolis. I work at Zallpy, where right now I'm
-        writing data pipelines for BMW Europe in Node.js and PostgreSQL. Before that I built the Angular front end of a
-        BMW USA financial platform and got its load time from over ten seconds to under one.
+        <span class="initial">I</span> work at Zallpy, where right now I'm writing data pipelines for BMW Europe in
+        Node.js and PostgreSQL. Before that I built the Angular front end of a BMW USA financial platform and got its
+        load time from over ten seconds to under one.
       </p>
       <p class="more">
         I started out at eTopocart, on maps and very large tables for city halls. I'm finishing Computer Science at
@@ -163,7 +173,7 @@ const PLACES = {
   };
 
   const forum = createForum(canvas, {
-    name: 'Eduardo de Bem',
+    name: 'Forum',
     reducedMotion: reduced,
     onContextLost: () => root.classList.add('no-webgl'),
     onFocus: (place, atDoor) => {
@@ -279,6 +289,7 @@ const PLACES = {
 <style>
   /* ── Verso ── */
 
+
   .plate-nav {
     display: flex;
     align-items: center;
@@ -311,8 +322,43 @@ const PLACES = {
 
   /* ── Recto ── */
 
+  .author {
+    flex: none;
+    margin: clamp(4px, 1.4vh, 16px) 0 0;
+  }
+
+  .author h1 {
+    font-size: clamp(1.9rem, 2.9vw, 2.9rem);
+    line-height: 1;
+    margin: 0;
+  }
+
+  .role {
+    margin: 0.25rem 0 0;
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.1rem 1.1rem;
+    margin: 0.35rem 0 0;
+    font-family: 'IM Fell English SC', serif;
+    letter-spacing: 0.06em;
+  }
+
+  .links a {
+    color: var(--rubric);
+    text-decoration: none;
+  }
+
+  .links a:hover {
+    text-decoration: underline;
+  }
+
   .bio {
-    margin-top: clamp(4px, 1.6vh, 20px);
+    margin-top: clamp(8px, 1.8vh, 20px);
   }
 
   .lede,
@@ -370,7 +416,7 @@ const PLACES = {
 
   .cover {
     flex: none;
-    width: clamp(84px, 13vh, 140px);
+    width: clamp(72px, 11vh, 124px);
     aspect-ratio: 1;
     margin: 6px;
     border: 1px solid var(--ink);
@@ -412,52 +458,23 @@ const PLACES = {
   /* ── Shorter screens: shed the secondary lines first ── */
 
   @media (max-height: 760px) and (min-aspect-ratio: 1/1) {
-    .more {
-      display: none;
-    }
-  }
-
-  @media (max-height: 680px) and (min-aspect-ratio: 1/1) {
+    .more,
     .sub li:nth-child(n + 2),
     .watching {
       display: none;
     }
   }
 
-  /* ── Portrait: plate above, author below, still one screen ── */
+  /* ── Portrait: one long page, name and links first, then the forum, then the rest ── */
 
   @media (max-aspect-ratio: 1/1) {
-    :global(.book--fit .running),
-    :global(.book--fit .verso .folio),
-    .hint,
-    .cap-note,
-    .more,
-    .sub,
-    .watching,
-    .contents .rubric {
+    .hint {
       display: none;
     }
 
-    .lede {
-      font-size: 0.95rem;
-      line-height: 1.4;
-      margin: 0;
-    }
-
-    .chapter > a {
-      font-size: 1rem;
-    }
-
-    .contents {
-      margin-top: 8px;
-    }
 
     .cover {
-      width: 64px;
-    }
-
-    .track {
-      font-size: 1.05rem;
+      width: 72px;
     }
   }
 </style>

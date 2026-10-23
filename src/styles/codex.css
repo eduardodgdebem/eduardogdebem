@@ -781,16 +781,11 @@ html:active-view-transition-type(back)::view-transition-new(recto) {
 
 @media (max-aspect-ratio: 1/1) {
   .book {
-    grid-template-columns: 1fr;
+    /* minmax(0, …): a long title ellipsizes instead of widening the page. */
+    grid-template-columns: minmax(0, 1fr);
     grid-auto-rows: auto;
     overflow-y: auto;
     background: var(--paper);
-  }
-
-  /* The home spread fits one screen; other pages scroll as one long page. */
-  .book--fit {
-    overflow: hidden;
-    grid-template-rows: minmax(0, 1.1fr) auto;
   }
 
   .page {
@@ -804,29 +799,31 @@ html:active-view-transition-type(back)::view-transition-new(recto) {
     padding-right: 0;
   }
 
-  /* Scrolling spreads: pages size to their content (flex:1 would contribute 0). */
-  .book:not(.book--fit) {
+  /* One column, every page scrolling as one long page (the home spread only
+     fits one screen when it's a spread): pages size to their content, since
+     flex: 1 would contribute 0. */
+  .book {
     grid-auto-rows: max-content;
     align-content: start;
   }
 
-  .book:not(.book--fit) .page,
-  .book:not(.book--fit) .page-body {
+  .book .page,
+  .book .page-body {
     flex: none;
     min-height: auto;
   }
 
-  .book:not(.book--fit) .plate {
+  .book .plate {
     flex: none;
   }
 
-  .book:not(.book--fit) .plate-frame {
+  .book .plate-frame {
     flex: none;
     aspect-ratio: 1;
   }
 
-  .book:not(.book--fit) .verso .folio,
-  .book:not(.book--fit) .recto .running .mark-text {
+  .book .verso .folio,
+  .book .recto .running .mark-text {
     display: none;
   }
 
