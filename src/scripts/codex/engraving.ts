@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { gsap } from 'gsap';
-import { PLATES, buildModel, disposeModel } from './models';
+import { PLATES, type PlateId, buildModel, disposeModel } from './models';
 
 // Copper-plate engraving of 3D models, in three passes:
 //   1. ink:     each surface is drawn as parallel engraved lines that wrap the form;
@@ -19,7 +19,9 @@ export interface Engraving {
 interface Options {
   /** Lettered on the banderole. */
   name: string;
-  /** Plate to open on (index into PLATES). */
+  /** Plates this engraving can show; show(i) indexes into it. */
+  plates?: PlateId[];
+  /** Plate to open on (index into plates). */
   initial?: number;
   reducedMotion: boolean;
   onContextLost?: () => void;
@@ -238,7 +240,7 @@ function banderole(width = 7.6, height = 0.66) {
   return geo;
 }
 
-export function createEngraving(canvas: HTMLCanvasElement, { name, initial = 0, reducedMotion, onContextLost }: Options): Engraving | null {
+export function createEngraving(canvas: HTMLCanvasElement, { name, plates = PLATES, initial = 0, reducedMotion, onContextLost }: Options): Engraving | null {
   let renderer: THREE.WebGLRenderer;
   try {
     renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false });
@@ -279,7 +281,7 @@ export function createEngraving(canvas: HTMLCanvasElement, { name, initial = 0, 
   const turntable = new THREE.Group();
   scene.add(turntable);
   let current = initial;
-  let model = buildModel(PLATES[current], engrave);
+  let model = buildModel(plates[current], engrave);
   turntable.add(model);
 
   /* ── Armillary sphere: engraved rings around the plate ── */
@@ -486,7 +488,7 @@ export function createEngraving(canvas: HTMLCanvasElement, { name, initial = 0, 
     turntable.remove(model);
     disposeModel(model);
     current = index;
-    model = buildModel(PLATES[index], engrave);
+    model = buildModel(plates[index], engrave);
     turntable.add(model);
   };
 

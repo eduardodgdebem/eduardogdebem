@@ -5,7 +5,10 @@ import * as THREE from 'three';
 // and scaled to a common size. Swap any of these for a loaded .glb later: the
 // engraving only needs meshes with normals.
 
-export type PlateId = 'galea' | 'fides' | 'currus';
+import { circinus, hora, liber, machina, sigillum, stilus } from './scenes';
+
+export type PlateId = 'galea' | 'fides' | 'currus' | 'stilus' | 'sigillum' | 'machina' | 'liber' | 'hora' | 'circinus';
+/** The home page's cycle. Inner pages pick one plate each (see src/components/Plate.astro). */
 export const PLATES: PlateId[] = ['galea', 'fides', 'currus'];
 
 const box = (w: number, h: number, d: number, x = 0, y = 0, z = 0) => new THREE.BoxGeometry(w, h, d).translate(x, y, z);
@@ -211,12 +214,21 @@ const POSE: Record<PlateId, THREE.Euler> = {
   galea: new THREE.Euler(0.12, -1.35, 0),
   fides: new THREE.Euler(-0.45, 0.35, -0.55),
   currus: new THREE.Euler(0.26, -0.45, 0),
+  stilus: new THREE.Euler(0.62, -0.35, 0),
+  sigillum: new THREE.Euler(-0.15, 0.3, 0.04),
+  machina: new THREE.Euler(-0.12, 0.38, 0.05),
+  liber: new THREE.Euler(0.72, -0.2, 0.05),
+  hora: new THREE.Euler(0.12, 0.3, 0.06),
+  circinus: new THREE.Euler(0.15, -0.35, 0.05),
 };
 
-const BUILDERS: Record<PlateId, () => THREE.BufferGeometry[]> = { galea, fides, currus };
+const BUILDERS: Record<PlateId, () => THREE.BufferGeometry[]> = { galea, fides, currus, stilus, sigillum, machina, liber, hora, circinus };
 
 // Long, thin objects need a larger size to fill the same plate.
-const SIZE: Record<PlateId, number> = { galea: 5.2, fides: 6.0, currus: 6.6 };
+const SIZE: Record<PlateId, number> = {
+  galea: 5.2, fides: 6.0, currus: 6.6,
+  stilus: 6.4, sigillum: 5.0, machina: 5.2, liber: 6.2, hora: 4.8, circinus: 5.2,
+};
 
 /** Meshes for a plate, posed, centred and scaled so the largest dimension is `size`. */
 export function buildModel(id: PlateId, material: THREE.Material, size = SIZE[id]) {

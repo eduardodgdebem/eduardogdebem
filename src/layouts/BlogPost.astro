@@ -4,6 +4,8 @@
 import type { MarkdownHeading } from 'astro';
 import type { CollectionEntry } from 'astro:content';
 import Codex from './Codex.astro';
+import Plate from '../components/Plate.astro';
+import { plateForTags } from '../scripts/codex/catalogue';
 import { SITE_TITLE } from '../consts';
 
 type Props = CollectionEntry<'blog'>['data'] & {
@@ -34,35 +36,17 @@ const lede = description && !/^lorem ipsum/i.test(description) ? description : n
 
 <Codex title={`${title} — ${SITE_TITLE}`} description={description} image={heroImage} folio={10 + chapter * 2}>
   <Fragment slot="verso">
+    <a href="/blog" class="back">← Commentarii</a>
+    <Plate plate={plateForTags(tags)} banner={`Caput ${roman(chapter)}`} />
     <header class="opener">
-      <a href="/blog" class="back">← Commentarii</a>
-      <p class="rubric caput">Caput {roman(chapter)}</p>
       <h1>{title}</h1>
-      <p class="fleuron" aria-hidden="true">❦</p>
       <p class="date">
         <time datetime={pubDate.toISOString()}>{date(pubDate)}</time>
         {updatedDate && <span class="updated">, revised <time datetime={updatedDate.toISOString()}>{date(updatedDate)}</time></span>}
+        {tags && tags.length > 0 && <span class="tags">{tags.map((t) => <a href={`/blog/tag/${t}/`} class="subject">{t}</a>)}</span>}
       </p>
       {lede && <p class="lede">{lede}</p>}
-      {tags && tags.length > 0 && (
-        <p class="tags">
-          {tags.map((t) => <a href={`/blog/tag/${t}/`} class="subject">{t}</a>)}
-        </p>
-      )}
     </header>
-
-    {headings.length > 1 && (
-      <nav class="contents in-chapter" aria-label="In this chapter">
-        <p class="rubric">In hoc capite</p>
-        <ol>
-          {headings.map((h, i) => (
-            <li class={`d${h.depth}`}>
-              <a href={`#${h.slug}`}><span class="num">{roman(i + 1)}.</span><span class="label">{h.text}</span><span class="leader"></span></a>
-            </li>
-          ))}
-        </ol>
-      </nav>
-    )}
 
     <nav class="turn" aria-label="Other chapters">
       {prev ? <a href={prev.href} rel="prev">← {prev.title}</a> : <span></span>}
@@ -71,6 +55,12 @@ const lede = description && !/^lorem ipsum/i.test(description) ? description : n
   </Fragment>
 
   <Fragment slot="recto">
+    {headings.length > 1 && (
+      <nav class="in-chapter" aria-label="In this chapter">
+        <span class="rubric">In hoc capite:</span>
+        {headings.map((h) => <a href={`#${h.slug}`}>{h.text}</a>)}
+      </nav>
+    )}
     <article class="codex-prose">
       <slot />
     </article>
@@ -79,68 +69,51 @@ const lede = description && !/^lorem ipsum/i.test(description) ? description : n
 </Codex>
 
 <style>
-  .opener {
-    margin-top: clamp(4px, 4vh, 48px);
-    text-align: center;
-  }
-
   .back {
-    display: inline-block;
     font-style: italic;
     color: var(--ink-soft);
     text-decoration: none;
-    margin-bottom: clamp(12px, 4vh, 48px);
   }
 
-  .caput {
-    letter-spacing: 0.2em;
+  .opener {
+    text-align: center;
+    margin-top: 0.4rem;
   }
 
   h1 {
-    font-size: clamp(2rem, 3.4vw, 3.4rem);
-    line-height: 1.05;
-    margin: 0.3rem auto 0;
-    max-width: 18ch;
+    font-size: clamp(1.6rem, 2.4vw, 2.5rem);
+    line-height: 1.08;
+    margin: 0 auto;
+    max-width: 24ch;
     text-wrap: balance;
   }
 
   .date {
     font-style: italic;
     color: var(--ink-soft);
-    margin: 0;
-  }
-
-  .lede {
-    font-size: 1.1rem;
-    font-style: italic;
-    max-width: 38ch;
-    margin: 1rem auto 0;
+    margin: 0.35rem 0 0;
   }
 
   .tags {
-    display: flex;
-    justify-content: center;
-    gap: 0.8rem;
-    margin: 0.8rem 0 0;
+    display: inline-flex;
+    gap: 0.6rem;
+    margin-left: 0.8rem;
+    font-style: normal;
   }
 
-  .in-chapter {
-    margin-top: clamp(16px, 5vh, 56px);
-  }
-
-  .in-chapter .d3 {
-    padding-left: 3ch;
-    font-size: 0.92rem;
+  .lede {
+    font-style: italic;
+    max-width: 44ch;
+    margin: 0.4rem auto 0;
   }
 
   .turn {
     display: flex;
     justify-content: space-between;
     gap: 1rem;
-    margin-top: auto;
-    padding-top: 1.2rem;
+    padding-top: 0.6rem;
     font-style: italic;
-    font-size: 0.95rem;
+    font-size: 0.92rem;
   }
 
   .turn a {
@@ -151,6 +124,28 @@ const lede = description && !/^lorem ipsum/i.test(description) ? description : n
 
   .turn a[rel='next'] {
     text-align: right;
+  }
+
+  .in-chapter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.2rem 1rem;
+    font-size: 0.92rem;
+    font-style: italic;
+    padding-bottom: 0.8rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .in-chapter .rubric {
+    font-style: normal;
+    margin: 0;
+  }
+
+  .in-chapter a {
+    color: var(--ink-soft);
+    text-decoration: none;
   }
 
   .explicit {

@@ -8,6 +8,8 @@ Personal blog-first portfolio. The goal is "knows what he's saying, but is chill
 
 The whole site is an open book. `src/layouts/Codex.astro` renders every page as a spread: `slot="verso"` (left) and `slot="recto"` (right), 50/50, inside a fixed viewport (long pages scroll inside the page; on portrait screens the spread stacks and scrolls). Navigating between pages turns the leaf: cross-document View Transitions (`@view-transition { navigation: auto }` in `codex.css`), with `.verso`/`.recto` as named transition groups. An inline `pagereveal` script in the layout tags each transition `forward` or `back` (history traversal, or going "up" in URL depth), and `html:active-view-transition-type(back)` reverses the turn.
 
+Plates per page: home cycles I–III (galea, fides, currus); /blog → IV stilus; /about → V sigillum (the logo in wax); subject pages and posts pick by tag via `plateForTags()` (dev → machina, notes → liber, thoughts → hora, tools → circinus; others → liber). To illustrate a new tag, add it to `SUBJECTS` in `catalogue.ts`.
+
 **Gotcha:** in the page-turn CSS, back rules must use the full `animation:` shorthand. The forward rules' `animation: none` also resets `animation-duration` to 0, so a back rule that only sets `animation-name` runs instantly.
 
 The Dead Reckoning notes below describe the previous design and are kept for history.
@@ -107,7 +109,9 @@ src/
 │
 ├── scripts/
 │   └── codex/
-│       ├── models.ts        — Solid procedural helmet / violin / F1 car (swap for .glb later)
+│       ├── models.ts        — Plate registry + home models (helmet / violin / F1 car); buildModel()
+│       ├── scenes.ts        — Inner-page plates: stilus, sigillum, machina, liber, hora, circinus
+│       ├── catalogue.ts     — Plate numbers + captions; subject (tag) → plate and Latin banner
 │       ├── engraving.ts     — Copper-plate engraving renderer: hatch pass, normal/depth outlines, paper composite, name banderole
 │       └── cover.ts         — Re-draws the Jellyfin album cover as a line engraving (2D shader)
 │

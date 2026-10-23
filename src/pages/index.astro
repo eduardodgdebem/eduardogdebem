@@ -1,6 +1,8 @@
 ---
 import { getCollection } from 'astro:content';
 import Codex from '../layouts/Codex.astro';
+import { CATALOGUE } from '../scripts/codex/catalogue';
+import { PLATES } from '../scripts/codex/models';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 
 const posts = (await getCollection('blog'))
@@ -19,12 +21,7 @@ const roman = (n: number) =>
     { n, out: '' },
   ).out;
 
-// Order must match PLATES in src/scripts/codex/models.ts.
-const plates = [
-  { numeral: 'I', latin: 'Galea', note: 'the legionary’s helmet, with its crest of horsehair.' },
-  { numeral: 'II', latin: 'Fides', note: 'the violin and its bow. Played for years; still heard.' },
-  { numeral: 'III', latin: 'Currus', note: 'the chariot, as it is raced in our age.' },
-];
+const plates = PLATES.map((id) => CATALOGUE[id]);
 ---
 
 <Codex title={SITE_TITLE} description={SITE_DESCRIPTION} folio={1} fit>

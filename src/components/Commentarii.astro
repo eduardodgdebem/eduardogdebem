@@ -3,6 +3,7 @@
 import type { CollectionEntry } from 'astro:content';
 import Codex from '../layouts/Codex.astro';
 import Plate from './Plate.astro';
+import { plateForTags, subjectBanner } from '../scripts/codex/catalogue';
 import { SITE_TITLE } from '../consts';
 
 interface Props {
@@ -34,7 +35,7 @@ const description = activeTag ? `Field notes on ${activeTag}.` : 'Field notes: w
 
 <Codex title={title} description={description} folio={activeTag ? 5 : 3}>
   <Fragment slot="verso">
-    <Plate plate={0} banner="Commentarii" numeral="IV" latin="Commentarii" note="notes kept on campaign, as Caesar kept his." />
+    <Plate plate={activeTag ? plateForTags([activeTag]) : 'stilus'} banner={activeTag ? subjectBanner(activeTag) : 'Commentarii'} />
   </Fragment>
 
   <Fragment slot="recto">
