@@ -1,0 +1,565 @@
+---
+// The games, in English (/ludus/) or Portuguese (/pt/ludus/): the arena on
+// the left page, the battle plan and its annals on the right. The game is
+// src/scripts/codex/ludus/ (sim.ts fights it, ludus.ts draws it).
+import Codex from '../layouts/Codex.astro';
+import { SITE_TITLE } from '../consts';
+import { tr, type Lang, type StringKey } from '../i18n/strings';
+import { PATHS } from '../i18n/paths';
+import { BUDGET, COST, MAX_COHORTS, ROMAN_KINDS } from '../scripts/codex/ludus/sim';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const s = tr(lang);
+const META = {
+  en: {
+    title: `Ludus: a battle in the arena — ${SITE_TITLE}`,
+    description: 'A small game in the arena: set out a Roman legion, cohort by cohort, against a Gallic host, and watch the battle play out.',
+  },
+  pt: {
+    title: `Ludus: uma batalha na arena — ${SITE_TITLE}`,
+    description: 'Um pequeno jogo na arena: arme uma legião romana, coorte por coorte, contra uma horda gaulesa, e veja a batalha acontecer.',
+  },
+}[lang];
+const FORMATIONS = ['acies', 'testudo', 'cuneus', 'orbis'] as const;
+const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus', 'Cuneus'], ['orbis', 'Orbis']] as const;
+const k = (key: string) => key as StringKey;
+---
+
+<Codex lang={lang} alternates={PATHS.ludus} title={META.title} description={META.description} folio={9}>
+  <Fragment slot="verso">
+    <figure class="plate">
+      <div class="plate-frame">
+        <canvas class="plate-canvas ludus-canvas" data-ludus aria-hidden="true"></canvas>
+        <div class="plate-fallback" aria-hidden="true"><span>Ludus</span></div>
+      </div>
+      <figcaption class="plate-caption">
+        <span class="tab">Tab. VI</span>
+        <span class="cap-latin">Amphitheatrum</span>
+        <span class="cap-note" data-i18n="ludus.note">{s('ludus.note')}</span>
+      </figcaption>
+    </figure>
+    <p class="tip" data-i18n="ludus.tip">{s('ludus.tip')}</p>
+  </Fragment>
+
+  <Fragment slot="recto">
+    <p class="rubric">Liber IV · Ludus</p>
+    <h1 data-i18n="ludus.title">{s('ludus.title')}</h1>
+    <p class="intro" data-i18n="ludus.intro">{s('ludus.intro')}</p>
+
+    <!-- The plan: what to field, and how. -->
+    <section class="tabula" data-tabula aria-label="Battle plan">
+      <p class="treasury">
+        <span data-i18n="ludus.treasury">{s('ludus.treasury')}</span> <b data-spent>0</b>/{BUDGET} ·
+        <span data-i18n="ludus.cohorts">{s('ludus.cohorts')}</span> <b data-count>0</b>/{MAX_COHORTS}
+      </p>
+
+      <fieldset class="pick">
+        <legend data-i18n="ludus.unit">{s('ludus.unit')}</legend>
+        {ROMAN_KINDS.map((kind, i) => (
+          <label>
+            <input type="radio" name="kind" value={kind} checked={i === 0} />
+            <span class="name" data-i18n={k(`ludus.kind.${kind}`)}>{s(k(`ludus.kind.${kind}`))}</span>
+            <span class="cost">{COST[kind]} d.</span>
+            <span class="note" data-i18n={k(`ludus.kind.${kind}.note`)}>{s(k(`ludus.kind.${kind}.note`))}</span>
+          </label>
+        ))}
+      </fieldset>
+
+      <fieldset class="pick">
+        <legend data-i18n="ludus.order">{s('ludus.order')}</legend>
+        {FORMATIONS.map((f, i) => (
+          <label>
+            <input type="radio" name="formation" value={f} checked={i === 0} />
+            <span class="name" data-i18n={k(`ludus.form.${f}`)}>{s(k(`ludus.form.${f}`))}</span>
+            <span class="note" data-i18n={k(`ludus.form.${f}.note`)}>{s(k(`ludus.form.${f}.note`))}</span>
+          </label>
+        ))}
+      </fieldset>
+
+      <p class="presets">
+        <span class="label" data-i18n="ludus.presets">{s('ludus.presets')}</span>
+        {PRESETS.map(([id, name]) => <button type="button" data-preset={id}>{name}</button>)}
+      </p>
+
+      <p class="message" data-message role="status" aria-live="polite"></p>
+
+      <p class="actions">
+        <button type="button" class="primary" data-fight>Pugnate!</button>
+        <button type="button" data-remove hidden data-i18n="ludus.remove">{s('ludus.remove')}</button>
+        <button type="button" data-clear data-i18n="ludus.clear">{s('ludus.clear')}</button>
+        <button type="button" data-share data-i18n="ludus.share">{s('ludus.share')}</button>
+      </p>
+    </section>
+
+    <!-- The battle: the clock, the horn, and what to do after. -->
+    <section class="pugna" data-pugna hidden aria-label="The battle">
+      <p class="score">
+        <span data-time>0:00</span> · Roma <b data-roma>0</b> · Gallia <b data-gallia>0</b>
+      </p>
+      <p class="horn" data-horn-row>
+        <span class="label" data-i18n="ludus.horn">{s('ludus.horn')}</span>
+        <button type="button" data-horn="signum" data-i18n="ludus.signum">{s('ludus.signum')}</button>
+        <button type="button" data-horn="receptui" data-i18n="ludus.receptui">{s('ludus.receptui')}</button>
+      </p>
+      <p class="actions" data-after hidden>
+        <button type="button" class="primary" data-again data-i18n="ludus.again">{s('ludus.again')}</button>
+        <button type="button" data-replan data-i18n="ludus.replan">{s('ludus.replan')}</button>
+      </p>
+    </section>
+
+    <h2 class="rubric annales-head">Annales</h2>
+    <ol class="annales" data-annales aria-live="polite"></ol>
+  </Fragment>
+</Codex>
+
+<script>
+  import { createLudus, type Ludus } from '../scripts/codex/ludus/ludus';
+  import {
+    ALLOWED,
+    BUDGET,
+    COST,
+    MAX_COHORTS,
+    cost,
+    count,
+    decode,
+    encode,
+    preset,
+    SLOTS,
+    type Battle,
+    type Event,
+    type Formation,
+    type Plan,
+    type RomanKind,
+  } from '../scripts/codex/ludus/sim';
+  import { bookOpened } from '../scripts/codex/opening';
+  import { t } from '../scripts/codex/lang';
+
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const $ = <T extends Element = HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
+  const canvas = $<HTMLCanvasElement>('[data-ludus]');
+  const tabula = $('[data-tabula]');
+  const pugna = $('[data-pugna]');
+  const annales = $('[data-annales]');
+  const message = $('[data-message]');
+  const removeBtn = $<HTMLButtonElement>('[data-remove]');
+  const fightBtn = $<HTMLButtonElement>('[data-fight]');
+  const kinds = [...document.querySelectorAll<HTMLInputElement>('input[name="kind"]')];
+  const forms = [...document.querySelectorAll<HTMLInputElement>('input[name="formation"]')];
+
+  const roman = (n: number) =>
+    ([['X', 10], ['IX', 9], ['V', 5], ['IV', 4], ['I', 1]] as const).reduce(
+      (acc, [sym, v]) => {
+        while (acc.n >= v) {
+          acc.out += sym;
+          acc.n -= v;
+        }
+        return acc;
+      },
+      { n, out: '' },
+    ).out;
+
+  // The plan: from a shared link if there is one, else the triple line.
+  let plan: Plan = decode(new URLSearchParams(location.hash.slice(1)).get('plan') ?? '') ?? preset('triplex');
+  let selected: number | null = null;
+  let current: Battle | null = null;
+  // The plate, once its font has loaded (the handlers below may run before then).
+  let ludus: Ludus | null = null;
+
+  const kind = () => kinds.find((i) => i.checked)!.value as RomanKind;
+  const formation = () => forms.find((i) => i.checked)!.value as Formation;
+  const allowed = (k: RomanKind, f: Formation) => ALLOWED[k].includes(f);
+
+  /** Keep the pickers, the treasury and the plate in step with the plan. */
+  const refresh = () => {
+    const k = kind();
+    for (const f of forms) {
+      f.disabled = !allowed(k, f.value as Formation);
+      if (f.checked && f.disabled) forms[0].checked = true;
+    }
+    $('[data-spent]').textContent = String(cost(plan));
+    $('[data-count]').textContent = String(count(plan));
+    removeBtn.hidden = selected === null;
+    fightBtn.disabled = count(plan) === 0;
+    ludus?.setPlan(plan, selected);
+  };
+  const say = (text: string) => {
+    message.textContent = text;
+    clearTimeout(sayT);
+    sayT = setTimeout(() => (message.textContent = ''), 3000);
+  };
+  let sayT: ReturnType<typeof setTimeout> | undefined;
+
+  /** Would this plan fit the treasury and the eight cohorts? */
+  const fits = (next: Plan) => cost(next) <= BUDGET && count(next) <= MAX_COHORTS;
+
+  const pick = (slot: number) => {
+    if (current) return;
+    const there = plan[slot];
+    if (there) {
+      // A cohort already stands there: pick it out (or let it go), and show what it is.
+      selected = selected === slot ? null : slot;
+      if (selected !== null) {
+        kinds.forEach((i) => (i.checked = i.value === there.kind));
+        refresh();
+        forms.forEach((i) => (i.checked = i.value === there.formation));
+      }
+    } else {
+      const k = kind();
+      const next = [...plan];
+      next[slot] = { kind: k, formation: allowed(k, formation()) ? formation() : 'acies' };
+      if (fits(next)) {
+        plan = next;
+        selected = null;
+      } else say(t('ludus.full'));
+    }
+    refresh();
+  };
+
+  // Change the picked cohort when the pickers change.
+  const amend = () => {
+    if (selected === null || !plan[selected]) return refresh();
+    const k = kind();
+    const next = [...plan];
+    next[selected] = { kind: k, formation: allowed(k, formation()) ? formation() : 'acies' };
+    if (fits(next)) plan = next;
+    else {
+      say(t('ludus.full'));
+      kinds.forEach((i) => (i.checked = i.value === plan[selected!]!.kind));
+    }
+    refresh();
+  };
+  kinds.forEach((i) => i.addEventListener('change', amend));
+  forms.forEach((i) => i.addEventListener('change', amend));
+
+  removeBtn.addEventListener('click', () => {
+    if (selected === null) return;
+    plan = plan.map((p, i) => (i === selected ? null : p));
+    selected = null;
+    refresh();
+  });
+  $('[data-clear]').addEventListener('click', () => {
+    plan = SLOTS.map(() => null);
+    selected = null;
+    refresh();
+  });
+  for (const b of document.querySelectorAll<HTMLButtonElement>('[data-preset]')) {
+    b.addEventListener('click', () => {
+      plan = preset(b.dataset.preset as Parameters<typeof preset>[0]);
+      selected = null;
+      refresh();
+    });
+  }
+  $('[data-share]').addEventListener('click', async () => {
+    const url = new URL(location.href);
+    url.hash = `plan=${encode(plan)}`;
+    history.replaceState(null, '', url);
+    try {
+      await navigator.clipboard.writeText(url.href);
+    } catch {}
+    say(t('ludus.shared'));
+  });
+
+  /* ── The battle, and its annals ── */
+
+  // Each side's cohorts by name: Cohors II of archers; Warband III.
+  const nameOf = (b: Battle, id: number) => {
+    const c = b.cohorts[id];
+    if (c.side === 'roma') return `Cohors ${roman(c.n)} ${t('ludus.kindOf')} ${t(`ludus.kind.${c.kind}`).toLowerCase()}`;
+    if (c.kind === 'hastatus') return t('gaul.hastatus');
+    const nth = b.cohorts.filter((o) => o.side === 'gallia' && o.kind === c.kind && o.id <= c.id).length;
+    return `${t(`gaul.${c.kind}`)} ${roman(nth)}`;
+  };
+  const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+
+  /** A line in the annals, written in a word at a time. */
+  const write = (text: string, strong = false) => {
+    const li = document.createElement('li');
+    if (strong) li.className = 'end';
+    const time = document.createElement('span');
+    time.className = 'at';
+    time.textContent = clock(current?.t ?? 0);
+    li.append(time, ' ');
+    text.split(/(\s+)/).forEach((w, i) => {
+      if (/^\s+$/.test(w) || !w) return li.append(w);
+      const span = document.createElement('span');
+      span.className = reduced ? '' : 'quill quill-word';
+      span.style.setProperty('--d', `${i * 22}ms`);
+      span.textContent = w;
+      li.append(span);
+    });
+    annales.prepend(li);
+  };
+
+  const onEvent = (e: Event, b: Battle) => {
+    const fill = (key: string, a?: number, c?: number) =>
+      t(key)
+        .replace('{a}', a === undefined ? '' : nameOf(b, a))
+        .replace('{b}', c === undefined ? '' : nameOf(b, c));
+    if (e.type === 'start') write(t('log.start'));
+    else if (e.type === 'contact' || e.type === 'flank' || e.type === 'rear') {
+      // Every meeting is logged once a side; the front-to-front ones only by the Romans, to keep it readable.
+      if (e.type !== 'contact' || b.cohorts[e.a].side === 'roma') write(fill(`log.${e.type}`, e.a, e.b));
+    } else if (e.type === 'broken' || e.type === 'destroyed') write(fill(`log.${e.type}`, e.a));
+    else if (e.type === 'horn') write(t(`log.${e.call}`), true);
+    else if (e.type === 'end') {
+      write(t(`log.${e.result}`), true);
+      $('[data-after]').hidden = false;
+      $('[data-horn-row]').hidden = true;
+    }
+  };
+
+  // The clock and the men standing, while it lasts.
+  const score = () => {
+    if (!current) return;
+    $('[data-time]').textContent = clock(current.t);
+    const men = (side: string) => current!.cohorts.filter((c) => c.side === side && c.state !== 'gone' && c.state !== 'rout').reduce((n, c) => n + c.men, 0);
+    $('[data-roma]').textContent = String(men('roma'));
+    $('[data-gallia]').textContent = String(men('gallia'));
+    if (!current.result) requestAnimationFrame(score);
+  };
+
+  const fight = () => {
+    if (!ludus || count(plan) === 0) return;
+    selected = null;
+    annales.replaceChildren();
+    tabula.hidden = true;
+    pugna.hidden = false;
+    $('[data-after]').hidden = true;
+    $('[data-horn-row]').hidden = false;
+    for (const b of document.querySelectorAll<HTMLButtonElement>('[data-horn]')) b.disabled = false;
+    current = ludus.fight(plan);
+    score();
+  };
+  fightBtn.addEventListener('click', fight);
+  $('[data-again]').addEventListener('click', fight);
+  $('[data-replan]').addEventListener('click', () => {
+    current = null;
+    ludus?.reset();
+    pugna.hidden = true;
+    tabula.hidden = false;
+    refresh();
+  });
+  for (const b of document.querySelectorAll<HTMLButtonElement>('[data-horn]')) {
+    b.addEventListener('click', () => {
+      if (!ludus?.sound(b.dataset.horn as 'signum' | 'receptui')) return;
+      for (const o of document.querySelectorAll<HTMLButtonElement>('[data-horn]')) o.disabled = true;
+    });
+  }
+
+  // The banderole letters with the page font, so wait for it.
+  await document.fonts.load('150px "IM Fell English SC"').catch(() => undefined);
+  ludus = createLudus(canvas, {
+    name: 'Amphitheatrum',
+    reducedMotion: reduced,
+    onContextLost: () => document.documentElement.classList.add('no-webgl'),
+    onPick: pick,
+    onEvent,
+  });
+  if (!ludus) document.documentElement.classList.add('no-webgl');
+  ludus?.intro(bookOpened());
+  refresh();
+
+  window.addEventListener('pagehide', (e) => !e.persisted && ludus?.dispose());
+</script>
+
+<style>
+  .ludus-canvas,
+  .ludus-canvas:active {
+    cursor: default;
+  }
+
+  .tip {
+    margin: 0.4rem 12px 0;
+    font-style: italic;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+
+  h1 {
+    font-size: clamp(2.2rem, 3.4vw, 3.4rem);
+    margin: 0 0 0.6rem;
+  }
+
+  .intro {
+    max-width: 58ch;
+    margin: 0 0 1rem;
+  }
+
+  .treasury,
+  .score {
+    font-family: 'IM Fell English SC', serif;
+    letter-spacing: 0.05em;
+    margin: 0 0 0.6rem;
+  }
+
+  .treasury b,
+  .score b {
+    color: var(--rubric);
+    font-weight: 400;
+  }
+
+  .pick {
+    border: 0;
+    border-top: 1px solid var(--rule);
+    margin: 0 0 0.6rem;
+    padding: 0.5rem 0 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem 1rem;
+  }
+
+  .pick legend {
+    font-family: 'IM Fell English SC', serif;
+    letter-spacing: 0.08em;
+    color: var(--rubric);
+    padding: 0 0.4rem 0 0;
+  }
+
+  .pick label {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: baseline;
+    gap: 0 0.45rem;
+    padding: 0.25rem 0.4rem;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    cursor: pointer;
+  }
+
+  .pick label:has(input:checked) {
+    border-color: var(--rubric);
+  }
+
+  .pick label:has(input:disabled) {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .pick input {
+    accent-color: var(--rubric);
+  }
+
+  .pick .name {
+    font-family: 'IM Fell English SC', serif;
+    letter-spacing: 0.04em;
+  }
+
+  .pick .cost {
+    font-style: italic;
+    color: var(--ink-soft);
+    font-size: 0.85rem;
+  }
+
+  .pick .note {
+    grid-column: 2 / -1;
+    font-style: italic;
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    line-height: 1.25;
+  }
+
+  .presets,
+  .horn,
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.4rem 0.6rem;
+    margin: 0.4rem 0 0.6rem;
+  }
+
+  .presets .label,
+  .horn .label {
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  button {
+    font: inherit;
+    font-family: 'IM Fell English SC', serif;
+    letter-spacing: 0.05em;
+    font-size: 0.92rem;
+    padding: 0.15rem 0.6rem;
+    color: var(--ink);
+    background: none;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    cursor: pointer;
+  }
+
+  button:hover:not(:disabled) {
+    color: var(--rubric);
+    border-color: var(--rubric);
+  }
+
+  button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  button.primary {
+    color: var(--paper);
+    background: var(--rubric);
+    border-color: var(--rubric);
+    padding: 0.25rem 1.1rem;
+  }
+
+  button.primary:hover:not(:disabled) {
+    color: var(--paper);
+    background: #7f2318;
+  }
+
+  .message {
+    min-height: 1.2em;
+    margin: 0;
+    font-style: italic;
+    color: var(--rubric);
+  }
+
+  .annales-head {
+    font-size: 1rem;
+    margin: 1rem 0 0.4rem;
+    color: var(--rubric);
+  }
+
+  .annales {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .annales :global(li) {
+    padding: 0.2rem 0;
+    border-bottom: 1px dotted var(--rule);
+  }
+
+  .annales :global(li.end) {
+    font-family: 'IM Fell English SC', serif;
+    letter-spacing: 0.04em;
+    color: var(--rubric);
+  }
+
+  .annales :global(.at) {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    margin-right: 0.3rem;
+  }
+
+  @media (max-width: 560px) {
+    .pick {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* On a phone the arena is wider than the usual 4:5 plate: square it. */
+  @media (max-aspect-ratio: 1/1) {
+    .plate .plate-frame {
+      aspect-ratio: 1;
+    }
+  }
+</style>

@@ -40,7 +40,7 @@ const roman = (n: number) =>
 
 // The places in the forum on the left page, each standing for a page. Their
 // notes are in src/i18n/strings.ts, under place.<id>.
-const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabrica', statua: 'Statua' };
+const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabrica', statua: 'Statua', amphitheatrum: 'Amphitheatrum' };
 ---
 
 <Codex
@@ -118,7 +118,10 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
           <a href="https://github.com/eduardodgdebem" target="_blank" rel="noopener noreferrer" data-place="fabrica"><span class="num">III.</span><span class="label" data-i18n="home.index.workshop">{s('home.index.workshop')}</span><span class="leader"></span><span class="pg">github</span></a>
         </li>
         <li class="chapter">
-          <a href={`${href(lang, 'about')}#correspondence`}><span class="num">IV.</span><span class="label" data-i18n="home.index.letters">{s('home.index.letters')}</span><span class="leader"></span><span class="pg" data-i18n="home.index.letters.pg">{s('home.index.letters.pg')}</span></a>
+          <a href={href(lang, 'ludus')} data-place="amphitheatrum"><span class="num">IV.</span><span class="label" data-i18n="home.index.ludus">{s('home.index.ludus')}</span><span class="leader"></span><span class="pg" data-i18n="home.index.ludus.pg">{s('home.index.ludus.pg')}</span></a>
+        </li>
+        <li class="chapter">
+          <a href={`${href(lang, 'about')}#correspondence`}><span class="num">V.</span><span class="label" data-i18n="home.index.letters">{s('home.index.letters')}</span><span class="leader"></span><span class="pg" data-i18n="home.index.letters.pg">{s('home.index.letters.pg')}</span></a>
         </li>
       </ol>
     </nav>
@@ -341,7 +344,7 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
     cursor: default;
   }
 
-  .hint kbd {
+  .hint :global(kbd) {
     font-family: inherit;
     font-style: normal;
     font-size: 0.8em;
@@ -500,6 +503,10 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
     .sub li:nth-child(n + 2),
     .watching {
       display: none;
+    }
+
+    .chapter > a {
+      font-size: 1rem;
     }
   }
 

@@ -42,11 +42,25 @@ export const engraveVertex = /* glsl */ `
   varying vec3 vNormal;
   varying vec3 vView;
   varying vec2 vUv;
+  varying float vInstanceGlow;
   void main() {
     vUv = uv;
-    vec4 world = modelMatrix * vec4(position, 1.0);
+    // Instanced meshes (a crowd of soldiers) carry a transform each, and may
+    // carry a colour whose red picks that one out, as uGlow does a whole mesh.
+    vec4 local = vec4(position, 1.0);
+    vec3 n = normal;
+    #ifdef USE_INSTANCING
+      local = instanceMatrix * local;
+      n = mat3(instanceMatrix) * n;
+    #endif
+    #ifdef USE_INSTANCING_COLOR
+      vInstanceGlow = instanceColor.r;
+    #else
+      vInstanceGlow = 0.0;
+    #endif
+    vec4 world = modelMatrix * local;
     vObj = (uObjectInverse * world).xyz;
-    vNormal = normalize(normalMatrix * normal);
+    vNormal = normalize(normalMatrix * n);
     vec4 mv = viewMatrix * world;
     vView = -mv.xyz;
     gl_Position = projectionMatrix * mv;
@@ -60,6 +74,7 @@ export const engraveFragment = /* glsl */ `
   uniform sampler2D uText;  // lettering, for the banderole
   uniform float uHasText;
   uniform float uGlow;      // 1 = picked out in red (a hovered building)
+  varying float vInstanceGlow; // the same, for one instance of an instanced mesh
   uniform float uPale;      // lightens a surface's shading (ground under fine joints)
   uniform float uBlue;      // 1 = drawn in blue ink (a certain police box)
   varying vec3 vObj;
@@ -90,7 +105,8 @@ export const engraveFragment = /* glsl */ `
     float dark = pow(1.0 - tone, 0.85);
     dark *= 1.0 - uPale;
     // Picked out: cut a little deeper.
-    dark = mix(dark, min(1.0, dark * 1.2 + 0.12), uGlow);
+    float glow = max(uGlow, vInstanceGlow);
+    dark = mix(dark, min(1.0, dark * 1.2 + 0.12), glow);
 
     // Swelling, slightly wavering lines, as a burin leaves them.
     float wobble = sin(dot(vObj, vec3(1.7, 0.3, 2.3)) * 3.0) * 0.18;
@@ -109,7 +125,7 @@ export const engraveFragment = /* glsl */ `
     // Lettering on the front of the banderole, cut left to right; the ribbon's
     // own hatching is kept light so the name reads. Red in the lettering
     // (initials, fleurons) rides in the red channel to the paper pass.
-    float red = uGlow;
+    float red = glow;
     if (uHasText > 0.5) {
       vec4 tx = gl_FrontFacing ? texture2D(uText, vUv) : vec4(0.0);
       float letters = tx.a * step(vUv.x, uReveal * 1.15 - 0.08);
