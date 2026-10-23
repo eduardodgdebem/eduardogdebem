@@ -86,7 +86,7 @@ export const engraveFragment = /* glsl */ `
     float lambert = max(dot(n, normalize(uLight)), 0.0);
     float rim = pow(1.0 - max(dot(n, v), 0.0), 2.0);
     // A little fill so faces turned from the lamp still read as form, not solid ink.
-    float tone = clamp(0.22 + lambert * 0.9 - rim * 0.4, 0.0, 1.0);
+    float tone = clamp(0.3 + lambert * 0.85 - rim * 0.3, 0.0, 1.0);
     float dark = pow(1.0 - tone, 0.85);
     dark *= 1.0 - uPale;
     // Picked out: cut a little deeper.
@@ -98,9 +98,10 @@ export const engraveFragment = /* glsl */ `
     float c2 = dot(vObj, normalize(vec3(1.0, -0.35, 0.6))) * uFreq * 0.9;
     float c3 = dot(vObj, normalize(vec3(-0.6, 0.4, 1.0))) * uFreq * 0.7;
 
-    float ink = lines(c1, clamp(dark * 0.5, 0.0, 0.44), c2);
-    ink = max(ink, lines(c2, clamp((dark - 0.45) * 0.55, 0.0, 0.36), c1));
-    ink = max(ink, lines(c3, clamp((dark - 0.8) * 0.8, 0.0, 0.25), c1));
+    // Fine lines: the darkest stay well short of solid, so a plate never blots.
+    float ink = lines(c1, clamp(dark * 0.34, 0.0, 0.3), c2);
+    ink = max(ink, lines(c2, clamp((dark - 0.55) * 0.42, 0.0, 0.22), c1));
+    ink = max(ink, lines(c3, clamp((dark - 0.85) * 0.6, 0.0, 0.16), c1));
 
     // Bare highlights stay paper.
     ink *= smoothstep(0.0, 0.12, dark);
@@ -188,7 +189,7 @@ export const compositeFragment = /* glsl */ `
     vec3 inkColour = mix(mix(uInk, uRed, inkSample.r), uBlue, inkSample.g);
 
     // Outlines from normal and depth discontinuities.
-    float o = 1.2 * uPixel;
+    float o = 0.9 * uPixel;
     vec3 n0 = texture2D(tNormal, vUv).xyz;
     float d0 = linearDepth(vUv);
     float edge = 0.0;
