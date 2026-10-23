@@ -9,11 +9,6 @@ import Logo from '../components/Logo.astro';
 import Binding from '../components/Binding.astro';
 import Corner from '../components/Corner.astro';
 
-export interface Turn {
-  href: string;
-  label: string;
-}
-
 interface Props {
   title: string;
   description: string;
@@ -22,12 +17,9 @@ interface Props {
   folio: number;
   /** Fit the spread to one screen even on portrait (the home page). */
   fit?: boolean;
-  /** The pages either side in reading order, turned by their corners. */
-  prev?: Turn;
-  next?: Turn;
 }
 
-const { title, description, image, folio, fit = false, prev, next } = Astro.props;
+const { title, description, image, folio, fit = false } = Astro.props;
 
 const roman = (n: number) =>
   ([['M', 1000], ['CM', 900], ['D', 500], ['CD', 400], ['C', 100], ['XC', 90], ['L', 50], ['XL', 40], ['X', 10], ['IX', 9], ['V', 5], ['IV', 4], ['I', 1]] as const).reduce(
@@ -104,7 +96,9 @@ const nav = [
         <footer class="folio">
           <span>{roman(folio)}</span>
         </footer>
-        {prev && <Corner turn={prev} rel="prev" />}
+        <Corner dir="back" />
+        {/* On portrait the spread is one column: the top of the screen is this page's. */}
+        <Corner dir="forward" portrait />
       </section>
 
       <main class="page recto">
@@ -122,14 +116,14 @@ const nav = [
           <a href="/rss.xml">rss</a>
           <span>{roman(folio + 1)}</span>
         </footer>
-        {/* On portrait the spread is one column: both corners are this page's. */}
-        {prev && <Corner turn={prev} rel="prev" portrait />}
-        {next && <Corner turn={next} rel="next" />}
+        <Corner dir="forward" />
       </main>
     </div>
     <script>
       import { openBook } from '../scripts/codex/opening';
+      import { foldCorners } from '../scripts/codex/corners';
       openBook();
+      foldCorners();
     </script>
   </body>
 </html>

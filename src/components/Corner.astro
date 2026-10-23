@@ -1,26 +1,24 @@
 ---
-// A page corner that turns the page. Resting, it's a hint of a dog-ear; under
-// the cursor (or focus) the corner lifts and folds back, showing the page
-// beneath and the name of the page it turns to. Clicking navigates, and the
-// view transition in codex.css turns the leaf from there.
-import type { Turn } from '../layouts/Codex.astro';
-
+// A top page corner that turns back or forward through the browser history.
+// Resting, it's a hint of a dog-ear; under the cursor (or focus) the corner
+// lifts and folds down, showing the leaf beneath and the name of the page it
+// turns to. Hidden until src/scripts/codex/corners.ts finds history that way.
 interface Props {
-  turn: Turn;
-  rel: 'prev' | 'next';
+  dir: 'back' | 'forward';
   /** The copy shown only on portrait screens, where the spread is one column. */
   portrait?: boolean;
 }
 
-const { turn, rel, portrait = false } = Astro.props;
+const { dir, portrait = false } = Astro.props;
 ---
 
-<a
-  href={turn.href}
-  rel={rel}
-  class:list={['corner', `corner--${rel}`, { 'corner--portrait': portrait }]}
-  aria-label={`${rel === 'prev' ? 'Previous' : 'Next'} page: ${turn.label}`}
+<button
+  type="button"
+  class:list={['corner', `corner--${dir}`, { 'corner--portrait': portrait }]}
+  data-turn={dir}
+  aria-label={dir === 'back' ? 'Back' : 'Forward'}
+  hidden
 >
   <span class="fold" aria-hidden="true"></span>
-  <span class="corner-label" aria-hidden="true">{turn.label}</span>
-</a>
+  <span class="corner-label" aria-hidden="true"></span>
+</button>

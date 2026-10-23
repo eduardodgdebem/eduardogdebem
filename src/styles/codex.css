@@ -164,37 +164,43 @@
   margin-top: clamp(10px, 2vh, 18px);
 }
 
-/* ── Page corners: turn to the previous / next page in reading order ──
-   Resting, a hint of a dog-ear; under the cursor the corner lifts and folds
-   back over the page, showing the leaf beneath. Drawn for the bottom-right
-   corner and mirrored for the bottom-left. */
+/* ── Page corners: back and forward through history (Corner.astro) ──
+   Resting, a hint of a dog-ear; under the cursor the top corner lifts and
+   folds down over the page, showing the leaf beneath. The fold is drawn for
+   a bottom-right corner and mirrored into the top two. */
 
 .corner {
   position: absolute;
-  bottom: 0;
+  top: 0;
   z-index: 6;
   width: 96px;
   height: 96px;
-  text-decoration: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
   --fold: 12px;
 }
 
-.corner--next {
+.corner--forward {
   right: 0;
 }
 
-.corner--prev {
+.corner--back {
   left: 0;
 }
 
-.corner--portrait {
-  display: none;
+.corner--portrait,
+.corner[hidden] {
+  display: none !important;
 }
 
 .fold {
   position: absolute;
+  top: 0;
   right: 0;
-  bottom: 0;
   width: var(--fold);
   height: var(--fold);
   filter: drop-shadow(-2px -2px 3px rgb(50 30 10 / 0.28));
@@ -203,10 +209,14 @@
     height 0.45s cubic-bezier(0.3, 1.35, 0.5, 1);
 }
 
-.corner--prev .fold {
+.corner--forward .fold {
+  transform: scaleY(-1);
+}
+
+.corner--back .fold {
   right: auto;
   left: 0;
-  transform: scaleX(-1);
+  transform: scale(-1, -1);
 }
 
 /* Where the corner was: the next leaf, in the folded page's shadow. */
@@ -231,7 +241,7 @@
 .corner-label {
   position: absolute;
   right: 12px;
-  bottom: 78px;
+  top: 78px;
   padding: 0 0.3em;
   font-style: italic;
   font-size: 0.85rem;
@@ -246,7 +256,7 @@
   pointer-events: none;
 }
 
-.corner--prev .corner-label {
+.corner--back .corner-label {
   right: auto;
   left: 12px;
 }
@@ -720,13 +730,13 @@ html:active-view-transition-type(back)::view-transition-new(recto) {
     display: none;
   }
 
-  /* One column: the verso's corner would sit mid-screen, so the recto carries both. */
-  .verso .corner--prev {
+  /* One column: the top of the screen is the verso's, so it carries both. */
+  .recto .corner--forward {
     display: none;
   }
 
-  .corner--portrait {
-    display: block;
+  .corner--portrait:not([hidden]) {
+    display: block !important;
   }
 
   /* One leaf turning over the whole screen. */
