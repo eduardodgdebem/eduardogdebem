@@ -430,34 +430,26 @@
   font-family: 'IM Fell English SC', serif;
 }
 
-.lang button {
-  font: inherit;
+.lang a {
   font-size: 0.85rem;
+  text-decoration: none;
   letter-spacing: 0.08em;
   padding: 0 0.35rem;
   color: var(--ink-soft);
-  background: none;
   border: 1px solid transparent;
   border-radius: 2px;
-  cursor: pointer;
 }
 
-.lang button:hover {
+.lang a:hover {
   color: var(--ink);
 }
 
-.lang button[aria-pressed='true'] {
+.lang a[aria-current] {
   color: var(--rubric);
   border-color: var(--rule);
 }
 
-/* Words being replaced lift off the page… */
-.quill-out {
-  opacity: 0;
-  transition: opacity 0.18s ease-in;
-}
-
-/* …and the new ones are inked in, one after another. Opacity and a small
+/* Arriving by the language toggle: the page is inked in, one piece after another. Opacity and a small
    rise only: both are cheap to animate, even for a few hundred at once. */
 .quill {
   animation: quill 0.3s ease-out var(--d, 0ms) both;
@@ -484,11 +476,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .quill,
-  .quill-out {
+  .quill {
     animation: none;
-    transition: none;
-    opacity: 1;
   }
 }
 

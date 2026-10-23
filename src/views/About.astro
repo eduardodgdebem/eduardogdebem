@@ -1,0 +1,287 @@
+---
+// Of the author, in English (/about/) or Portuguese (/pt/sobre/).
+import Plaza, { type PlazaMonument } from '../components/Plaza.astro';
+import Codex from '../layouts/Codex.astro';
+import { CV_PDF, SITE_TITLE } from '../consts';
+import { tr, type Lang, type StringKey } from '../i18n/strings';
+import { PATHS, href } from '../i18n/paths';
+import { PERSON, SITE_URL } from '../seo';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const s = tr(lang);
+const META = {
+  en: {
+    title: `About ${SITE_TITLE} — Full Stack Developer`,
+    description:
+      'Eduardo de Bem is a full stack developer in Florianópolis: data pipelines for BMW Europe at Zallpy, Angular and React front ends, Node.js and .NET. How to reach him.',
+  },
+  pt: {
+    title: `Sobre ${SITE_TITLE} — Desenvolvedor Full Stack`,
+    description:
+      'Eduardo de Bem é desenvolvedor full stack em Florianópolis: pipelines de dados para a BMW Europa na Zallpy, front-ends em Angular e React, Node.js e .NET. Como falar com ele.',
+  },
+}[lang];
+
+const EMAIL = 'eduardogdebem@gmail.com';
+const LINKEDIN = 'https://linkedin.com/in/eduardogdebem';
+const GITHUB = 'https://github.com/eduardodgdebem';
+
+// The marginal notes, each standing as a monument in the plaza on the left
+// page. Their heads and items are in src/i18n/strings.ts, under note.<key>.
+const NOTES: { key: string; plate: PlazaMonument['plate']; inscription: string }[] = [
+  { key: 'currently', plate: 'machina', inscription: 'OFFICINA' },
+  { key: 'reading', plate: 'liber', inscription: 'LIBRI' },
+  { key: 'racing', plate: 'currus', inscription: 'CIRCVS' },
+  { key: 'fighting', plate: 'galea', inscription: 'PVGNA' },
+  { key: 'music', plate: 'fides', inscription: 'MVSICA' },
+  { key: 'tongues', plate: 'stilus', inscription: 'LINGVAE' },
+];
+const head = (key: string) => `note.${key}` as StringKey;
+const items = (key: string) => `note.${key}.items` as StringKey;
+const monuments: PlazaMonument[] = NOTES.map(({ key, plate, inscription }) => ({ key, plate, inscription }));
+---
+
+<Codex
+  lang={lang}
+  alternates={PATHS.about}
+  title={META.title}
+  description={META.description}
+  folio={3}
+  schema={{ '@context': 'https://schema.org', '@type': 'ProfilePage', url: `${SITE_URL}${href(lang, 'about')}`, inLanguage: lang === 'pt' ? 'pt-BR' : 'en', mainEntity: PERSON }}
+>
+  <Fragment slot="verso">
+    <Plaza monuments={monuments} banner="De auctore" lang={lang} />
+  </Fragment>
+
+  <Fragment slot="recto">
+    <p class="rubric">Liber II · De auctore</p>
+    <h1>Eduardo de Bem</h1>
+    <p class="reach">
+      <a href={`mailto:${EMAIL}`} data-i18n="link.email">{s('link.email')}</a>
+      <a href={LINKEDIN} target="_blank" rel="noopener noreferrer">LinkedIn</a>
+      <a href={GITHUB} target="_blank" rel="noopener noreferrer">GitHub</a>
+      <a href={CV_PDF} download data-i18n="link.cv">{s('link.cv')}</a>
+      <a href="#correspondence" data-i18n="about.all">{s('about.all')}</a>
+    </p>
+
+    <div class="codex-prose">
+      {(['about.p1', 'about.p2', 'about.p3', 'about.p4', 'about.p5'] as const).map((k) => <p data-i18n={k}>{s(k)}</p>)}
+      <h2 data-i18n="about.stack.head">{s('about.stack.head')}</h2>
+      <p data-i18n="about.stack">{s('about.stack')}</p>
+    </div>
+
+    <h2 class="rubric notes-head">Marginalia</h2>
+    <dl class="notes">
+      {NOTES.map(({ key }, i) => (
+        <div data-monument={i}>
+          <dt data-i18n={head(key)}>{s(head(key))}</dt>
+          <dd data-i18n={items(key)}>{s(items(key))}</dd>
+        </div>
+      ))}
+    </dl>
+
+    <section class="correspondence" id="correspondence" aria-labelledby="correspondence-head">
+      <h2 class="rubric notes-head" id="correspondence-head" data-i18n="letters.head">{s('letters.head')}</h2>
+      <p class="contact" data-i18n="letters.intro">{s('letters.intro')}</p>
+      <dl class="letters">
+        <div>
+          <dt data-i18n="link.email">{s('link.email')}</dt>
+          <dd>
+            <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
+            <button type="button" class="copy" data-copy={EMAIL} data-i18n="letters.copy">{s('letters.copy')}</button>
+          </dd>
+        </div>
+        <div>
+          <dt>LinkedIn</dt>
+          <dd><a href={LINKEDIN} target="_blank" rel="noopener noreferrer">linkedin.com/in/eduardogdebem</a></dd>
+        </div>
+        <div>
+          <dt>GitHub</dt>
+          <dd><a href={GITHUB} target="_blank" rel="noopener noreferrer">github.com/eduardodgdebem</a></dd>
+        </div>
+        <div>
+          <dt data-i18n="letters.cv">{s('letters.cv')}</dt>
+          <dd><a href={CV_PDF} download data-i18n="letters.cv.value">{s('letters.cv.value')}</a></dd>
+        </div>
+        <div>
+          <dt data-i18n="letters.based">{s('letters.based')}</dt>
+          <dd data-i18n="letters.based.value">{s('letters.based.value')}</dd>
+        </div>
+        <div>
+          <dt data-i18n="letters.speaks">{s('letters.speaks')}</dt>
+          <dd data-i18n="letters.speaks.value">{s('letters.speaks.value')}</dd>
+        </div>
+      </dl>
+      <p class="write">
+        <a class="write-button" href={`mailto:${EMAIL}?subject=${encodeURIComponent(lang === 'pt' ? 'Olá, Eduardo' : 'Hello Eduardo')}`} data-i18n="letters.write">{s('letters.write')}</a>
+      </p>
+    </section>
+    <p class="fleuron" aria-hidden="true">❦</p>
+  </Fragment>
+</Codex>
+
+<script>
+  import { t } from '../scripts/codex/lang';
+
+  // Copy the address, for readers whose mailto links go nowhere.
+  for (const button of document.querySelectorAll<HTMLButtonElement>('[data-copy]')) {
+    button.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(button.dataset.copy!);
+        button.textContent = t('letters.copied');
+      } catch {
+        button.textContent = t('letters.copy.key');
+        getSelection()?.selectAllChildren(button.previousElementSibling!);
+      }
+      setTimeout(() => (button.textContent = t('letters.copy')), 2000);
+    });
+  }
+</script>
+
+<style>
+  h1 {
+    font-size: clamp(2.4rem, 3.6vw, 3.6rem);
+    margin: 0 0 1rem;
+  }
+
+  .notes-head {
+    /* Rubricated, like every section mark (the book's heading colour would otherwise win). */
+    color: var(--rubric);
+    font-size: 1rem;
+    margin: 1.6rem 0 0.6rem;
+  }
+
+  .notes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem 2rem;
+    margin: 0;
+  }
+
+  .notes div.is-lit dt {
+    color: var(--rubric);
+  }
+
+  .notes dt {
+    font-family: 'IM Fell English SC', serif;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+  }
+
+  .notes dd {
+    margin: 0;
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  /* Contact at a glance, under the name. */
+  .reach {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 1.1rem;
+    margin: -0.4rem 0 1.1rem;
+    font-family: 'IM Fell English SC', serif;
+    letter-spacing: 0.06em;
+  }
+
+  .reach a {
+    color: var(--rubric);
+    text-decoration: none;
+  }
+
+  .reach a:hover {
+    text-decoration: underline;
+  }
+
+  .contact {
+    max-width: 62ch;
+  }
+
+  /* The correspondence card: each way in, spelled out. */
+  .letters {
+    margin: 0.8rem 0 0;
+    padding: 0.9rem 1.1rem;
+    border: 1px solid var(--rule);
+    outline: 1px solid var(--rule);
+    outline-offset: 3px;
+    display: grid;
+    gap: 0.45rem;
+  }
+
+  .letters div {
+    display: grid;
+    grid-template-columns: 7.5rem 1fr;
+    align-items: baseline;
+    gap: 1rem;
+  }
+
+  .letters dt {
+    font-family: 'IM Fell English SC', serif;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+  }
+
+  .letters dd {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.6rem;
+  }
+
+  .letters a {
+    color: var(--ink);
+  }
+
+  .copy {
+    font: inherit;
+    font-family: 'IM Fell English SC', serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.06em;
+    padding: 0 0.5rem;
+    color: var(--ink-soft);
+    background: none;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    cursor: pointer;
+  }
+
+  .copy:hover {
+    color: var(--rubric);
+    border-color: var(--rubric);
+  }
+
+  .write {
+    margin: 1rem 0 0;
+  }
+
+  .write-button {
+    display: inline-block;
+    padding: 0.35rem 1.1rem 0.4rem;
+    font-family: 'IM Fell English SC', serif;
+    letter-spacing: 0.08em;
+    color: var(--paper) !important;
+    background: var(--rubric);
+    text-decoration: none;
+    border-radius: 2px;
+  }
+
+  .write-button:hover {
+    background: #7f2318;
+  }
+
+  @media (max-width: 560px) {
+    .letters div {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+
+    .notes {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

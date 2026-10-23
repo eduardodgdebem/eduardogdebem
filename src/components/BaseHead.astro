@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import type { ImageMetadata } from 'astro';
 import { SITE_TITLE } from '../consts';
+import type { Lang } from '../i18n/strings';
 
 interface Props {
   title: string;
@@ -14,9 +15,13 @@ interface Props {
   schema?: Record<string, unknown>;
   /** False for a page with no address of its own (the not-found page stands in for any missing URL). */
   canonical?: boolean;
+  lang?: Lang;
+  /** The page's address in each language, when it exists in both (hreflang). */
+  alternates?: Record<Lang, string>;
 }
 
-const { title, description, image, noindex = false, schema, canonical = true } = Astro.props;
+const { title, description, image, noindex = false, schema, canonical = true, lang = 'en', alternates } = Astro.props;
+const LOCALE: Record<Lang, string> = { en: 'en_US', pt: 'pt_BR' };
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 // The default preview is 1200 × 630, the size LinkedIn, Slack and X expect.
 const preview = image
@@ -41,6 +46,15 @@ const preview = image
 />
 
 {canonical && <link rel="canonical" href={canonicalURL} />}
+{
+  alternates && (
+    <>
+      <link rel="alternate" hreflang="en" href={new URL(alternates.en, Astro.site)} />
+      <link rel="alternate" hreflang="pt-BR" href={new URL(alternates.pt, Astro.site)} />
+      <link rel="alternate" hreflang="x-default" href={new URL(alternates.en, Astro.site)} />
+    </>
+  )
+}
 {noindex && <meta name="robots" content="noindex, follow" />}
 
 <title>{title}</title>
@@ -48,8 +62,8 @@ const preview = image
 
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content={SITE_TITLE} />
-<meta property="og:locale" content="en_US" />
-<meta property="og:locale:alternate" content="pt_BR" />
+<meta property="og:locale" content={LOCALE[lang]} />
+{alternates && <meta property="og:locale:alternate" content={LOCALE[lang === 'pt' ? 'en' : 'pt']} />}
 <meta property="og:url" content={canonicalURL} />
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description} />

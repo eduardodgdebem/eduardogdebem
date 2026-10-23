@@ -1,12 +1,8 @@
 ---
-import { getCollection } from 'astro:content';
 import Commentarii from '../../components/Commentarii.astro';
+import { notes } from '../../lib/notes';
 
-const all = await getCollection('blog');
-const posts = all.toSorted((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
-// Chapters are numbered in the order they were written.
-const chapters = new Map(posts.toReversed().map((p, i) => [p.id, i + 1]));
-const allTags = [...new Set(all.flatMap((p) => p.data.tags ?? []))].sort();
+const { posts, chapters, allTags } = await notes();
 ---
 
-<Commentarii posts={posts} chapters={chapters} allTags={allTags} />
+<Commentarii posts={posts} chapters={chapters} allTags={allTags} lang="en" />

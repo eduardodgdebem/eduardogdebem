@@ -216,3 +216,6 @@ export const STRINGS: Record<Lang, Record<StringKey, string>> = { en: EN, pt: PT
 
 /** The English, as the pages render it before any switch. */
 export const en = (key: StringKey) => EN[key];
+
+/** The strings of one language, for a page rendered in it. */
+export const tr = (lang: Lang) => (key: StringKey) => STRINGS[lang][key];

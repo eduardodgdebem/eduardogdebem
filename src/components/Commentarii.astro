@@ -6,7 +6,8 @@ import Plate from './Plate.astro';
 import Library, { type LibraryRoll } from './Library.astro';
 import { plateForTags, subjectBanner } from '../scripts/codex/catalogue';
 import { SITE_TITLE } from '../consts';
-import { en } from '../i18n/strings';
+import { tr, type Lang } from '../i18n/strings';
+import { PATHS, href } from '../i18n/paths';
 
 interface Props {
   posts: CollectionEntry<'blog'>[];
@@ -14,9 +15,12 @@ interface Props {
   chapters: Map<string, number>;
   allTags: string[];
   activeTag?: string;
+  /** The listing's language (subject pages are English only). */
+  lang?: Lang;
 }
 
-const { posts, chapters, allTags, activeTag } = Astro.props;
+const { posts, chapters, allTags, activeTag, lang = 'en' } = Astro.props;
+const s = tr(lang);
 
 const roman = (n: number) =>
   ([['M', 1000], ['CM', 900], ['D', 500], ['CD', 400], ['C', 100], ['XC', 90], ['L', 50], ['XL', 40], ['X', 10], ['IX', 9], ['V', 5], ['IV', 4], ['I', 1]] as const).reduce(
@@ -37,27 +41,29 @@ const rolls: LibraryRoll[] = posts
   .map((p) => ({ id: p.id, numeral: roman(chapters.get(p.id) ?? 1), title: p.data.title, date: date(p.data.pubDate), href: `/blog/${p.id}/` }));
 const rollOf = new Map(rolls.map((r, i) => [r.href, i]));
 
-const title = activeTag ? `Field notes on ${activeTag} — ${SITE_TITLE}` : `Field notes — ${SITE_TITLE}`;
+const title = activeTag ? `Field notes on ${activeTag} — ${SITE_TITLE}` : `${s('notes.title')} — ${SITE_TITLE}`;
 const description = activeTag
   ? `Eduardo de Bem's field notes on ${activeTag}: what he built, read and learned.`
-  : 'Field notes by Eduardo de Bem, full stack developer: what I built, read and learned, written down as I go.';
+  : lang === 'pt'
+    ? 'Notas de campo de Eduardo de Bem, desenvolvedor full stack: o que construí, li e aprendi, anotado pelo caminho.'
+    : 'Field notes by Eduardo de Bem, full stack developer: what I built, read and learned, written down as I go.';
 // A subject with only a post or two is too thin to stand on its own in search.
 const thin = !!activeTag && posts.length < 3;
 ---
 
-<Codex title={title} description={description} folio={activeTag ? 7 : 5} noindex={thin}>
+<Codex lang={lang} alternates={activeTag ? undefined : PATHS.notes} title={title} description={description} folio={activeTag ? 7 : 5} noindex={thin}>
   <Fragment slot="verso">
-    {activeTag ? <Plate plate={plateForTags([activeTag])} banner={subjectBanner(activeTag)} /> : <Library rolls={rolls} banner="Commentarii" />}
+    {activeTag ? <Plate plate={plateForTags([activeTag])} banner={subjectBanner(activeTag)} /> : <Library rolls={rolls} banner="Commentarii" lang={lang} />}
   </Fragment>
 
   <Fragment slot="recto">
     <header class="head">
       <p class="rubric">Liber I</p>
-      <h1><span data-i18n="notes.title">{en('notes.title')}</span>{activeTag && <> <span class="de">de {activeTag}</span></>}</h1>
-      <p class="intro" data-i18n="notes.intro">{en('notes.intro')}</p>
+      <h1><span data-i18n="notes.title">{s('notes.title')}</span>{activeTag && <> <span class="de">de {activeTag}</span></>}</h1>
+      <p class="intro" data-i18n="notes.intro">{s('notes.intro')}</p>
       <nav class="subjects" aria-label="Subjects">
-        <span class="subjects-label" data-i18n="notes.subjects">{en('notes.subjects')}</span>
-        <a href="/blog/" class="subject" aria-current={!activeTag ? 'page' : undefined} data-i18n="notes.all">{en('notes.all')}</a>
+        <span class="subjects-label" data-i18n="notes.subjects">{s('notes.subjects')}</span>
+        <a href={href(lang, 'notes')} class="subject" aria-current={!activeTag ? 'page' : undefined} data-i18n="notes.all">{s('notes.all')}</a>
         {allTags.map((t) => (
           <a href={`/blog/tag/${t}/`} class="subject" aria-current={t === activeTag ? 'page' : undefined}>{t}</a>
         ))}
@@ -82,7 +88,7 @@ const thin = !!activeTag && posts.length < 3;
       ))}
     </ol>
 
-    {posts.length === 0 && <p class="empty" data-i18n="notes.empty">{en('notes.empty')}</p>}
+    {posts.length === 0 && <p class="empty" data-i18n="notes.empty">{s('notes.empty')}</p>}
     <p class="fleuron" aria-hidden="true">❦</p>
   </Fragment>
 </Codex>

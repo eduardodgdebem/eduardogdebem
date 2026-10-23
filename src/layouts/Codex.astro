@@ -8,7 +8,8 @@ import BaseHead from '../components/BaseHead.astro';
 import Logo from '../components/Logo.astro';
 import Binding from '../components/Binding.astro';
 import Corner from '../components/Corner.astro';
-import { STRINGS } from '../i18n/strings';
+import { STRINGS, type Lang } from '../i18n/strings';
+import { PATHS, href } from '../i18n/paths';
 
 interface Props {
   title: string;
@@ -24,9 +25,15 @@ interface Props {
   canonical?: boolean;
   /** Fit the spread to one screen, without scrolling (the home page; on portrait it scrolls like the rest). */
   fit?: boolean;
+  /** The page's language. */
+  lang?: Lang;
+  /** The page's address in each language, for a page that exists in both: the toggle links them, and search engines are told. */
+  alternates?: Record<Lang, string>;
 }
 
-const { title, description, image, folio, fit = false, noindex = false, schema, canonical = true } = Astro.props;
+const { title, description, image, folio, fit = false, noindex = false, schema, canonical = true, lang = 'en', alternates } = Astro.props;
+// For scripts: this page's strings only (the 3D labels and captions are written at run time).
+const DICT = STRINGS[lang];
 
 const roman = (n: number) =>
   ([['M', 1000], ['CM', 900], ['D', 500], ['CD', 400], ['C', 100], ['XC', 90], ['L', 50], ['XL', 40], ['X', 10], ['IX', 9], ['V', 5], ['IV', 4], ['I', 1]] as const).reduce(
@@ -42,16 +49,16 @@ const roman = (n: number) =>
 
 const path = Astro.url.pathname;
 const nav = [
-  { href: '/', label: 'Index', current: path === '/' },
-  { href: '/blog/', label: 'Commentarii', current: path.startsWith('/blog') },
-  { href: '/about/', label: 'De auctore', current: path.startsWith('/about') },
+  { href: href(lang, 'home'), label: 'Index', current: path === PATHS.home[lang] },
+  { href: href(lang, 'notes'), label: 'Commentarii', current: path.startsWith(PATHS.notes[lang]) || path.startsWith('/blog') },
+  { href: href(lang, 'about'), label: 'De auctore', current: path.startsWith(PATHS.about[lang]) },
 ];
 ---
 
 <!doctype html>
-<html lang="en" data-folio={folio}>
+<html lang={lang === 'pt' ? 'pt-BR' : 'en'} data-folio={folio}>
   <head>
-    <BaseHead title={title} description={description} image={image} noindex={noindex} schema={schema} canonical={canonical} />
+    <BaseHead title={title} description={description} image={image} noindex={noindex} schema={schema} canonical={canonical} lang={lang} alternates={alternates} />
     <script is:inline>
       // The first page of a visit arrives as a closed book (Binding.astro).
       // Set before first paint so the closed board is what paints; if the
@@ -70,6 +77,10 @@ const nav = [
       // folio on the way out.
       window.addEventListener('pageswap', (e) => {
         if (!e.viewTransition) return;
+        // Over to the other language: no leaf turns; the new page is written in instead.
+        try {
+          if (sessionStorage.getItem('codex-quill')) return e.viewTransition.skipTransition();
+        } catch {}
         try {
           sessionStorage.setItem('codex-from-folio', document.documentElement.dataset.folio);
         } catch {}
@@ -115,10 +126,12 @@ const nav = [
               <a href={n.href} aria-current={n.current ? 'page' : undefined}>{n.label}</a>
             ))}
           </nav>
-          <div class="lang" role="group" aria-label="Language" data-i18n-label="lang.toggle">
-            <button type="button" data-lang="en" lang="en" aria-pressed="true">EN</button>
-            <button type="button" data-lang="pt" lang="pt-BR" aria-pressed="false">PT</button>
-          </div>
+          {alternates && (
+            <nav class="lang" aria-label={DICT['lang.toggle']}>
+              <a href={alternates.en} hreflang="en" lang="en" data-lang-link aria-current={lang === 'en' ? 'page' : undefined}>EN</a>
+              <a href={alternates.pt} hreflang="pt-BR" lang="pt-BR" data-lang-link aria-current={lang === 'pt' ? 'page' : undefined}>PT</a>
+            </nav>
+          )}
         </header>
         <div class="page-body">
           <slot name="recto" />
@@ -130,28 +143,33 @@ const nav = [
         <Corner dir="forward" />
       </main>
     </div>
-    <script is:inline define:vars={{ STRINGS }}>
-      // The book in English or Portuguese. Elements carry data-i18n (text) or
-      // data-i18n-html (markup) with a key into STRINGS; switching rewrites
-      // them in place, inked in letter by letter as if being written. Inline
-      // and at the end of the body, so a stored choice applies before first
-      // paint. Scripts read it through src/scripts/codex/lang.ts.
+    <script is:inline define:vars={{ DICT }}>
+      // The page's language, for scripts (src/scripts/codex/lang.ts): its
+      // strings, for the labels and captions the 3D plates write at run time.
+      // And when the reader has just come over by the EN · PT toggle, the page
+      // is written in as if by a quill: what's on screen and translatable
+      // (data-i18n, data-i18n-html) appears letter by letter, or a word at a
+      // time in a long paragraph. Inline at the end of the body, so it runs
+      // before first paint.
       (() => {
-        const KEY = 'codex-lang';
         const root = document.documentElement;
-        let lang = 'en';
-        try {
-          lang = localStorage.getItem(KEY) || ((navigator.language || '').toLowerCase().startsWith('pt') ? 'pt' : 'en');
-        } catch {}
-        if (!STRINGS[lang]) lang = 'en';
-        const t = (key) => STRINGS[lang][key] ?? STRINGS.en[key] ?? key;
-        const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        window.codexLang = { lang: root.lang.startsWith('pt') ? 'pt' : 'en', t: (key) => DICT[key] ?? key };
 
-        const content = (el) => (el.dataset.i18nHtml ? t(el.dataset.i18nHtml) : t(el.dataset.i18n));
-        const set = (el, value) => {
-          if (el.dataset.i18nHtml) el.innerHTML = value;
-          else el.textContent = value;
-        };
+        const FLAG = 'codex-quill';
+        document.addEventListener('click', (e) => {
+          const a = e.target.closest('a[data-lang-link]');
+          if (!a || a.hasAttribute('aria-current')) return;
+          try {
+            sessionStorage.setItem(FLAG, '1');
+          } catch {}
+        });
+        let arrived = false;
+        try {
+          arrived = sessionStorage.getItem(FLAG) === '1';
+          sessionStorage.removeItem(FLAG);
+        } catch {}
+        if (!arrived || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
         // An element's text cut into pieces, each in its own span, to be inked a
         // moment after the last: letters for a short line, words for a long
         // paragraph (thousands of animated letters would stutter).
@@ -191,53 +209,19 @@ const nav = [
           return r.bottom > top && r.top < bottom;
         };
 
-        const apply = (animate) => {
-          root.lang = lang === 'pt' ? 'pt-BR' : 'en';
-          for (const b of document.querySelectorAll('[data-lang]')) b.setAttribute('aria-pressed', String(b.dataset.lang === lang));
-          for (const el of document.querySelectorAll('[data-i18n-label]')) el.setAttribute('aria-label', t(el.dataset.i18nLabel));
-          const els = [...document.querySelectorAll('[data-i18n], [data-i18n-html]')];
-          let order = 0;
-          for (const el of els) {
-            const value = content(el);
-            if (!animate || reduced || !seen(el)) {
-              set(el, value);
-              continue;
-            }
-            // The old words lift off, then the new are written in, top of the page first.
-            const start = Math.min(order++ * 55, 900);
-            const text = value.replace(/<[^>]*>/g, '');
-            const byWord = text.length > 120;
-            const count = Math.max(1, byWord ? text.split(/\s+/).length : text.length);
-            const step = Math.min(byWord ? 45 : 14, 700 / count);
-            el.classList.add('quill-out');
-            setTimeout(() => {
-              set(el, value);
-              pieces(el, start, step, byWord);
-              el.classList.remove('quill-out');
-              // Back to plain text once dry, so selection and wrapping are as before.
-              setTimeout(() => set(el, value), start + count * step + 400);
-            }, 180);
-          }
-        };
-
-        window.codexLang = {
-          get lang() {
-            return lang;
-          },
-          t,
-        };
-        if (lang !== 'en') apply(false);
-
-        document.addEventListener('click', (e) => {
-          const b = e.target.closest('[data-lang]');
-          if (!b || b.dataset.lang === lang) return;
-          lang = b.dataset.lang;
-          try {
-            localStorage.setItem(KEY, lang);
-          } catch {}
-          apply(true);
-          document.dispatchEvent(new CustomEvent('codex:lang', { detail: lang }));
-        });
+        let order = 0;
+        for (const el of document.querySelectorAll('[data-i18n], [data-i18n-html]')) {
+          if (!seen(el)) continue;
+          const html = el.innerHTML;
+          const text = el.textContent;
+          const start = Math.min(order++ * 55, 900);
+          const byWord = text.length > 120;
+          const count = Math.max(1, byWord ? text.split(/\s+/).length : text.length);
+          const step = Math.min(byWord ? 45 : 14, 700 / count);
+          pieces(el, start, step, byWord);
+          // Back to plain text once dry, so selection and wrapping are as before.
+          setTimeout(() => (el.innerHTML = html), start + count * step + 400);
+        }
       })();
     </script>
     <script>

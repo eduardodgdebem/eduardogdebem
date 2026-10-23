@@ -1,21 +1,12 @@
 ---
-import { getCollection } from 'astro:content';
 import Commentarii from '../../../components/Commentarii.astro';
+import { notes } from '../../../lib/notes';
 
 export async function getStaticPaths() {
-  const all = await getCollection('blog');
-  const sorted = all.toSorted((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
-  const chapters = new Map(sorted.toReversed().map((p, i) => [p.id, i + 1]));
-  const allTags = [...new Set(all.flatMap((post) => post.data.tags ?? []))].sort();
-
+  const { posts, chapters, allTags } = await notes();
   return allTags.map((tag) => ({
     params: { tag },
-    props: {
-      tag,
-      posts: sorted.filter((post) => post.data.tags?.includes(tag)),
-      chapters,
-      allTags,
-    },
+    props: { tag, posts: posts.filter((post) => post.data.tags?.includes(tag)), chapters, allTags },
   }));
 }
 

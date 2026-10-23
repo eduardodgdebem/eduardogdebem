@@ -3,7 +3,7 @@
 // Monuments are linked to the notes on the same spread by index: an element
 // with `data-monument={i}` lights monument i.
 import type { PlateId } from '../scripts/codex/models';
-import { en } from '../i18n/strings';
+import { tr, type Lang } from '../i18n/strings';
 
 export interface PlazaMonument {
   /** The marginal note it stands for: its label reads note.<key> and note.<key>.items. */
@@ -16,9 +16,11 @@ interface Props {
   monuments: PlazaMonument[];
   /** Lettered on the banderole. */
   banner: string;
+  lang?: Lang;
 }
 
-const { monuments, banner } = Astro.props;
+const { monuments, banner, lang = 'en' } = Astro.props;
+const s = tr(lang);
 ---
 
 <figure class="plate">
@@ -35,19 +37,21 @@ const { monuments, banner } = Astro.props;
   <figcaption class="plate-caption">
     <span class="tab">Tab. V</span>
     <span class="cap-latin">Forum auctoris</span>
-    <span class="cap-note" data-i18n="plaza.note">{en('plaza.note')}</span>
+    <span class="cap-note" data-i18n="plaza.note">{s('plaza.note')}</span>
   </figcaption>
 </figure>
-<p class="touch-hint" data-i18n="plaza.touch">{en('plaza.touch')}</p>
-<p class="plaza-hint" data-i18n-html="plaza.hint" set:html={en('plaza.hint')} />
+<p class="touch-hint" data-i18n="plaza.touch">{s('plaza.touch')}</p>
+<p class="plaza-hint" data-i18n-html="plaza.hint" set:html={s('plaza.hint')} />
 
 <script>
   import { createPlaza, type Subject } from '../scripts/codex/plaza';
   import { bookOpened } from '../scripts/codex/opening';
   import type { PlazaMonument } from './Plaza.astro';
-  import { onLang, pick, t } from '../scripts/codex/lang';
+  import { lang, pick, t } from '../scripts/codex/lang';
 
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // The Via Sacra, in the page's language: where the way out leads.
+  const street = lang() === 'pt' ? '/pt/' : '/';
   // No hover, no keyboard: labels are tapped instead of Enter pressed.
   const touch = matchMedia('(hover: none)').matches;
   const canvas = document.querySelector<HTMLCanvasElement>('[data-plaza]')!;
@@ -86,7 +90,7 @@ const { monuments, banner } = Astro.props;
   let tagged: Subject | null = null;
   tag.addEventListener('click', () => {
     if (typeof tagged === 'number') plaza?.turn(tagged);
-    else if (tagged === 'exitus') plaza?.leave().then(() => location.assign('/'));
+    else if (tagged === 'exitus') plaza?.leave().then(() => location.assign(street));
   });
 
   const plaza = createPlaza(canvas, {
@@ -96,16 +100,14 @@ const { monuments, banner } = Astro.props;
     eager: new URLSearchParams(location.search).has('tardis'),
     onContextLost: () => document.documentElement.classList.add('no-webgl'),
     onFocus: (i) => notes.forEach((n) => n.classList.toggle('is-lit', Number(n.dataset.monument) === i)),
-    onExit: () => (plaza ? plaza.leave().then(() => location.assign('/')) : location.assign('/')),
+    onExit: () => (plaza ? plaza.leave().then(() => location.assign(street)) : location.assign(street)),
     onVisitor: (here) => here && (quip = (quip + 1) % QUIPS.length),
     onTag: (subject, x, y) => showTag(subject, x, y),
   });
   if (!plaza) document.documentElement.classList.add('no-webgl');
   plaza?.intro(bookOpened());
 
-  let shownTag: [Subject | null, number, number] = [null, 0, 0];
   function showTag(subject: Subject | null, x: number, y: number) {
-    shownTag = [subject, x, y];
     tag.classList.toggle('is-shown', subject !== null);
     if (subject === null) return (tagged = null);
     const m = typeof subject === 'number' ? monuments[subject] : null;
@@ -126,8 +128,6 @@ const { monuments, banner } = Astro.props;
     tag.style.top = `${y}px`;
     tag.classList.toggle('is-below', y < tag.offsetHeight + 70);
   }
-  // Another language: any label showing, in it.
-  onLang(() => showTag(...shownTag));
 
   // The notes on the facing page light their monuments.
   for (const n of notes) {
