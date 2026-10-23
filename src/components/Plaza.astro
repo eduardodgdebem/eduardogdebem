@@ -134,7 +134,7 @@ const s = tr(lang);
   // The notes on the facing page light their monuments.
   for (const n of notes) {
     const i = Number(n.dataset.monument);
-    n.addEventListener('pointerenter', () => plaza?.highlight(i));
+    n.addEventListener('pointerenter', (e) => e.pointerType === 'mouse' && plaza?.highlight(i));
     n.addEventListener('pointerleave', () => plaza?.highlight(null));
   }
 
