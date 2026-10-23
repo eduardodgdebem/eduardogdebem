@@ -17,6 +17,8 @@ export interface Engraving {
 }
 
 interface Options {
+  /** Lettered on the banderole. */
+  name: string;
   reducedMotion: boolean;
   onContextLost?: () => void;
 }
@@ -32,7 +34,9 @@ const engraveVertex = /* glsl */ `
   varying vec3 vObj;
   varying vec3 vNormal;
   varying vec3 vView;
+  varying vec2 vUv;
   void main() {
+    vUv = uv;
     vec4 world = modelMatrix * vec4(position, 1.0);
     vObj = (uObjectInverse * world).xyz;
     vNormal = normalize(normalMatrix * normal);
@@ -46,9 +50,12 @@ const engraveFragment = /* glsl */ `
   uniform vec3 uLight;      // view space
   uniform float uFreq;      // lines per unit
   uniform float uReveal;    // 0 = blank plate, 1 = fully engraved
+  uniform sampler2D uText;  // lettering, for the banderole
+  uniform float uHasText;
   varying vec3 vObj;
   varying vec3 vNormal;
   varying vec3 vView;
+  varying vec2 vUv;
 
   float hash(float n) { return fract(sin(n) * 43758.5453); }
 
@@ -84,6 +91,14 @@ const engraveFragment = /* glsl */ `
 
     // Bare highlights stay paper.
     ink *= smoothstep(0.0, 0.12, dark);
+
+    // Lettering on the front of the banderole, cut left to right; the ribbon's
+    // own hatching is kept light so the name reads.
+    if (uHasText > 0.5) {
+      float letters = gl_FrontFacing ? texture2D(uText, vUv).a : 0.0;
+      letters *= step(vUv.x, uReveal * 1.15 - 0.08);
+      ink = max(ink * 0.6, letters);
+    }
     gl_FragColor = vec4(vec3(0.0), ink);
   }
 `;
@@ -172,7 +187,56 @@ const compositeFragment = /* glsl */ `
   }
 `;
 
-export function createEngraving(canvas: HTMLCanvasElement, { reducedMotion, onContextLost }: Options): Engraving | null {
+/** Name set in Fell small caps, black on transparent, for the banderole's middle stretch. */
+function letteringTexture(text: string) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 2400;
+  canvas.height = 200;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = '#000';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const spaced = text.toUpperCase().split('').join('\u200A');
+  let size = 150;
+  ctx.font = `${size}px "IM Fell English SC", serif`;
+  // Fit the lettering to the flat middle of the ribbon (its ends twist away).
+  const max = canvas.width * 0.62;
+  const width = ctx.measureText(spaced).width;
+  if (width > max) {
+    size *= max / width;
+    ctx.font = `${size}px "IM Fell English SC", serif`;
+  }
+  ctx.fillText(spaced, canvas.width / 2, canvas.height / 2 + size * 0.06);
+  // Flourish rules either side of the name.
+  const half = Math.min(max, ctx.measureText(spaced).width) / 2;
+  ctx.fillRect(canvas.width / 2 - half - 170, canvas.height / 2 - 1.5, 120, 3);
+  ctx.fillRect(canvas.width / 2 + half + 50, canvas.height / 2 - 1.5, 120, 3);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.anisotropy = 8;
+  return texture;
+}
+
+/** A ribbon bowed toward the viewer, its ends twisting back as banderoles do in old plates. */
+function banderole(width = 7.6, height = 0.66) {
+  const geo = new THREE.PlaneGeometry(1, 1, 220, 6);
+  const p = geo.attributes.position as THREE.BufferAttribute;
+  for (let i = 0; i < p.count; i++) {
+    const u = p.getX(i) + 0.5;
+    const v = p.getY(i);
+    const s = u * 2 - 1;
+    const x = s * width * 0.5;
+    const y = -3.05 + 0.16 * Math.sin(u * Math.PI * 3) + 0.25 * s * s;
+    const z = 2.3 - 1.4 * s * s;
+    // Twist toward the tails: 0 in the middle, up to ~150° at the ends.
+    const end = THREE.MathUtils.smoothstep(Math.abs(s), 0.62, 1);
+    const twist = Math.sign(s) * end * 2.6;
+    p.setXYZ(i, x - Math.sign(s) * end * 0.25, y + v * height * Math.cos(twist), z + v * height * Math.sin(twist) - end * 0.4);
+  }
+  geo.computeVertexNormals();
+  return geo;
+}
+
+export function createEngraving(canvas: HTMLCanvasElement, { name, reducedMotion, onContextLost }: Options): Engraving | null {
   let renderer: THREE.WebGLRenderer;
   try {
     renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false });
@@ -196,6 +260,8 @@ export function createEngraving(canvas: HTMLCanvasElement, { reducedMotion, onCo
     uFreq: { value: 15 },
     uReveal: { value: 1 },
     uObjectInverse: { value: new THREE.Matrix4() },
+    uText: { value: null as THREE.Texture | null },
+    uHasText: { value: 0 },
   };
   const engrave = new THREE.ShaderMaterial({
     uniforms: engraveUniforms,
@@ -245,6 +311,27 @@ export function createEngraving(canvas: HTMLCanvasElement, { reducedMotion, onCo
   armillary.add(equator, ecliptic, meridian);
   armillary.traverse((o) => o.layers.set(1));
   scene.add(armillary);
+
+  /* ── Banderole: a ribbon across the plate carrying the name ── */
+
+  const nameTexture = letteringTexture(name);
+  const ribbonUniforms = {
+    uLight: engraveUniforms.uLight,
+    uFreq: { value: 22 },
+    uReveal: { value: 1 },
+    uObjectInverse: { value: new THREE.Matrix4() },
+    uText: { value: nameTexture },
+    uHasText: { value: 1 },
+  };
+  const ribbonMat = new THREE.ShaderMaterial({
+    uniforms: ribbonUniforms,
+    vertexShader: engraveVertex,
+    fragmentShader: engraveFragment,
+    side: THREE.DoubleSide,
+  });
+  const ribbon = new THREE.Mesh(banderole(), ribbonMat);
+  scene.add(ribbon);
+  turntable.position.y = 0.45;
 
   /* ── Targets and the paper pass ── */
 
@@ -433,7 +520,9 @@ export function createEngraving(canvas: HTMLCanvasElement, { reducedMotion, onCo
   const intro = () => {
     if (reducedMotion) return;
     engraveUniforms.uReveal.value = 0;
+    ribbonUniforms.uReveal.value = 0;
     gsap.to(engraveUniforms.uReveal, { value: 1, duration: 2.8, ease: 'power1.out', delay: 0.5 });
+    gsap.to(ribbonUniforms.uReveal, { value: 1, duration: 2.4, ease: 'power1.inOut', delay: 1.4 });
   };
 
   window.addEventListener('resize', resize);
@@ -452,7 +541,10 @@ export function createEngraving(canvas: HTMLCanvasElement, { reducedMotion, onCo
     intro,
     dispose() {
       stop();
-      gsap.killTweensOf(engraveUniforms.uReveal);
+      gsap.killTweensOf([engraveUniforms.uReveal, ribbonUniforms.uReveal]);
+      ribbon.geometry.dispose();
+      ribbonMat.dispose();
+      nameTexture.dispose();
       window.removeEventListener('resize', resize);
       window.removeEventListener('pointermove', onPointerMove);
       canvas.removeEventListener('pointerdown', onDown);

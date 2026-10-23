@@ -9,18 +9,16 @@ const posts = (await getCollection('blog'))
   .slice(0, 3);
 
 const roman = (n: number) =>
-  [['M', 1000], ['CM', 900], ['D', 500], ['CD', 400], ['C', 100], ['XC', 90], ['L', 50], ['XL', 40], ['X', 10], ['IX', 9], ['V', 5], ['IV', 4], ['I', 1]].reduce(
+  ([['M', 1000], ['CM', 900], ['D', 500], ['CD', 400], ['C', 100], ['XC', 90], ['L', 50], ['XL', 40], ['X', 10], ['IX', 9], ['V', 5], ['IV', 4], ['I', 1]] as const).reduce(
     (acc, [s, v]) => {
-      while (acc.n >= (v as number)) {
+      while (acc.n >= v) {
         acc.out += s;
-        acc.n -= v as number;
+        acc.n -= v;
       }
       return acc;
     },
     { n, out: '' },
   ).out;
-
-const year = (d: Date) => roman(d.getFullYear());
 
 // Order must match PLATES in src/scripts/codex/models.ts.
 const plates = [
@@ -37,61 +35,19 @@ const plates = [
   </head>
   <body class="home">
     <div class="book">
-      <!-- Verso: title, contents, marginalia -->
-      <main class="page verso">
+      <!-- Verso: the engraved plate, with the name lettered on its banderole -->
+      <section class="page verso" aria-label="Frontispiece">
         <header class="running">
-          <a href="/" class="mark" aria-label="Home"><Logo size={26} /></a>
+          <a href="/" class="mark" aria-label="Home"><Logo size={24} /></a>
           <span>Codex Eduardi</span>
         </header>
 
-        <div class="title-block">
-          <p class="rubric">Incipit liber</p>
-          <h1 class="name"><span class="initial">E</span>duardo<br />de Bem</h1>
-          <p class="lede">
-            Fullstack developer. I build things for the web and keep field notes on how they turned out.
-          </p>
-        </div>
-
-        <nav class="contents" aria-label="Contents">
-          <p class="contents-head">Index</p>
-          <ol>
-            <li class="chapter">
-              <a href="/blog"><span class="num">I.</span><span class="label">Field notes</span><span class="leader"></span><span class="pg">all</span></a>
-              <ol class="sub">
-                {posts.map((p) => (
-                  <li>
-                    <a href={`/blog/${p.id}/`}><span class="label">{p.data.title}</span><span class="leader"></span><span class="pg">{year(p.data.pubDate)}</span></a>
-                  </li>
-                ))}
-              </ol>
-            </li>
-            <li class="chapter">
-              <a href="/about"><span class="num">II.</span><span class="label">Of the author</span><span class="leader"></span><span class="pg">about</span></a>
-            </li>
-            <li class="chapter">
-              <a href="https://github.com/eduardodgdebem" target="_blank" rel="noopener noreferrer"><span class="num">III.</span><span class="label">Workshop</span><span class="leader"></span><span class="pg">github</span></a>
-            </li>
-          </ol>
-        </nav>
-
-        <!-- Marginalia: Jellyfin, filled by script; hidden if it can't be reached. -->
-        <aside class="margin" data-media hidden aria-label="What I'm listening to and watching">
-          <p data-slot="listening" hidden><span class="hand" aria-hidden="true">☞</span> <em data-verb></em> <span data-title></span><span class="by" data-sub></span></p>
-          <p data-slot="watching" hidden><span class="hand" aria-hidden="true">☞</span> <em data-verb></em> <span data-title></span><span class="by" data-sub></span></p>
-        </aside>
-
-        <footer class="folio">
-          <span>{roman(new Date().getFullYear())}</span>
-          <a href="/rss.xml">rss</a>
-        </footer>
-      </main>
-
-      <!-- Recto: the engraved plate -->
-      <section class="page recto" aria-label="Engraved plates">
         <figure class="plate">
           <div class="plate-frame">
             <canvas id="engraving" aria-hidden="true"></canvas>
-            <div class="plate-fallback" aria-hidden="true"></div>
+            <div class="plate-fallback" aria-hidden="true">
+              <span>Eduardo de Bem</span>
+            </div>
           </div>
           <figcaption class="caption" data-plates={JSON.stringify(plates)}>
             <span class="tab">Tab. <span data-cap-numeral>{plates[0].numeral}</span></span>
@@ -109,22 +65,92 @@ const plates = [
           <span class="hint">move the lamp with your cursor · drag to turn</span>
         </div>
       </section>
+
+      <!-- Recto: of the author, the index, and what he is listening to -->
+      <main class="page recto">
+        <header class="running running-right">
+          <span>De auctore</span>
+        </header>
+
+        <div class="bio">
+          <h1 class="sr-only">Eduardo de Bem</h1>
+          <p class="lede">
+            <span class="initial">F</span>ullstack developer in Florianópolis. By day, Angular micro frontends with
+            .NET and MuleSoft behind them, for a BMW USA financial platform at Zallpy; on the side, React, NestJS,
+            PostgreSQL and RabbitMQ.
+          </p>
+          <p class="more">
+            Before that, geoprocessing at eTopocart, where ten-thousand-row tables taught me that performance problems
+            are more interesting than they look. Years of violin, now only listened to. Computer Science at UNISUL,
+            graduating {roman(2026)}.
+          </p>
+        </div>
+
+        <nav class="contents" aria-label="Contents">
+          <p class="contents-head">Index</p>
+          <ol>
+            <li class="chapter">
+              <a href="/blog"><span class="num">I.</span><span class="label">Field notes</span><span class="leader"></span><span class="pg">all</span></a>
+              <ol class="sub">
+                {posts.map((p) => (
+                  <li>
+                    <a href={`/blog/${p.id}/`}><span class="label">{p.data.title}</span><span class="leader"></span><span class="pg">{roman(p.data.pubDate.getFullYear())}</span></a>
+                  </li>
+                ))}
+              </ol>
+            </li>
+            <li class="chapter">
+              <a href="/about"><span class="num">II.</span><span class="label">Of the author, at length</span><span class="leader"></span><span class="pg">about</span></a>
+            </li>
+            <li class="chapter">
+              <a href="https://github.com/eduardodgdebem" target="_blank" rel="noopener noreferrer"><span class="num">III.</span><span class="label">Workshop</span><span class="leader"></span><span class="pg">github</span></a>
+            </li>
+          </ol>
+        </nav>
+
+        <!-- Jellyfin: the cover, re-drawn as an engraving; hidden if it can't be reached. -->
+        <aside class="listening" data-media hidden aria-label="What I'm listening to and watching">
+          <figure class="cover" data-cover hidden>
+            <canvas id="cover" aria-hidden="true"></canvas>
+          </figure>
+          <div class="listening-text">
+            <p data-slot="listening" hidden>
+              <span class="hand" aria-hidden="true">☞</span> <em data-verb></em><br />
+              <span class="track" data-title></span><br /><span class="by" data-sub></span>
+            </p>
+            <p class="watching" data-slot="watching" hidden>
+              <em data-verb></em> <span data-title></span><span class="by" data-sub></span>
+            </p>
+          </div>
+        </aside>
+
+        <footer class="folio">
+          <span>{roman(new Date().getFullYear())}</span>
+          <a href="/rss.xml">rss</a>
+        </footer>
+      </main>
     </div>
 
     <script>
       import { gsap } from 'gsap';
+      import { createCoverEngraving } from '../scripts/codex/cover';
       import { createEngraving } from '../scripts/codex/engraving';
 
       const root = document.documentElement;
       const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
       const canvas = document.getElementById('engraving') as HTMLCanvasElement;
 
-      await document.fonts.ready;
-      const plate = createEngraving(canvas, { reducedMotion: reduced, onContextLost: () => root.classList.add('no-webgl') });
+      // The banderole letters with the page font, so wait for it.
+      await document.fonts.load('150px "IM Fell English SC"').catch(() => undefined);
+      const plate = createEngraving(canvas, {
+        name: 'Eduardo de Bem',
+        reducedMotion: reduced,
+        onContextLost: () => root.classList.add('no-webgl'),
+      });
       if (!plate) root.classList.add('no-webgl');
       plate?.intro();
 
-      /* ── Plates: caption + numerals; the engraving re-cuts itself ── */
+      /* ── Plates ── */
 
       const caption = document.querySelector<HTMLElement>('.caption')!;
       const plates: { numeral: string; latin: string; note: string }[] = JSON.parse(caption.dataset.plates!);
@@ -152,7 +178,6 @@ const plates = [
         schedule();
       };
 
-      // Turn the page on its own every so often, unless the reader is busy with the plate.
       const schedule = () => {
         auto?.kill();
         if (!reduced) auto = gsap.delayedCall(11, () => select((index + 1) % plates.length));
@@ -162,28 +187,35 @@ const plates = [
       document.addEventListener('visibilitychange', () => (document.hidden ? auto?.pause() : auto?.resume()));
       schedule();
 
-      /* ── Marginalia from Jellyfin ── */
+      /* ── Jellyfin: cover engraving and marginal note ── */
 
-      type Entry = { title: string; subtitle: string; live: boolean; paused: boolean } | null;
-      const margin = document.querySelector<HTMLElement>('[data-media]')!;
-      const VERBS = { listening: ['Nunc audit', 'Nuper audivit'], watching: ['Nunc spectat', 'Nuper spectavit'] } as const;
+      type Entry = { title: string; subtitle: string; image: string | null; live: boolean; paused: boolean } | null;
+      const media = document.querySelector<HTMLElement>('[data-media]')!;
+      const coverFig = document.querySelector<HTMLElement>('[data-cover]')!;
+      const cover = createCoverEngraving(document.getElementById('cover') as HTMLCanvasElement, { reducedMotion: reduced });
+      const VERBS = { listening: ['Nunc audit', 'Nuper audivit'], watching: ['Nunc spectat:', 'Nuper spectavit:'] } as const;
+
       const refresh = async () => {
         try {
           const res = await fetch('/api/now-playing.json');
           if (!res.ok) throw new Error(String(res.status));
           const data = (await res.json()) as Record<'listening' | 'watching', Entry>;
           (['listening', 'watching'] as const).forEach((k) => {
-            const el = margin.querySelector<HTMLElement>(`[data-slot="${k}"]`)!;
+            const el = media.querySelector<HTMLElement>(`[data-slot="${k}"]`)!;
             const e = data[k];
             el.hidden = !e;
             if (!e) return;
             el.querySelector('[data-verb]')!.textContent = VERBS[k][e.live && !e.paused ? 0 : 1];
             el.querySelector('[data-title]')!.textContent = e.title;
-            el.querySelector('[data-sub]')!.textContent = e.subtitle ? `, ${e.subtitle}` : '';
+            el.querySelector('[data-sub]')!.textContent = k === 'watching' ? (e.subtitle ? `, ${e.subtitle}` : '') : e.subtitle;
           });
-          margin.hidden = !data.listening && !data.watching;
+          media.hidden = !data.listening && !data.watching;
+          // Engrave the record's cover; fall back to the watching poster.
+          const art = data.listening?.image ?? data.watching?.image;
+          coverFig.hidden = !art || !cover;
+          if (art && cover) coverFig.hidden = !(await cover.set(art));
         } catch {
-          margin.hidden = true;
+          media.hidden = true;
         }
       };
       refresh();
@@ -192,11 +224,14 @@ const plates = [
       /* ── Arrival ── */
 
       if (!reduced) {
-        gsap.from('.verso > *', { autoAlpha: 0, y: 8, duration: 1.4, stagger: 0.12, ease: 'power2.out', delay: 0.2 });
-        gsap.from('.caption, .plate-nav', { autoAlpha: 0, duration: 1.4, delay: 2.2 });
+        gsap.from('.recto > *', { autoAlpha: 0, y: 8, duration: 1.4, stagger: 0.12, ease: 'power2.out', delay: 0.6 });
+        gsap.from('.caption, .plate-nav', { autoAlpha: 0, duration: 1.4, delay: 2.4 });
       }
 
-      window.addEventListener('pagehide', () => plate?.dispose(), { once: true });
+      window.addEventListener('pagehide', () => {
+        plate?.dispose();
+        cover?.dispose();
+      }, { once: true });
     </script>
 
     <style>
@@ -204,7 +239,6 @@ const plates = [
 
       .home {
         --paper: #efe6d0;
-        --paper-edge: #e3d6b8;
         --ink: #1b2419;
         --ink-soft: #4a5243;
         --rubric: #9b2d20;
@@ -225,9 +259,9 @@ const plates = [
         position: fixed;
         inset: clamp(10px, 2vw, 28px);
         display: grid;
-        grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
         background:
-          linear-gradient(90deg, transparent calc(41% - 30px), rgb(60 40 20 / 0.18) 41%, transparent calc(41% + 30px)),
+          linear-gradient(90deg, transparent calc(50% - 34px), rgb(60 40 20 / 0.2) 50%, transparent calc(50% + 34px)),
           var(--paper);
         box-shadow:
           0 30px 80px rgb(0 0 0 / 0.6),
@@ -251,13 +285,7 @@ const plates = [
         min-height: 0;
         display: flex;
         flex-direction: column;
-      }
-
-      /* ── Verso ── */
-
-      .verso {
-        padding: clamp(18px, 3vh, 36px) clamp(24px, 4vw, 64px) clamp(16px, 2.5vh, 28px);
-        gap: clamp(14px, 3vh, 36px);
+        padding: clamp(18px, 3vh, 34px) clamp(22px, 3.4vw, 56px) clamp(14px, 2.2vh, 26px);
       }
 
       .running {
@@ -269,7 +297,12 @@ const plates = [
         letter-spacing: 0.12em;
         color: var(--ink-soft);
         border-bottom: 1px solid var(--rule);
-        padding-bottom: 0.6rem;
+        padding-bottom: 0.55rem;
+        flex: none;
+      }
+
+      .running-right {
+        justify-content: flex-end;
       }
 
       .mark {
@@ -277,167 +310,10 @@ const plates = [
         display: flex;
       }
 
-      .title-block {
-        margin-top: auto;
-      }
+      /* ── Verso: the plate ── */
 
-      .rubric {
-        font-family: 'IM Fell English SC', serif;
-        color: var(--rubric);
-        letter-spacing: 0.1em;
-        margin: 0 0 0.4rem;
-      }
-
-      .name {
-        font-family: 'IM Fell English', serif;
-        font-weight: 400;
-        font-size: clamp(2.6rem, min(5.4vw, 9vh), 5.6rem);
-        line-height: 0.95;
-        letter-spacing: -0.01em;
-        margin: 0 0 1rem;
-        color: var(--ink);
-      }
-
-      /* Rubricated initial. */
-      .initial {
-        color: var(--rubric);
-        font-size: 1.18em;
-      }
-
-      .lede {
-        font-style: italic;
-        font-size: clamp(1rem, 1.1vw + 0.3rem, 1.25rem);
-        line-height: 1.45;
-        max-width: 30ch;
-        margin: 0;
-        color: var(--ink-soft);
-      }
-
-      .contents-head {
-        font-family: 'IM Fell English SC', serif;
-        letter-spacing: 0.14em;
-        color: var(--rubric);
-        margin: 0 0 0.5rem;
-      }
-
-      .contents ol {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-      }
-
-      .contents a {
-        display: flex;
-        align-items: baseline;
-        gap: 0.5ch;
-        color: var(--ink);
-        text-decoration: none;
-        padding: 0.12rem 0;
-      }
-
-      .chapter > a {
-        font-size: 1.15rem;
-      }
-
-      .num {
-        font-family: 'IM Fell English SC', serif;
-        color: var(--rubric);
-        min-width: 2.6ch;
-      }
-
-      .label {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        min-width: 0;
-      }
-
-      .leader {
-        flex: 1;
-        min-width: 2ch;
-        border-bottom: 1px dotted var(--ink-soft);
-        transform: translateY(-0.3em);
-      }
-
-      .pg {
-        font-family: 'IM Fell English SC', serif;
-        font-size: 0.85em;
-        color: var(--ink-soft);
-      }
-
-      .sub {
-        padding-left: 3.1ch !important;
-        margin-bottom: 0.35rem !important;
-      }
-
-      .sub a {
-        font-style: italic;
-        font-size: 0.95rem;
-        color: var(--ink-soft);
-      }
-
-      .contents a:hover .label,
-      .contents a:focus-visible .label {
-        color: var(--rubric);
-      }
-
-      .contents a:focus-visible,
-      .plate-nav button:focus-visible,
-      .folio a:focus-visible,
-      .mark:focus-visible {
-        outline: 1px solid var(--rubric);
-        outline-offset: 3px;
-      }
-
-      .margin {
-        font-size: 0.92rem;
-        line-height: 1.4;
-        color: var(--ink-soft);
-        border-left: 1px solid var(--rule);
-        padding-left: 0.9rem;
-      }
-
-      .margin[hidden],
-      .margin [hidden] {
-        display: none;
-      }
-
-      .margin p {
-        margin: 0 0 0.2rem;
-      }
-
-      .margin em {
-        color: var(--rubric);
-        margin-right: 0.3ch;
-      }
-
-      .hand {
-        color: var(--rubric);
-      }
-
-      .by {
-        font-style: italic;
-      }
-
-      .folio {
-        display: flex;
-        justify-content: space-between;
-        font-family: 'IM Fell English SC', serif;
-        font-size: 0.85rem;
-        color: var(--ink-soft);
-        border-top: 1px solid var(--rule);
-        padding-top: 0.5rem;
-      }
-
-      .folio a {
-        color: inherit;
-      }
-
-      /* ── Recto: the plate ── */
-
-      .recto {
-        padding: clamp(18px, 3vh, 36px) clamp(20px, 3.4vw, 56px) clamp(14px, 2vh, 24px);
-        gap: 0.8rem;
+      .verso {
+        gap: 0.7rem;
       }
 
       .plate {
@@ -445,7 +321,7 @@ const plates = [
         min-height: 0;
         display: flex;
         flex-direction: column;
-        margin: 0;
+        margin: 0.4rem 0 0;
       }
 
       /* Plate mark: the dent a copper plate leaves in the paper, plus a ruled border. */
@@ -458,8 +334,7 @@ const plates = [
         outline-offset: 5px;
         box-shadow:
           0 0 0 11px var(--paper),
-          0 0 0 12px rgb(80 60 30 / 0.28),
-          inset 0 0 0 1px rgb(255 255 255 / 0.25);
+          0 0 0 12px rgb(80 60 30 / 0.28);
         margin: 12px;
       }
 
@@ -480,13 +355,18 @@ const plates = [
 
       .plate-fallback {
         display: none;
+        place-items: end center;
+        padding-bottom: 12%;
+        font-family: 'IM Fell English SC', serif;
+        font-size: 2rem;
+        letter-spacing: 0.14em;
         background:
-          repeating-linear-gradient(115deg, transparent 0 5px, rgb(27 36 25 / 0.12) 5px 6px),
+          repeating-linear-gradient(115deg, transparent 0 5px, rgb(27 36 25 / 0.1) 5px 6px),
           var(--paper);
       }
 
       :global(.no-webgl) .plate-fallback {
-        display: block;
+        display: grid;
       }
 
       :global(.no-webgl) #engraving {
@@ -499,7 +379,6 @@ const plates = [
         flex-wrap: wrap;
         gap: 0.2rem 0.8rem;
         margin: 0.6rem 12px 0;
-        font-size: 1rem;
       }
 
       .tab {
@@ -510,7 +389,7 @@ const plates = [
 
       .cap-latin {
         font-family: 'IM Fell English SC', serif;
-        font-size: 1.3rem;
+        font-size: 1.25rem;
         letter-spacing: 0.16em;
       }
 
@@ -554,59 +433,260 @@ const plates = [
         color: var(--ink-soft);
       }
 
-      /* ── Portrait: plate above, text below, still one page ── */
+      /* ── Recto: of the author ── */
+
+      .recto {
+        gap: clamp(12px, 2.2vh, 26px);
+      }
+
+      .bio {
+        margin-top: clamp(6px, 2vh, 24px);
+      }
+
+      .lede,
+      .more {
+        font-size: clamp(1.02rem, 0.55vw + 0.62rem, 1.22rem);
+        line-height: 1.5;
+        max-width: 54ch;
+        margin: 0 0 0.6rem;
+        hyphens: auto;
+        text-align: justify;
+      }
+
+      .more {
+        color: var(--ink-soft);
+      }
+
+      /* Rubricated initial, dropped two lines. */
+      .initial {
+        float: left;
+        font-size: 3.4em;
+        line-height: 0.82;
+        padding: 0.06em 0.08em 0 0;
+        color: var(--rubric);
+      }
+
+      .contents-head {
+        font-family: 'IM Fell English SC', serif;
+        letter-spacing: 0.14em;
+        color: var(--rubric);
+        margin: 0 0 0.4rem;
+      }
+
+      .contents ol {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .contents a {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5ch;
+        color: var(--ink);
+        text-decoration: none;
+        padding: 0.1rem 0;
+      }
+
+      .chapter > a {
+        font-size: 1.1rem;
+      }
+
+      .num {
+        font-family: 'IM Fell English SC', serif;
+        color: var(--rubric);
+        min-width: 2.6ch;
+      }
+
+      .label {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 0;
+      }
+
+      .leader {
+        flex: 1;
+        min-width: 2ch;
+        border-bottom: 1px dotted var(--ink-soft);
+        transform: translateY(-0.3em);
+      }
+
+      .pg {
+        font-family: 'IM Fell English SC', serif;
+        font-size: 0.85em;
+        color: var(--ink-soft);
+      }
+
+      .sub {
+        padding-left: 3.1ch !important;
+        margin-bottom: 0.3rem !important;
+      }
+
+      .sub a {
+        font-style: italic;
+        font-size: 0.95rem;
+        color: var(--ink-soft);
+      }
+
+      .contents a:hover .label,
+      .contents a:focus-visible .label {
+        color: var(--rubric);
+      }
+
+      .contents a:focus-visible,
+      .plate-nav button:focus-visible,
+      .folio a:focus-visible,
+      .mark:focus-visible {
+        outline: 1px solid var(--rubric);
+        outline-offset: 3px;
+      }
+
+      /* ── Listening: the engraved cover beside its note ── */
+
+      .listening {
+        display: flex;
+        align-items: center;
+        gap: 1.1rem;
+        margin-top: auto;
+      }
+
+      .listening[hidden],
+      .listening [hidden] {
+        display: none;
+      }
+
+      .cover {
+        flex: none;
+        width: clamp(84px, 13vh, 140px);
+        aspect-ratio: 1;
+        margin: 6px;
+        border: 1px solid var(--ink);
+        outline: 1px solid var(--ink);
+        outline-offset: 3px;
+      }
+
+      #cover {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .listening-text p {
+        margin: 0;
+        line-height: 1.3;
+      }
+
+      .listening em {
+        color: var(--rubric);
+      }
+
+      .hand {
+        color: var(--rubric);
+      }
+
+      .track {
+        font-size: 1.25rem;
+      }
+
+      .by {
+        font-style: italic;
+        color: var(--ink-soft);
+      }
+
+      .watching {
+        margin-top: 0.5rem !important;
+        font-size: 0.92rem;
+        color: var(--ink-soft);
+      }
+
+      .folio {
+        display: flex;
+        justify-content: space-between;
+        font-family: 'IM Fell English SC', serif;
+        font-size: 0.85rem;
+        color: var(--ink-soft);
+        border-top: 1px solid var(--rule);
+        padding-top: 0.5rem;
+        flex: none;
+      }
+
+      .folio a {
+        color: inherit;
+      }
+
+      /* ── Shorter screens: shed the secondary lines first ── */
+
+      @media (max-height: 760px) and (min-aspect-ratio: 1/1) {
+        .more {
+          display: none;
+        }
+      }
+
+      @media (max-height: 680px) and (min-aspect-ratio: 1/1) {
+        .sub li:nth-child(n + 2),
+        .watching {
+          display: none;
+        }
+      }
+
+      /* ── Portrait: plate above, author below, still one screen ── */
 
       @media (max-aspect-ratio: 1/1) {
         .book {
           grid-template-columns: 1fr;
-          grid-template-rows: minmax(0, 1fr) auto;
+          grid-template-rows: minmax(0, 1.1fr) auto;
           background: var(--paper);
         }
 
-        .recto {
-          order: -1;
-          padding: 14px 14px 0;
+        .page {
+          padding: 12px 18px;
+        }
+
+        .verso .running,
+        .recto .running,
+        .hint,
+        .cap-note,
+        .more,
+        .sub,
+        .watching,
+        .contents-head {
+          display: none;
         }
 
         .plate-frame {
-          margin: 10px;
+          margin: 8px;
         }
 
-        .verso {
-          padding: 12px 22px 14px;
-          gap: 12px;
+        .caption {
+          margin-top: 0.3rem;
         }
 
-        .running,
-        .rubric,
-        .sub,
-        .hint,
-        .cap-note {
-          display: none;
+        .recto {
+          gap: 10px;
+          padding-top: 4px;
         }
 
-        .title-block {
+        .bio {
           margin-top: 0;
         }
 
-        .name {
-          font-size: clamp(2rem, 9.5vw, 3rem);
-          margin-bottom: 0.4rem;
-        }
-
         .lede {
-          font-size: 0.98rem;
+          font-size: 0.95rem;
+          line-height: 1.4;
+          margin: 0;
         }
 
         .chapter > a {
-          font-size: 1.05rem;
+          font-size: 1rem;
         }
-      }
 
-      @media (max-height: 640px) and (min-aspect-ratio: 1/1) {
-        .sub li:nth-child(n + 2),
-        .margin {
-          display: none;
+        .cover {
+          width: 64px;
+        }
+
+        .track {
+          font-size: 1.05rem;
         }
       }
     </style>

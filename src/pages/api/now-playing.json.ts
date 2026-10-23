@@ -53,7 +53,7 @@ function toEntry(base: string, item: JellyfinItem, live = false, paused = false)
   const kind = kindOf(item);
   if (!kind) return null;
 
-  const image = (id: string) => `${base}/Items/${id}/Images/Primary?fillWidth=120&fillHeight=120&quality=80`;
+  const image = (id: string) => `${base}/Items/${id}/Images/Primary?fillWidth=360&fillHeight=360&quality=85`;
 
   if (item.Type === 'Audio') {
     const artist = item.AlbumArtist || item.Artists?.join(', ') || '';

@@ -80,7 +80,7 @@ src/
 │   └── BlogPost.astro       — Reading layout: meta, title, tags, prose slot, footer nav
 │
 ├── pages/
-│   ├── index.astro          — / (no-scroll homepage: open codex — contents on the verso, engraved plate on the recto)
+│   ├── index.astro          — / (no-scroll homepage: open codex — engraved plate + name banderole on the left, bio/index/engraved album cover on the right)
 │   ├── about.astro          — /about (bio + interests sidebar)
 │   ├── blog/
 │   │   ├── index.astro      — /blog (all posts + tag filter row)
@@ -99,7 +99,8 @@ src/
 ├── scripts/
 │   └── codex/
 │       ├── models.ts        — Solid procedural helmet / violin / F1 car (swap for .glb later)
-│       └── engraving.ts     — Copper-plate engraving renderer: hatch pass, normal/depth outlines, paper composite
+│       ├── engraving.ts     — Copper-plate engraving renderer: hatch pass, normal/depth outlines, paper composite, name banderole
+│       └── cover.ts         — Re-draws the Jellyfin album cover as a line engraving (2D shader)
 │
 ├── styles/
 │   └── global.css           — Tailwind @theme tokens, base styles, prose styles
@@ -265,7 +266,7 @@ All non-content text (dates, labels, coordinates, tags, nav links in context) us
 `Tag.astro` renders either a `<span>` (decorative, no link) or `<a>` (navigable) based on whether `href` is passed. The `active` prop switches the border/text to `signal` color. One component, three use cases: listing, post, filter row.
 
 ### 11. Scroll-below-hero pattern
-The homepage is a single no-scroll viewport (`100svh`, `overflow: hidden`): an open codex. Left page: rubricated title, an index of chapters (field notes with the latest posts, about, GitHub) and Jellyfin marginalia in Latin. Right page: a WebGL copper-plate engraving of the current plate (I Galea, II Fides, III Currus) inside an armillary sphere; the lamp follows the cursor over the plate and dragging turns the object. Fonts: IM Fell English (+ SC). Other pages still follow the opaque `bg-void` sections-over-canvas rule.
+The homepage is a single no-scroll viewport (`100svh`, `overflow: hidden`): an open codex split 50/50. Left page: a WebGL copper-plate engraving of the current plate (I Galea, II Fides, III Currus) inside an armillary sphere, with the name lettered on an engraved banderole in the scene; the lamp follows the cursor over the plate and dragging turns the object. Right page: short bio with a rubricated initial, an index (field notes + latest posts, about, GitHub), and the Jellyfin cover re-drawn as an engraving with Latin marginalia (Nunc audit / Nuper spectavit). Fonts: IM Fell English (+ SC). Other pages still follow the opaque `bg-void` sections-over-canvas rule.
 
 ### 12. BlogPost layout separates metadata from content
 `BlogPost.astro` handles the chrome (header, nav, tags, dates, back link). The `<slot />` receives only the Markdown content. The layout is used by `[...slug].astro` which passes `post.data` as props.
