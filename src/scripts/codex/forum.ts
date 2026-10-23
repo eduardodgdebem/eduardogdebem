@@ -40,8 +40,8 @@ import {
 // engraving.ts, on a slab of street floating among the stars. It is 2.5D: a
 // fixed, raised, orthographic view that follows the reader's citizen along the
 // street. Walk with the arrow keys or WASD, or click the street; three of the
-// buildings are pages (library, statue, forge). Stand at one's door and go up
-// (or press Enter) to go in, and the page turns.
+// buildings are pages (library, statue, forge). Stand at one's door and press
+// Enter, or click the building, to go in, and the page turns.
 
 export type Place = 'bibliotheca' | 'fabrica' | 'statua';
 
@@ -66,8 +66,11 @@ interface Options {
   onFocus?: (place: Place | null, atDoor: boolean) => void;
   /** The citizen is to go in at a place: clicked in the scene, or walked into. */
   onEnter?: (place: Place) => void;
-  /** Where to pin the focused place's label, in CSS px within the canvas (null: hide it). */
-  onTag?: (place: Place | null, x: number, y: number) => void;
+  /**
+   * Where to pin a label, in CSS px within the canvas: over the focused place,
+   * or over the orator when the citizen comes near him (null: hide it).
+   */
+  onTag?: (subject: Place | 'orator' | null, x: number, y: number) => void;
 }
 
 /* ── The street ── */
@@ -83,6 +86,9 @@ const SPEED = 3.4;
 const AT: Record<Place, number> = { bibliotheca: -12.5, statua: -2, fabrica: 17 };
 const doorOf = (place: Place) => new THREE.Vector3(AT[place], 0, FRONT + 0.45);
 const DOOR_REACH = 1.3;
+// The orator's platform on the south pavement; come within earshot to hear him.
+const ORATOR = new THREE.Vector3(-6.4, 0, 3.3);
+const EARSHOT = 2.6;
 
 /* ── The view: raised, turned a little down the street, orthographic ── */
 
@@ -478,7 +484,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     mesh.position.y = y;
     standers.push({ mesh, phase: rand() * 6, sway });
   };
-  stand('orator', -6.4, 3.3, Math.PI, 0.12, 1, 0.53);
+  stand('orator', ORATOR.x, ORATOR.z, Math.PI, 0.12, 1, 0.53);
   for (const [dx, dz] of [[-1.2, -0.9], [-0.4, -1.2], [0.5, -1.15], [1.25, -0.8], [0.05, -1.75]]) {
     stand(rand() > 0.4 ? 'civis' : 'matrona', -6.4 + dx, 3.2 + dz, Math.atan2(-dx, -dz), 0.02, 0.9 + rand() * 0.1);
   }
@@ -573,6 +579,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     uNear: { value: camera.near },
     uFar: { value: camera.far },
     uOrtho: { value: 1 },
+    uStarShift: { value: new THREE.Vector2() },
     uPixel: { value: pixel },
     uReveal: { value: 1 },
     uPaper: { value: raw(PAPER) },
@@ -637,9 +644,8 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   const onKeyUp = (e: KeyboardEvent) => keys.delete(e.code);
   const onBlur = () => keys.clear();
 
-  const lampTarget = new THREE.Vector2(0.55, 0.55);
+  // The lamp stands still, up and to the right, as in the old plates.
   const lamp = new THREE.Vector2(0.55, 0.55);
-  const LAMP_REST = new THREE.Vector2(0.55, 0.55);
   const ray = new THREE.Raycaster();
   ray.layers.set(2);
   const ndc = new THREE.Vector2();
@@ -660,9 +666,6 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     const x = ((e.clientX - r.left) / r.width) * 2 - 1;
     const y = -(((e.clientY - r.top) / r.height) * 2 - 1);
     const inside = Math.abs(x) <= 1 && Math.abs(y) <= 1;
-    // Only the cursor over the plate holds the lamp; elsewhere it drifts back to its rest.
-    if (inside) lampTarget.set(x, y);
-    else lampTarget.copy(LAMP_REST);
     if (e.pointerType !== 'mouse' || entering) return;
     const hit = inside ? pick(e) : null;
     pointed = (hit?.object.userData.place as Place) ?? null;
@@ -684,7 +687,6 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     else walkTo(hit.point);
   };
   const onLeave = () => {
-    lampTarget.copy(LAMP_REST);
     pointed = null;
     refocus();
   };
@@ -713,6 +715,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   let stroll: THREE.Vector3 | null = null; // a spot clicked on the street
   let autoWalk: gsap.core.Tween | null = null; // walking in at a door
   let entering = false;
+  let nearOrator = false;
 
   const clampToStreet = (p: THREE.Vector3) => {
     p.x = THREE.MathUtils.clamp(p.x, -BOUNDS.x, BOUNDS.x);
@@ -807,13 +810,6 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     velocity.lerp(want, Math.min(1, dt * 9));
     const moving = velocity.length() > 0.05;
 
-    // Walking up into a door goes in.
-    if (atDoor && keys.size && want.z < 0 && Math.abs(want.x) < 0.01 && citizen.position.z <= BOUNDS.zMin + 0.02) {
-      keys.clear();
-      onEnter?.(atDoor);
-      return;
-    }
-
     citizen.position.addScaledVector(velocity, dt);
     clampToStreet(citizen.position);
     if (moving) {
@@ -823,6 +819,8 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     citizen.rotation.y += angleTo(citizen.rotation.y, heading.value) * Math.min(1, dt * 10);
     citizen.position.y = moving ? Math.abs(Math.sin(stride)) * 0.06 : citizen.position.y * 0.8;
     citizen.rotation.z = moving ? Math.sin(stride) * 0.04 : 0;
+
+    nearOrator = Math.hypot(citizen.position.x - ORATOR.x, citizen.position.z - ORATOR.z) < EARSHOT;
 
     // At a door?
     const door = (Object.keys(AT) as Place[]).find((p) => Math.abs(citizen.position.x - AT[p]) < DOOR_REACH && citizen.position.z < FRONT + 1.4) ?? null;
@@ -844,8 +842,10 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     target.set(view.x, VIEW_Y, VIEW_Z);
     camera.position.copy(target).addScaledVector(VIEW_DIR, VIEW_DIST);
     camera.lookAt(target);
-    // The world hangs far off: it holds its place on the plate while the street passes.
-    world.position.set(view.x - 3.6 + halfW * 0.35, 1.2, -16);
+    // The sky is far off: the world and the stars drift slowly behind the street.
+    world.position.set(view.x * 0.82 - 3.6 + halfW * 0.35, 1.2, -16);
+    const pxPerUnit = compositeUniforms.uResolution.value.x / (halfW * 2);
+    compositeUniforms.uStarShift.value.set(view.x * 0.12 * pxPerUnit, 0);
   };
 
   /* ── The focused place's label: pinned over the top of its building ── */
@@ -854,20 +854,26 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   let pinned = '';
   const pinTag = () => {
     if (!onTag) return;
-    if (!focused) {
+    const subject = focused ?? (nearOrator && !entering ? 'orator' : null);
+    if (!subject) {
       if (pinned) onTag(null, 0, 0);
       pinned = '';
       return;
     }
-    const proxy = pickables.find((m) => m.userData.place === focused)!;
-    const size = (proxy.geometry as THREE.BoxGeometry).parameters.height;
-    anchor.copy(proxy.position).setY(proxy.position.y + size / 2).project(camera);
+    if (subject === 'orator') {
+      anchor.copy(ORATOR).setY(2.45);
+    } else {
+      const proxy = pickables.find((m) => m.userData.place === subject)!;
+      const size = (proxy.geometry as THREE.BoxGeometry).parameters.height;
+      anchor.copy(proxy.position).setY(proxy.position.y + size / 2);
+    }
+    anchor.project(camera);
     const x = ((anchor.x + 1) / 2) * canvas.clientWidth;
     const y = ((1 - anchor.y) / 2) * canvas.clientHeight;
-    const key = `${focused}:${x.toFixed(0)}:${y.toFixed(0)}`;
+    const key = `${subject}:${x.toFixed(0)}:${y.toFixed(0)}`;
     if (key === pinned) return;
     pinned = key;
-    onTag(focused, x, y);
+    onTag(subject, x, y);
   };
 
   /* ── Loop ── */
@@ -908,7 +914,6 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     timer.update(now);
     const dt = Math.min(timer.getDelta(), 0.05);
     if (!reducedMotion) clock += dt;
-    lamp.lerp(lampTarget, 0.06);
     step(dt);
     follow(dt);
     drawSmoke(clock);

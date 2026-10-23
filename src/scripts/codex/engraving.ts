@@ -133,6 +133,7 @@ export const compositeFragment = /* glsl */ `
   uniform float uOrtho;     // 1 for an orthographic camera: depth is already linear
   uniform float uPixel;
   uniform float uReveal;
+  uniform vec2 uStarShift;  // device px: the star field drifts behind a moving view
   uniform vec3 uPaper;
   uniform vec3 uInk;
   uniform vec3 uRed;
@@ -198,7 +199,7 @@ export const compositeFragment = /* glsl */ `
     edge *= step(0.002, uReveal);
     float covered = texture2D(tNormal, vUv).a;
 
-    float s = star(px) * (1.0 - covered) * 0.75;
+    float s = star(px + uStarShift) * (1.0 - covered) * 0.75;
     float coverage = clamp(max(max(ink, edge), s), 0.0, 1.0);
     // Ink sits a little unevenly on the plate.
     coverage *= 0.86 + 0.14 * noise(px * 0.35);

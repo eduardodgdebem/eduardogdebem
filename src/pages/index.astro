@@ -21,7 +21,7 @@ const roman = (n: number) =>
 
 // The places in the forum on the left page, each standing for a page.
 const PLACES = {
-  forum: { latin: 'Via Sacra', note: 'walk the street; go in at a door to turn the page.' },
+  forum: { latin: 'Via Sacra', note: 'walk the street; at a door, press Enter to go in and turn the page.' },
   bibliotheca: { latin: 'Bibliotheca', page: 'Field notes', note: 'the library, where the field notes are kept.' },
   fabrica: { latin: 'Fabrica', page: 'Workshop · GitHub', note: 'the forge: the workshop, on GitHub.' },
   statua: { latin: 'Statua', page: 'Of the author', note: 'the author, in stone and at length.' },
@@ -39,6 +39,7 @@ const PLACES = {
         <div class="place-tag" data-tag aria-hidden="true">
           <span class="tag-latin" data-tag-latin></span>
           <span class="tag-page" data-tag-page></span>
+          <span class="tag-by" data-tag-by></span>
         </div>
       </div>
       <figcaption class="plate-caption" data-places={JSON.stringify(PLACES)}>
@@ -49,7 +50,7 @@ const PLACES = {
     </figure>
 
     <p class="plate-nav">
-      <span class="hint"><kbd>←</kbd><kbd>→</kbd> or <kbd>A</kbd><kbd>D</kbd> to walk · <kbd>↑</kbd> at a door to go in · or click</span>
+      <span class="hint"><kbd>←</kbd><kbd>→</kbd> or <kbd>A</kbd><kbd>D</kbd> to walk · <kbd>Enter</kbd> at a door to go in · or click a building</span>
     </p>
   </Fragment>
 
@@ -113,6 +114,7 @@ const PLACES = {
   import { gsap } from 'gsap';
   import { createCoverEngraving } from '../scripts/codex/cover';
   import { createForum, type Place } from '../scripts/codex/forum';
+  import { SPEECHES } from '../scripts/codex/orator';
   import { bookOpened } from '../scripts/codex/opening';
 
   const root = document.documentElement;
@@ -129,6 +131,21 @@ const PLACES = {
   const tag = document.querySelector<HTMLElement>('[data-tag]')!;
   const tagLatin = tag.querySelector<HTMLElement>('[data-tag-latin]')!;
   const tagPage = tag.querySelector<HTMLElement>('[data-tag-page]')!;
+  const tagBy = tag.querySelector<HTMLElement>('[data-tag-by]')!;
+
+  // The orator: a new speech each time the citizen comes within earshot, and
+  // another every little while he stays to listen.
+  let speech = Math.floor(Math.random() * SPEECHES.length);
+  let listening = false;
+  let nextSpeech: ReturnType<typeof setTimeout> | undefined;
+  const speak = () => {
+    const { text, by } = SPEECHES[speech];
+    speech = (speech + 1) % SPEECHES.length;
+    tagPage.textContent = `“${text}”`;
+    tagBy.textContent = `— ${by}`;
+    clearTimeout(nextSpeech);
+    nextSpeech = setTimeout(speak, 8000);
+  };
   const cap = {
     latin: caption.querySelector<HTMLElement>('[data-cap-latin]')!,
     note: caption.querySelector<HTMLElement>('[data-cap-note]')!,
@@ -140,7 +157,7 @@ const PLACES = {
   const describe = (place: Place | null, atDoor = false) => {
     const entry = PLACES[place ?? 'forum'];
     cap.latin.textContent = entry.latin;
-    cap.note.textContent = atDoor ? `${entry.note} Go up, or press Enter, to go in.` : entry.note;
+    cap.note.textContent = atDoor ? `${entry.note} Press Enter to go in.` : entry.note;
   };
 
   const forum = createForum(canvas, {
@@ -152,11 +169,23 @@ const PLACES = {
       links.forEach((a) => a.classList.toggle('is-lit', a === chapterFor(place)));
     },
     onEnter: (place) => chapterFor(place)?.click(),
-    onTag: (place, x, y) => {
-      tag.classList.toggle('is-shown', !!place);
-      if (!place) return;
-      tagLatin.textContent = PLACES[place].latin;
-      tagPage.textContent = PLACES[place].page ?? '';
+    onTag: (subject, x, y) => {
+      tag.classList.toggle('is-shown', !!subject);
+      const orator = subject === 'orator';
+      tag.classList.toggle('is-speech', orator);
+      if (orator !== listening) {
+        listening = orator;
+        if (orator) speak();
+        else clearTimeout(nextSpeech);
+      }
+      if (!subject) return;
+      if (!orator) {
+        tagLatin.textContent = PLACES[subject].latin;
+        tagPage.textContent = PLACES[subject].page ?? '';
+        tagBy.textContent = '';
+      } else {
+        tagLatin.textContent = 'Orator';
+      }
       // Kept inside the plate; it flips below its building near the top edge.
       const w = tag.offsetWidth;
       const frame = tag.parentElement!.clientWidth;
@@ -328,6 +357,31 @@ const PLACES = {
     font-style: italic;
     font-size: 0.85rem;
     color: var(--ink-soft);
+  }
+
+  .tag-by {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+  }
+
+  .tag-by:empty {
+    display: none;
+  }
+
+  /* The orator's speech: a wider card, the words set to wrap. */
+  .place-tag.is-speech {
+    width: max-content;
+    max-width: min(17rem, 80%);
+    white-space: normal;
+    text-align: center;
+    gap: 0.15rem;
+  }
+
+  .place-tag.is-speech .tag-page {
+    font-size: 0.95rem;
+    color: var(--ink);
   }
 
   @media (prefers-reduced-motion: reduce) {
