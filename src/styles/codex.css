@@ -2,10 +2,9 @@
    Shared by every page through src/layouts/Codex.astro. Page-specific
    styling stays in the page. */
 
-/* Page turns between documents (Chrome 126+, Safari 18.2+; others just navigate). */
-@view-transition {
-  navigation: auto;
-}
+/* Page turns between documents: the opt-in (@view-transition) is inline at the
+   head of Codex.astro, where the arriving page sees it in time; the turns are
+   below, under "Page turn". */
 
 .codex {
   --paper: #efe6d0;
