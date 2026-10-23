@@ -7,8 +7,8 @@ const EN = {
   'lang.toggle': 'Language',
   'tools.in': 'Zoom in',
   'tools.out': 'Zoom out',
-  'tools.full': 'Full screen',
-  'tools.exit': 'Leave full screen',
+  'tools.full': 'Spread over the book',
+  'tools.exit': 'Back to the page',
 
   'link.email': 'Email',
   'link.contact': 'Contact',
@@ -179,8 +179,8 @@ const PT: Record<StringKey, string> = {
   'lang.toggle': 'Idioma',
   'tools.in': 'Aproximar',
   'tools.out': 'Afastar',
-  'tools.full': 'Tela cheia',
-  'tools.exit': 'Sair da tela cheia',
+  'tools.full': 'Abrir sobre o livro',
+  'tools.exit': 'Voltar à página',
 
   'link.email': 'E-mail',
   'link.contact': 'Contato',

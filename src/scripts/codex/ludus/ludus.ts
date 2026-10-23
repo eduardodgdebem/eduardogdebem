@@ -169,7 +169,14 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
   scene.add(new THREE.Mesh(merge(built.sand), sandMat));
   scene.add(new THREE.Mesh(merge(built.stone), tiers));
   scene.add(new THREE.Mesh(merge(built.awning), dyed));
-  scene.add(new THREE.Mesh(merge(crowd()), stone));
+  // The crowd in two halves, every other seat, so it can rise in waves.
+  const stands = [0, 1].map((part) => {
+    const mesh = new THREE.Mesh(merge(crowd(3, part as 0 | 1)), stone);
+    scene.add(mesh);
+    return mesh;
+  });
+  /** Who won, and since when: the survivors leap and the crowd rises. */
+  let cheer: { side: Cohort['side']; t0: number } | null = null;
   // The sand raked in rings, and a slab of floor under it all.
   {
     const pts: THREE.Vector3[] = [];
@@ -323,7 +330,9 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
         m.yaw += angleTo(m.yaw, yaw) * k;
         const moving = Math.hypot(dx, dz) > 0.02 || c.state === 'fight';
         if (moving && !reducedMotion) m.bob += dt * (cav ? 12 : 9);
-        put(c.kind, m.x, moving ? Math.abs(Math.sin(m.bob)) * 0.05 : 0, m.z, m.yaw, false, lit);
+        // The winners leap, each to his own beat.
+        const leap = cheer && cheer.side === c.side && !reducedMotion ? Math.abs(Math.sin((clock - cheer.t0) * 7 + i * 1.7)) * 0.35 : 0;
+        put(c.kind, m.x, (moving ? Math.abs(Math.sin(m.bob)) * 0.05 : 0) + leap, m.z, m.yaw, false, lit);
       });
       // The standard, behind the middle of the line.
       const back = at(Math.min(spots.length - 1, Math.floor(spots.length / 2)));
@@ -536,6 +545,12 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
       }
     }
     if (fight) for (; seenEvents < fight.events.length; seenEvents++) onEvent?.(fight.events[seenEvents], fight);
+    if (fight?.result && !cheer && fight.result !== 'aequum') cheer = { side: fight.result === 'vicisti' ? 'roma' : 'gallia', t0: clock };
+    // The stands on their feet, half after half.
+    stands.forEach((m, i) => {
+      const t = cheer && !reducedMotion ? clock - cheer.t0 : 0;
+      m.position.y = t > 0 ? Math.max(0, Math.sin(t * 5 + i * Math.PI)) * 0.22 * Math.min(1, t) : 0;
+    });
     aim(dt);
     drawMen(dt);
     drawArrows();
@@ -593,6 +608,7 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
     fight(next) {
       plan = next;
       clear();
+      cheer = null;
       fight = battle(next);
       return fight;
     },
@@ -604,6 +620,7 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
     reset() {
       fight = null;
       selected = null;
+      cheer = null;
       clear();
     },
     intro(after = Promise.resolve()) {

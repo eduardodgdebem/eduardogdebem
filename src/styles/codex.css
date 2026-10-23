@@ -1213,20 +1213,37 @@ html.opening .verso {
 }
 
 .plate-frame.is-full {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
+  position: absolute;
+  inset: clamp(12px, 2vw, 26px);
+  z-index: 30;
   margin: 0;
   background: var(--paper);
-  box-shadow: none;
-  outline: none;
   aspect-ratio: auto !important;
   width: auto !important;
 }
 
-html.plate-is-full,
-html.plate-is-full body {
-  overflow: hidden;
+/* The plate's page lets go of it, so it spreads over the book (both pages).
+   The pages' page-turn names make each its own layer, which would keep the
+   plate under the facing page: they're dropped while it's spread. */
+html.plate-is-full .page:has(.plate-frame.is-full) {
+  position: static;
+}
+
+html.plate-is-full .verso,
+html.plate-is-full .recto {
+  view-transition-name: none;
+}
+
+/* On a phone the book is one long column: the plate takes the screen. */
+@media (max-aspect-ratio: 1/1) {
+  .plate-frame.is-full {
+    position: fixed;
+    inset: 0;
+  }
+
+  html.plate-is-full .book {
+    overflow: hidden;
+  }
 }
 
 @media (max-aspect-ratio: 1/1) {

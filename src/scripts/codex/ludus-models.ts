@@ -218,7 +218,7 @@ export function arena() {
  * The crowd on the tiers, for one merged mesh: a seated spectator is a robe
  * and a head, light enough to fill the stands.
  */
-export function crowd(seed = 3) {
+export function crowd(seed = 3, part: 0 | 1 = 0) {
   const { rx, rz } = SAND;
   let s = seed;
   const rand = () => (s = (s * 16807) % 2147483647) / 2147483647;
@@ -227,8 +227,8 @@ export function crowd(seed = 3) {
   for (let k = 0; k < 7; k++) {
     const r = { x: rx + 0.6 + k * 0.85 - 0.35, z: rz + 0.6 + k * 0.85 - 0.35 };
     const y = 1.2 + k * 0.55;
-    for (const p of around(r.x, r.z, Math.PI + 0.12, 2 * Math.PI - 0.12, 46)) {
-      if (rand() < 0.45 || Math.abs(p.x) < 1.8) continue;
+    for (const [i, p] of around(r.x, r.z, Math.PI + 0.12, 2 * Math.PI - 0.12, 46).entries()) {
+      if (rand() < 0.45 || Math.abs(p.x) < 1.8 || (i + k) % 2 !== part) continue;
       for (const g of figure) {
         parts.push(g.clone().scale(0.5, 0.5 + rand() * 0.1, 0.5).translate(p.x, y, p.z));
       }

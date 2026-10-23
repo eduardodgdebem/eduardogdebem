@@ -28,8 +28,8 @@ const s = tr(lang);
     for (const b of tools.querySelectorAll<HTMLButtonElement>('[data-zoom]')) {
       b.addEventListener('click', () => canvas.dispatchEvent(new CustomEvent('plate:zoom', { detail: Number(b.dataset.zoom) })));
     }
-    // Full screen: the plate takes the window (a fixed overlay, which works on
-    // phones too), and the browser's own full screen where it has one.
+    // Spread out: the plate takes the whole open book, over both pages (on a
+    // phone, where the book is one column, the screen).
     const full = tools.querySelector<HTMLButtonElement>('[data-full]')!;
     const setFull = (on: boolean) => {
       frame.classList.toggle('is-full', on);
@@ -38,13 +38,10 @@ const s = tr(lang);
       const label = on ? tools.dataset.exitLabel! : tools.dataset.fullLabel!;
       full.setAttribute('aria-label', label);
       full.title = label;
-      if (on) frame.requestFullscreen?.().catch(() => undefined);
-      else if (document.fullscreenElement) document.exitFullscreen().catch(() => undefined);
       // The scene sizes itself on resize.
       requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
     };
     full.addEventListener('click', () => setFull(!frame.classList.contains('is-full')));
     document.addEventListener('keydown', (e) => e.key === 'Escape' && frame.classList.contains('is-full') && setFull(false));
-    document.addEventListener('fullscreenchange', () => !document.fullscreenElement && frame.classList.contains('is-full') && setFull(false));
   }
 </script>

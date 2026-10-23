@@ -31,6 +31,36 @@ const META = {
   },
 }[lang];
 const FORMATIONS = ['acies', 'testudo', 'cuneus', 'orbis'] as const;
+// The wreath round a victory's title: two branches along a circle, from the
+// stem at the bottom up either side, leaves pointing up the branch.
+const LAUREL = {
+  cx: 60,
+  cy: 30,
+  r: 27,
+  at(side: number, a: number) {
+    // a: 0 at the bottom, rising to 150° near the top on each side.
+    const rad = ((90 + side * a) * Math.PI) / 180;
+    return { x: this.cx + Math.cos(rad) * this.r, y: this.cy + Math.sin(rad) * this.r };
+  },
+  path(side: number) {
+    const p0 = this.at(side, 8);
+    const p1 = this.at(side, 150);
+    return `M${p0.x.toFixed(1)} ${p0.y.toFixed(1)} A${this.r} ${this.r} 0 0 ${side > 0 ? 1 : 0} ${p1.x.toFixed(1)} ${p1.y.toFixed(1)}`;
+  },
+  leaves(side: number) {
+    return Array.from({ length: 8 }, (_, i) => {
+      const a = 20 + i * 17;
+      const out = i % 2 ? 4 : -4; // alternately outside and inside the branch
+      const p = this.at(side, a);
+      const rad = ((90 + side * a) * Math.PI) / 180;
+      const x = p.x + Math.cos(rad) * out;
+      const y = p.y + Math.sin(rad) * out;
+      // Tangent to the circle, tipped toward the top.
+      const tangent = 90 + side * a + side * 90;
+      return { x: +x.toFixed(1), y: +y.toFixed(1), a: Math.round(tangent + side * out * 6) };
+    });
+  },
+};
 const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus', 'Cuneus'], ['orbis', 'Orbis']] as const;
 ---
 
@@ -83,7 +113,18 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
         </button>
 
         <!-- When it's over. -->
+        <div class="petals" data-petals aria-hidden="true"></div>
         <div class="verdict" data-verdict hidden>
+          <svg class="laurel" viewBox="0 0 120 64" aria-hidden="true">
+            {[-1, 1].map((side) => (
+              <g class="branch">
+                <path d={LAUREL.path(side)} />
+                {LAUREL.leaves(side).map((l, i) => (
+                  <ellipse class="leaf" style={`--i:${i}`} cx={l.x} cy={l.y} rx="5.2" ry="2" transform={`rotate(${l.a} ${l.x} ${l.y})`} />
+                ))}
+              </g>
+            ))}
+          </svg>
           <p class="verdict-title" data-verdict-title></p>
           <p class="verdict-note" data-verdict-note></p>
           <p class="verdict-actions">
@@ -429,8 +470,27 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
       $('[data-verdict-note]').textContent = note ?? '';
       verdict.dataset.result = e.result;
       verdict.hidden = false;
+      if (e.result === 'vicisti') rain();
       go.hidden = true;
     }
+  };
+
+  /** Rose petals over the arena, for a victory. */
+  const petals = $('[data-petals]');
+  const rain = () => {
+    if (reduced) return;
+    petals.replaceChildren();
+    for (let i = 0; i < 46; i++) {
+      const p = document.createElement('i');
+      p.style.setProperty('--x', `${Math.random() * 100}%`);
+      p.style.setProperty('--d', `${Math.random() * 2.2}s`);
+      p.style.setProperty('--t', `${3.2 + Math.random() * 2.4}s`);
+      p.style.setProperty('--s', `${0.6 + Math.random() * 0.8}`);
+      p.style.setProperty('--r', `${Math.random() * 720 - 360}deg`);
+      p.style.setProperty('--sway', `${Math.random() * 60 - 30}px`);
+      petals.append(p);
+    }
+    setTimeout(() => petals.replaceChildren(), 8000);
   };
 
   const tally = () => {
@@ -454,6 +514,7 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
   };
   const fight = () => {
     if (!ludus || count(plan) === 0) return;
+    petals.replaceChildren();
     selected = null;
     annales.replaceChildren();
     verdict.hidden = true;
@@ -881,7 +942,109 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
     display: none;
   }
 
+  .verdict:not([hidden]) {
+    animation: verdict-in 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  }
+
+  .verdict:not([hidden]) .verdict-title {
+    animation: stamp 0.45s 0.25s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+  }
+
+  @keyframes verdict-in {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -40%) scale(0.92);
+    }
+  }
+
+  @keyframes stamp {
+    from {
+      opacity: 0;
+      transform: scale(1.8) rotate(-4deg);
+    }
+  }
+
+  /* The laurel draws itself round a victory. */
+  .laurel {
+    display: none;
+    width: 96px;
+    margin: -0.2rem auto 0.1rem;
+    pointer-events: none;
+    overflow: visible;
+  }
+
+  .verdict[data-result='vicisti'] .laurel {
+    display: block;
+  }
+
+  .laurel path {
+    fill: none;
+    stroke: var(--rubric);
+    stroke-width: 1.2;
+    stroke-dasharray: 80;
+    stroke-dashoffset: 80;
+    animation: draw-branch 0.9s 0.4s ease-out forwards;
+  }
+
+  .laurel .leaf {
+    fill: var(--rubric);
+    opacity: 0;
+    animation: leaf-in 0.35s calc(0.6s + var(--i) * 0.1s) ease-out forwards;
+  }
+
+  @keyframes draw-branch {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes leaf-in {
+    to {
+      opacity: 0.9;
+    }
+  }
+
+  /* Rose petals falling over the arena. */
+  .petals {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .petals :global(i) {
+    position: absolute;
+    left: var(--x);
+    top: -20px;
+    width: calc(12px * var(--s));
+    height: calc(8px * var(--s));
+    background: radial-gradient(ellipse at 30% 30%, #c2493a, #9b2d20 70%);
+    border-radius: 80% 10% 80% 10%;
+    opacity: 0.9;
+    animation: petal var(--t) var(--d) ease-in forwards;
+  }
+
+  @keyframes petal {
+    to {
+      transform: translate(var(--sway), 110vh) rotate(var(--r));
+      opacity: 0.5;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .verdict:not([hidden]),
+    .verdict:not([hidden]) .verdict-title,
+    .laurel path,
+    .laurel .leaf {
+      animation: none;
+      stroke-dashoffset: 0;
+      opacity: 0.9;
+    }
+  }
+
   .verdict-title {
+    position: relative;
     margin: 0;
     font-family: 'IM Fell English SC', serif;
     font-size: 2rem;
