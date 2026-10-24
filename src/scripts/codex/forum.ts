@@ -748,7 +748,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     banner.uniforms.uReveal.value = 0;
     after.then(() => {
       gsap.to(shared.uReveal, { value: 1, duration: 3.2, ease: 'power1.out', delay: 0.4 });
-      gsap.to(banner.uniforms.uReveal, { value: 1, duration: 2.4, ease: 'power1.inOut', delay: 1.2 });
+      gsap.to(banner.uniforms.uReveal, { value: 1, duration: 1.8, ease: 'power1.inOut', delay: 0.2 });
     });
   };
 

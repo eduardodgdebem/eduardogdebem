@@ -83,7 +83,7 @@
   --squares: clamp(14px, 2.6vw, 38px);
 }
 
-html.opening .codex::before {
+html.opening:not(.uncovered) .codex::before {
   opacity: 0;
 }
 
@@ -1091,10 +1091,21 @@ html.opening .verso {
   clip-path: inset(0 0 0 100%);
 }
 
-/* The book opens on blank pages; what's on them comes once it's open. */
+/* The book opens on blank pages; what's on them fades in once it's open
+   (opening.ts adds .uncovered), the right page a moment after the left. */
 html.opening .verso > *,
 html.opening .recto > * {
-  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+
+html.opening .recto > * {
+  transition-delay: 0.12s;
+}
+
+html.opening.uncovered .verso > *,
+html.opening.uncovered .recto > * {
+  opacity: 1;
 }
 
 .book,
