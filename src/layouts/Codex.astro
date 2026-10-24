@@ -60,11 +60,13 @@ const nav = [
   <head>
     <BaseHead title={title} description={description} image={image} noindex={noindex} schema={schema} canonical={canonical} lang={lang} alternates={alternates} />
     <script is:inline>
-      // The first page of a visit arrives as a closed book (Binding.astro).
-      // Set before first paint so the closed board is what paints; if the
-      // opening script never runs, the book opens itself.
+      // The first page of a visit arrives as a closed book (Binding.astro),
+      // and so does a page reloaded; pages turned to (links, back and forward)
+      // don't. Set before first paint so the closed board is what paints; if
+      // the opening script never runs, the book opens itself.
       try {
-        if (!sessionStorage.getItem('codex-opened') && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const reloaded = performance.getEntriesByType('navigation')[0]?.type === 'reload';
+        if ((reloaded || !sessionStorage.getItem('codex-opened')) && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
           sessionStorage.setItem('codex-opened', '1');
           document.documentElement.classList.add('opening');
           setTimeout(() => window.__codexOpening || document.documentElement.classList.remove('opening'), 5000);

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createBanner } from './banner';
+import { createBanner, redrawOnSpread } from './banner';
 import { gsap } from 'gsap';
 import { laurea, matrona, togatus } from './forum-models';
 import {
@@ -398,6 +398,8 @@ export function createLibrary(canvas: HTMLCanvasElement, { rolls, name, reducedM
   arrive();
 
   const banner = createBanner(canvas, name, shared.uLight);
+
+  const stopRedraw = redrawOnSpread(canvas, shared.uReveal, banner);
   const passes = createPasses(renderer, camera, pixel);
 
   /* ── Focus: the roll the citizen stands at, the pointer's, or the list's ── */
@@ -743,6 +745,7 @@ export function createLibrary(canvas: HTMLCanvasElement, { rolls, name, reducedM
       document.removeEventListener('visibilitychange', onVisibility);
       canvas.removeEventListener('webglcontextlost', onLost);
       banner.dispose();
+      stopRedraw();
       scene.traverse((o) => {
         if (o instanceof THREE.Mesh || o instanceof THREE.Line) {
           o.geometry.dispose();

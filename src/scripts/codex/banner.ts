@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { gsap } from 'gsap';
 import { banderole, engraveFragment, engraveVertex, letteringTexture } from './engraving';
 import { createPasses } from './passes';
 
@@ -222,4 +223,19 @@ function roomAround(el: HTMLElement) {
     return { left: r.left - c.left, right: c.right - r.right, top: r.top - c.top + a.scrollTop };
   }
   return { left: r.left, right: innerWidth - r.right, top: r.top + scrollY };
+}
+
+/**
+ * When the plate is spread over the book or put back (PlateTools sends
+ * `plate:redraw` once it's laid at its new size), the scene is engraved
+ * afresh there: its lines cut in again and the banderole unrolls once more.
+ */
+export function redrawOnSpread(canvas: HTMLCanvasElement, reveal: { value: number }, banner: Banner) {
+  const redraw = () => {
+    gsap.killTweensOf([reveal, banner.uniforms.uReveal]);
+    gsap.fromTo(reveal, { value: 0 }, { value: 1, duration: 1.5, ease: 'power1.out' });
+    gsap.fromTo(banner.uniforms.uReveal, { value: 0 }, { value: 1, duration: 1.5, ease: 'power1.inOut', delay: 0.2 });
+  };
+  canvas.addEventListener('plate:redraw', redraw);
+  return () => canvas.removeEventListener('plate:redraw', redraw);
 }

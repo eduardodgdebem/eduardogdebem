@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createBanner } from './banner';
+import { createBanner, redrawOnSpread } from './banner';
 import { gsap } from 'gsap';
 import { arcus, cypress, laurea, matrona, statua, togatus } from './forum-models';
 import { buildModel, type PlateId } from './models';
@@ -268,6 +268,8 @@ export function createPlaza(canvas: HTMLCanvasElement, { monuments, name, reduce
   arrive();
 
   const banner = createBanner(canvas, name, shared.uLight);
+
+  const stopRedraw = redrawOnSpread(canvas, shared.uReveal, banner);
   const passes = createPasses(renderer, camera, pixel);
 
   /* ── Focus ── */
@@ -646,6 +648,7 @@ export function createPlaza(canvas: HTMLCanvasElement, { monuments, name, reduce
       document.removeEventListener('visibilitychange', onVisibility);
       canvas.removeEventListener('webglcontextlost', onLost);
       banner.dispose();
+      stopRedraw();
       scene.traverse((o) => {
         if (o instanceof THREE.Mesh || o instanceof THREE.Line) o.geometry.dispose();
       });

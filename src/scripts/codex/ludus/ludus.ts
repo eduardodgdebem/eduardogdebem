@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createBanner } from '../banner';
+import { createBanner, redrawOnSpread } from '../banner';
 import { gsap } from 'gsap';
 import {
   SAND,
@@ -242,6 +242,8 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
   let seenVolleys = 0;
 
   const banner = createBanner(canvas, name, shared.uLight);
+
+  const stopRedraw = redrawOnSpread(canvas, shared.uReveal, banner);
   const passes = createPasses(renderer, camera, pixel);
 
   /* ── Planning and fighting ── */
@@ -643,6 +645,7 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
       document.removeEventListener('visibilitychange', onVisibility);
       canvas.removeEventListener('webglcontextlost', onLost);
       banner.dispose();
+      stopRedraw();
       scene.traverse((o) => {
         if (o instanceof THREE.Mesh || o instanceof THREE.Line) o.geometry.dispose();
         if (o instanceof THREE.InstancedMesh) o.dispose();

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createBanner } from './banner';
+import { createBanner, redrawOnSpread } from './banner';
 import { gsap } from 'gsap';
 import { createInk, createPasses, fine, inscriptionTexture, merge, plateZoom } from './passes';
 import { amphitheatrum } from './ludus-models';
@@ -479,6 +479,8 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
 
   const banner = createBanner(canvas, name, shared.uLight);
 
+  const stopRedraw = redrawOnSpread(canvas, shared.uReveal, banner);
+
   /* ── The passes ── */
 
   const passes = createPasses(renderer, camera, pixel);
@@ -787,6 +789,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
         if (o instanceof THREE.Mesh || o instanceof THREE.Line) o.geometry.dispose();
       });
       banner.dispose();
+      stopRedraw();
       passes.dispose();
       materials.forEach((m) => m.dispose());
       textures.forEach((t) => t.dispose());

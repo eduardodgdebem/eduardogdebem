@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createBanner } from './banner';
+import { createBanner, redrawOnSpread } from './banner';
 import { gsap } from 'gsap';
 import { PLATES, type PlateId, buildModel, disposeModel } from './models';
 
@@ -429,6 +429,8 @@ export function createEngraving(canvas: HTMLCanvasElement, { name, plates = PLAT
   /* ── Banderole: a ribbon across the head of the plate carrying the name ── */
 
   const banner = createBanner(canvas, name, engraveUniforms.uLight);
+
+  const stopRedraw = redrawOnSpread(canvas, engraveUniforms.uReveal, banner);
   turntable.position.y = -0.35;
 
   /* ── Targets and the paper pass ── */
@@ -645,6 +647,7 @@ export function createEngraving(canvas: HTMLCanvasElement, { name, plates = PLAT
       stop();
       gsap.killTweensOf([engraveUniforms.uReveal, banner.uniforms.uReveal]);
       banner.dispose();
+      stopRedraw();
       window.removeEventListener('resize', resize);
       window.removeEventListener('pointermove', onPointerMove);
       canvas.removeEventListener('pointerdown', onDown);
