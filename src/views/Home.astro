@@ -3,7 +3,8 @@
 import { getCollection } from 'astro:content';
 import Codex from '../layouts/Codex.astro';
 import PlateTools from '../components/PlateTools.astro';
-import { CV_PDF, SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import { CV_PDF, SHOW_NOW_PLAYING, SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import Woodcut from '../components/Woodcut.astro';
 import { tr, type Lang } from '../i18n/strings';
 import { PATHS, href } from '../i18n/paths';
 import { PERSON, WEBSITE } from '../seo';
@@ -83,8 +84,13 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
 
   <!-- Recto: who this is and how to reach him, the index, and what he is listening to -->
   <Fragment slot="recto">
+    <!-- The title page: the name, opened with a woodcut initial as old books open their text. -->
     <header class="author">
-      <h1>Eduardo de Bem</h1>
+      <h1 class="title">
+        <Woodcut letter="E" class="title-initial" />
+        <span class="sr-only">E</span><span class="title-name"><span class="title-line">duardo</span><span class="title-line">de Bem</span></span>
+      </h1>
+      <p class="title-rule" aria-hidden="true"><span></span><span class="fl">❦</span><span></span></p>
       <p class="role" data-i18n="home.role">{s('home.role')}</p>
       <p class="links">
         <a href="mailto:eduardogdebem@gmail.com" data-i18n="link.email">{s('link.email')}</a>
@@ -128,7 +134,8 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
       </ol>
     </nav>
 
-    <!-- Jellyfin: the cover, re-drawn as an engraving; hidden if it can't be reached. -->
+    <!-- Jellyfin: the cover, re-drawn as an engraving; hidden if it can't be reached. Off for now (SHOW_NOW_PLAYING). -->
+    {SHOW_NOW_PLAYING && (
     <aside class="listening" data-media hidden aria-label="What I'm listening to and watching">
       <figure class="cover" data-cover hidden>
         <canvas id="cover" aria-hidden="true"></canvas>
@@ -143,6 +150,7 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
         </p>
       </div>
     </aside>
+    )}
   </Fragment>
 </Codex>
 
@@ -292,12 +300,14 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
   /* ── Jellyfin: cover engraving and marginal note ── */
 
   type Entry = { title: string; subtitle: string; image: string | null; live: boolean; paused: boolean } | null;
-  const media = document.querySelector<HTMLElement>('[data-media]')!;
-  const coverFig = document.querySelector<HTMLElement>('[data-cover]')!;
-  const cover = createCoverEngraving(document.getElementById('cover') as HTMLCanvasElement, { reducedMotion: reduced });
+  // Only when the note is on the page (SHOW_NOW_PLAYING).
+  const media = document.querySelector<HTMLElement>('[data-media]');
+  const coverFig = document.querySelector<HTMLElement>('[data-cover]');
+  const cover = media && createCoverEngraving(document.getElementById('cover') as HTMLCanvasElement, { reducedMotion: reduced });
   const VERBS = { listening: ['Nunc audit', 'Nuper audivit'], watching: ['Nunc spectat:', 'Nuper spectavit:'] } as const;
 
   const refresh = async () => {
+    if (!media || !coverFig) return;
     try {
       const res = await fetch('/api/now-playing.json');
       if (!res.ok) throw new Error(String(res.status));
@@ -320,8 +330,10 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
       media.hidden = true;
     }
   };
-  refresh();
-  setInterval(() => !document.hidden && refresh(), 60_000);
+  if (media) {
+    refresh();
+    setInterval(() => !document.hidden && refresh(), 60_000);
+  }
 
   /* ── Arrival (skipped when arriving by page turn: the leaf is the entrance) ── */
 
@@ -330,7 +342,22 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
     // Under a closed board the right page is already set; only the plate's
     // furniture waits for the book to open.
     const opening = root.classList.contains('opening');
-    if (!opening) gsap.from('.recto .page-body > *', { autoAlpha: 0, y: 8, duration: 1.4, stagger: 0.12, ease: 'power2.out', delay: 0.6 });
+    if (!opening) gsap.from('.recto .page-body > *:not(.author)', { autoAlpha: 0, y: 8, duration: 1.4, stagger: 0.12, ease: 'power2.out', delay: 1.4 });
+    // The title page lands first: the initial is cut (ground, vines, leaves,
+    // then the letter), the name is set beside it, and the rule is drawn out.
+    const title = gsap.timeline({ paused: true, defaults: { ease: 'power2.out' } });
+    title
+      .from('.title-initial .wc-ground', { autoAlpha: 0, duration: 0.6 })
+      .fromTo('.title-initial .wc-vine', { strokeDasharray: 1, strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 1.3, ease: 'power1.inOut' }, '<0.1')
+      .from('.title-initial .wc-leaves path', { scale: 0, transformOrigin: '0% 50%', duration: 0.5, stagger: 0.06 }, '-=0.7')
+      .from('.title-initial .wc-letter', { autoAlpha: 0, scale: 1.35, transformOrigin: '50% 60%', duration: 0.9, ease: 'power3.out' }, '-=0.6')
+      .from('.title-line', { autoAlpha: 0, x: -14, duration: 0.9, stagger: 0.15 }, '-=0.6')
+      .from('.title-rule span:not(.fl)', { scaleX: 0, duration: 0.9, ease: 'power2.inOut' }, '-=0.5')
+      .from('.title-rule .fl', { autoAlpha: 0, rotate: -90, duration: 0.6 }, '<0.3')
+      .from('.author .role, .author .links', { autoAlpha: 0, y: 6, duration: 0.8, stagger: 0.1 }, '-=0.5');
+    // (Its from-states are set at once, so nothing shows before it plays.)
+    if (opening) bookOpened().then(() => title.play());
+    else title.delay(0.2).play();
     bookOpened().then(() => gsap.from('.plate-caption, .plate-nav', { autoAlpha: 0, duration: 1.4, delay: opening ? 1.2 : 2.4 }));
   }
 
@@ -383,15 +410,79 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
     margin: clamp(2px, 1.1vh, 16px) 0 0;
   }
 
-  .author h1 {
-    font-size: clamp(1.9rem, 2.9vw, 2.9rem);
-    line-height: 1;
+  /* The name as a title page sets it: large, in two lines beside a woodcut
+     initial as tall as both. */
+  .title {
+    display: flex;
+    align-items: stretch;
+    gap: 0.12em;
+    font-size: clamp(2.6rem, min(5vw, 7.2vh), 5.6rem);
+    line-height: 0.98;
+    font-weight: 400;
+    letter-spacing: 0.01em;
     margin: 0;
   }
 
-  .role {
-    margin: 0.25rem 0 0;
+  .title :global(.title-initial) {
+    width: 1.96em;
+    height: 1.96em;
+    margin-top: 0.04em;
+    filter: drop-shadow(1px 2px 0 rgb(80 60 30 / 0.12));
+  }
+
+  .title-name {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 0.02em 0 0.06em;
+  }
+
+  .title-line {
+    display: block;
+  }
+
+  /* The second line set in from the first, as a title page staggers its lines. */
+  .title-line + .title-line {
+    padding-left: 0.5em;
     font-style: italic;
+  }
+
+  /* A rule with a fleuron, drawn out from the middle on arrival. */
+  .title-rule {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: clamp(6px, 1.2vh, 14px) 0 0;
+    color: var(--rubric);
+    font-size: 1.15rem;
+    line-height: 1;
+  }
+
+  .title-rule span:not(.fl) {
+    flex: 1;
+    height: 0;
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+    padding-top: 2px;
+  }
+
+  .title-rule span:first-child {
+    transform-origin: 100% 50%;
+  }
+
+  .title-rule span:last-child {
+    transform-origin: 0% 50%;
+  }
+
+  .fl {
+    display: inline-block;
+  }
+
+  .role {
+    margin: clamp(4px, 0.8vh, 10px) 0 0;
+    font-family: 'IM Fell English SC', serif;
+    font-size: 1.12rem;
+    letter-spacing: 0.08em;
     color: var(--ink-soft);
   }
 
