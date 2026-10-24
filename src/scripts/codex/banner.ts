@@ -79,11 +79,19 @@ export function createBanner(plate: HTMLCanvasElement, name: string, light: { va
   // The banderole's bow (see banderole()), to carry a rolled point to where its roll sits.
   const bowY = (s: number, u: number) => 0.16 * Math.sin(u * Math.PI * 3) + 0.25 * s * s;
   const bowZ = (s: number) => -1.4 * s * s;
+  // How far along the ribbon a point is, with the swallowtails' V cut back as
+  // banderole() cuts it, so a roll winds the tails up in their own shape.
+  const cut = (u: number, v: number) => {
+    const e = Math.min(u, 1 - u);
+    if (e >= 0.05) return u;
+    const e2 = e + ((0.05 - e) / 0.05) * 0.035 * (1 - 2 * Math.abs(v));
+    return u < 0.5 ? e2 : 1 - e2;
+  };
   const shape = (t: number, open: number) => {
     const p = position.array as Float32Array;
     for (let i = 0; i < position.count; i++) {
-      const u = uv.getX(i);
       const v = uv.getY(i) - 0.5;
+      const u = cut(uv.getX(i), v);
       const signed = u * 2 - 1;
       const s = Math.abs(signed);
       let x = rest[i * 3];
@@ -95,7 +103,7 @@ export function createBanner(plate: HTMLCanvasElement, name: string, light: { va
         // Each turn a little tighter, so the turns don't overprint.
         const r = ROLL * Math.max(0.35, 1 - 0.07 * (theta / (Math.PI * 2)));
         const ue = (side * open + 1) / 2;
-        x = side * ((open * WIDTH) / 2 + r * Math.sin(theta));
+        x += side * (((open - s) * WIDTH) / 2 + r * Math.sin(theta));
         y += bowY(open, ue) - bowY(s, u);
         z += bowZ(open) - bowZ(s) + r * (1 - Math.cos(theta));
       } else if (t >= 0) {
