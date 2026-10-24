@@ -1166,6 +1166,15 @@ html:active-view-transition-type(back)::view-transition-new(recto) {
     right: -6px;
   }
 
+  /* A plate spread over the screen is above the scroll, rollers and all. */
+  .roller {
+    transition: opacity 0.2s ease;
+  }
+
+  html.plate-is-full .roller {
+    opacity: 0;
+  }
+
   .roller--top {
     top: var(--roll-at);
   }
