@@ -45,14 +45,14 @@ export async function openBook() {
   };
   const done = () => {
     root.classList.remove('opening', 'uncovered');
-    gsap.set([book, board, verso, ...faces], { clearProps: 'all' });
+    gsap.set([book, board, verso, ...faces, ...document.querySelectorAll('.roller')], { clearProps: 'all' });
   };
 
   const tl = gsap.timeline({ onComplete: done });
-  // The book lifts a touch, then the board swings over on the spine.
-  tl.to(board, { z: 18, duration: 0.25, ease: 'power1.out' });
-  tl.to(board, { rotateY: -180, z: 0, duration: 1.15, ease: 'power2.inOut' }, '>-0.05');
   if (spread) {
+    // The book lifts a touch, then the board swings over on the spine.
+    tl.to(board, { z: 18, duration: 0.25, ease: 'power1.out' });
+    tl.to(board, { rotateY: -180, z: 0, duration: 1.15, ease: 'power2.inOut' }, '>-0.05');
     // Closed, the book sits centred; open, the spread is. The left page is
     // uncovered from the spine as the board passes over it.
     // x: 0 matters: GSAP reads the CSS translateX(-25%) as a pixel x and would
@@ -64,11 +64,22 @@ export async function openBook() {
       { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.6, ease: 'power2.out' },
       '<0.55',
     );
+    // The inside of the board is blank endpaper; it lifts away off the left
+    // page as the pages come alive.
+    tl.call(uncover, [], '>-0.1');
+    tl.to(faces, { autoAlpha: 0, duration: 0.5, ease: 'power1.inOut' }, '<');
   } else {
-    tl.to(faces, { autoAlpha: 0, duration: 0.6, ease: 'power1.in' }, '<0.7');
+    // On a phone it's a scroll, not a book: it lies rolled up in the middle of
+    // the screen, and is opened both ways at once, as two hands open one.
+    const [top, bottom] = [...document.querySelectorAll<HTMLElement>('.roller')];
+    // The CSS holds them together in the middle until now; measured at rest,
+    // they're eased out from there to it.
+    gsap.set([top, bottom], { translate: 'none' });
+    const half = (bottom.getBoundingClientRect().top - top.getBoundingClientRect().top) / 2;
+    const unroll = { duration: 1.1, ease: 'power2.inOut' };
+    tl.fromTo(book, { clipPath: 'inset(50% 0% 50% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', ...unroll });
+    tl.fromTo(top, { y: half }, { y: 0, ...unroll }, '<');
+    tl.fromTo(bottom, { y: -half }, { y: 0, ...unroll }, '<');
+    tl.call(uncover, [], '>-0.15');
   }
-  // The inside of the board is blank endpaper; it lifts away off the left
-  // page as the pages come alive.
-  tl.call(uncover, [], '>-0.1');
-  tl.to(faces, { autoAlpha: 0, duration: 0.5, ease: 'power1.inOut' }, '<');
 }

@@ -157,6 +157,9 @@ const nav = [
         <Corner dir="forward" />
       </main>
     </div>
+    <!-- On a phone the book is a scroll: its two rollers, above and below the page. -->
+    <div class="roller roller--top" aria-hidden="true"></div>
+    <div class="roller roller--bottom" aria-hidden="true"></div>
     <script is:inline define:vars={{ DICT }}>
       // The page's language, for scripts (src/scripts/codex/lang.ts): its
       // strings, for the labels and captions the 3D plates write at run time.
