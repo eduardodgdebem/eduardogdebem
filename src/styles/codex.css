@@ -58,14 +58,52 @@
 
 /* ── The spread ── */
 
+/* Round the pages, the open book's own boards: the green leather of the cover
+   (as it is when it's closed, see .board-front), darker toward the spine and
+   worn at the edges, with a gilt fillet tooled round it. It comes in as the
+   book opens; until then the book lies closed on the desk. */
+.codex::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent 47%, rgb(0 0 0 / 0.35) 49.4%, rgb(0 0 0 / 0.5) 50%, rgb(0 0 0 / 0.35) 50.6%, transparent 53%),
+    radial-gradient(ellipse at 28% 18%, rgb(255 240 200 / 0.07), transparent 55%),
+    radial-gradient(ellipse at 50% 50%, rgb(0 0 0 / 0) 70%, rgb(0 0 0 / 0.32)),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    #3a4a2e;
+  outline: 1px solid rgb(201 163 90 / 0.6);
+  outline-offset: calc(-0.4 * var(--squares));
+  transition: opacity 0.9s ease;
+}
+
+.codex {
+  /* How far the boards stand out past the pages. */
+  --squares: clamp(14px, 2.6vw, 38px);
+}
+
+html.opening .codex::before {
+  opacity: 0;
+}
+
 .book {
   position: fixed;
-  inset: clamp(10px, 2vw, 28px);
+  inset: var(--squares);
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   background: var(--paper);
   box-shadow:
-    0 30px 80px rgb(0 0 0 / 0.6),
+    /* the leaves under these two, edge on */
+    0 0 0 1px #e2d7bb,
+    0 0 0 2px #cdbf9e,
+    0 0 0 3px #e2d7bb,
+    0 0 0 4px #c8ba97,
+    0 0 0 5px #dfd3b5,
+    0 0 0 6px #c2b38f,
+    0 0 0 7px #d9cdad,
+    0 0 0 8px rgb(60 45 25 / 0.6),
+    0 12px 30px 6px rgb(0 0 0 / 0.45),
     inset 0 0 120px rgb(120 90 40 / 0.25);
   border-radius: 3px;
 }
@@ -673,6 +711,27 @@ a.subject:hover,
 .plate-caption .cap-note {
   font-style: italic;
   color: var(--ink-soft);
+}
+
+/* On the spread the plate takes whatever height the caption leaves it, and a
+   caption's note changes (hovering a place in a scene): kept to one line, so
+   the plate never grows or shrinks with it. A long note ends in an ellipsis. */
+@media (min-aspect-ratio: 1/1) {
+  .plate-caption {
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    min-width: 0;
+  }
+
+  .plate-caption .cap-note {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .plate-caption > :not(.cap-note) {
+    flex: none;
+  }
 }
 
 /* ── Prose: field notes set as a book ── */

@@ -31,17 +31,55 @@ const s = tr(lang);
     // Spread out: the plate takes the whole open book, over both pages (on a
     // phone, where the book is one column, the screen).
     const full = tools.querySelector<HTMLButtonElement>('[data-full]')!;
-    const setFull = (on: boolean) => {
+    const root = document.documentElement;
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let landing: Animation | null = null;
+    const resize = () => requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
+    // Lift the plate from where it lies and lay it over the book, or put it
+    // back. It's eased from the one box to the other, and stays spread while it
+    // moves, so it's always over the facing page and drawn at its larger size.
+    const lay = (on: boolean) => {
       frame.classList.toggle('is-full', on);
-      document.documentElement.classList.toggle('plate-is-full', on);
+      root.classList.toggle('plate-is-full', on);
+    };
+    let spread = false;
+    const setFull = (on: boolean) => {
+      landing?.finish();
+      spread = on;
+      if (still) {
+        lay(on);
+        resize();
+      } else {
+        const first = frame.getBoundingClientRect();
+        lay(on);
+        const last = frame.getBoundingClientRect();
+        // Put back: measured in place, then spread again until it has landed.
+        if (!on) lay(true);
+        const [big, small] = on ? [last, first] : [first, last];
+        const shrunk = `translate(${small.left - big.left}px, ${small.top - big.top}px) scale(${small.width / big.width}, ${small.height / big.height})`;
+        const lifted = { transform: 'none' };
+        const lying = { transform: shrunk };
+        landing = frame.animate(on ? [lying, lifted] : [lifted, lying], {
+          duration: on ? 620 : 520,
+          easing: 'cubic-bezier(0.65, 0, 0.25, 1)',
+        });
+        frame.style.transformOrigin = '0 0';
+        if (on) resize();
+        landing.onfinish = () => {
+          landing = null;
+          frame.style.transformOrigin = '';
+          if (!on) {
+            lay(false);
+            resize();
+          }
+        };
+      }
       full.innerHTML = on ? ICONS.shrink : ICONS.expand;
       const label = on ? tools.dataset.exitLabel! : tools.dataset.fullLabel!;
       full.setAttribute('aria-label', label);
       full.title = label;
-      // The scene sizes itself on resize.
-      requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
     };
-    full.addEventListener('click', () => setFull(!frame.classList.contains('is-full')));
-    document.addEventListener('keydown', (e) => e.key === 'Escape' && frame.classList.contains('is-full') && setFull(false));
+    full.addEventListener('click', () => setFull(!spread));
+    document.addEventListener('keydown', (e) => e.key === 'Escape' && spread && setFull(false));
   }
 </script>
