@@ -72,11 +72,13 @@ const nav = [
     </style>
     <BaseHead title={title} description={description} image={image} noindex={noindex} schema={schema} canonical={canonical} lang={lang} alternates={alternates} />
     <script is:inline>
-      // The first page of a visit arrives as a closed book (Binding.astro).
-      // Set before first paint so the closed board is what paints; if the
-      // opening script never runs, the book opens itself.
+      // The first page of a visit arrives as a closed book (Binding.astro),
+      // and so does a page reloaded; pages turned to (links, back and forward)
+      // don't. Set before first paint so the closed board is what paints; if
+      // the opening script never runs, the book opens itself.
       try {
-        if (!sessionStorage.getItem('codex-opened') && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const reloaded = performance.getEntriesByType('navigation')[0]?.type === 'reload';
+        if ((reloaded || !sessionStorage.getItem('codex-opened')) && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
           sessionStorage.setItem('codex-opened', '1');
           document.documentElement.classList.add('opening');
           setTimeout(() => window.__codexOpening || document.documentElement.classList.remove('opening'), 5000);
@@ -158,8 +160,8 @@ const nav = [
     <script is:inline define:vars={{ DICT }}>
       // The page's language, for scripts (src/scripts/codex/lang.ts): its
       // strings, for the labels and captions the 3D plates write at run time.
-      // And when the reader has just come over by the EN · PT toggle, the page
-      // is written in as if by a quill: what's on screen and translatable
+      // And when the reader has just come over by the EN · PT toggle, or the
+      // book has just opened, the page is written in as if by a quill: what's on screen and translatable
       // (data-i18n, data-i18n-html) appears letter by letter, or a word at a
       // time in a long paragraph. Inline at the end of the body, so it runs
       // before first paint.
@@ -180,7 +182,7 @@ const nav = [
           arrived = sessionStorage.getItem(FLAG) === '1';
           sessionStorage.removeItem(FLAG);
         } catch {}
-        if (!arrived || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
         // An element's text cut into pieces, each in its own span, to be inked a
         // moment after the last: letters for a short line, words for a long
@@ -221,6 +223,8 @@ const nav = [
           return r.bottom > top && r.top < bottom;
         };
 
+        // Also run when the book has opened on the first page of a visit (opening.ts).
+        const write = () => {
         let order = 0;
         for (const el of document.querySelectorAll('[data-i18n], [data-i18n-html]')) {
           if (!seen(el)) continue;
@@ -234,6 +238,9 @@ const nav = [
           // Back to plain text once dry, so selection and wrapping are as before.
           setTimeout(() => (el.innerHTML = html), start + count * step + 400);
         }
+        };
+        window.codexWrite = write;
+        if (arrived) write();
       })();
     </script>
     <script>

@@ -15,10 +15,7 @@ const EN = {
   'link.cv': 'CV',
 
   'home.role': 'Full stack developer · Florianópolis, Brazil',
-  'home.lede':
-    '<span class="initial">I</span> work at Zallpy, where right now I’m writing data pipelines for BMW Europe in Node.js and PostgreSQL. Before that I built the Angular front end of a BMW USA financial platform and got its load time from over ten seconds to under one.',
-  'home.more':
-    'I started out at eTopocart, on maps and very large tables for city halls. I’m finishing Computer Science at UNISUL in MMXXVI. I played the violin for years; now I only listen.',
+  'home.tagline': 'I build web software end to end. Right now, data pipelines for BMW Europe at Zallpy.',
   'home.index.notes': 'Field notes',
   'home.index.notes.pg': 'all',
   'home.index.author': 'Of the author, at length',
@@ -187,10 +184,7 @@ const PT: Record<StringKey, string> = {
   'link.cv': 'Currículo',
 
   'home.role': 'Desenvolvedor full stack · Florianópolis, Brasil',
-  'home.lede':
-    '<span class="initial">T</span>rabalho na Zallpy, onde agora escrevo pipelines de dados para a BMW Europa em Node.js e PostgreSQL. Antes disso, construí o front-end em Angular de uma plataforma financeira da BMW USA e baixei o tempo de carregamento de mais de dez segundos para menos de um.',
-  'home.more':
-    'Comecei na eTopocart, com mapas e tabelas enormes para prefeituras. Termino Ciência da Computação na UNISUL em MMXXVI. Toquei violino por anos; hoje só escuto.',
+  'home.tagline': 'Faço software para a web de ponta a ponta. Agora, pipelines de dados para a BMW Europa na Zallpy.',
   'home.index.notes': 'Notas de campo',
   'home.index.notes.pg': 'todas',
   'home.index.author': 'Do autor, por extenso',

@@ -7,10 +7,10 @@ import { gsap } from 'gsap';
 const root = document.documentElement;
 const OPENED = 'codex:opened';
 
-/** Resolves once the board is open (immediately when the book never closed). */
+/** Resolves once the board has opened (immediately when the book never closed). */
 export function bookOpened(): Promise<void> {
   return new Promise((resolve) => {
-    if (!root.classList.contains('opening')) return resolve();
+    if (!root.classList.contains('opening') || root.classList.contains('uncovered')) return resolve();
     document.addEventListener(OPENED, () => resolve(), { once: true });
   });
 }
@@ -32,35 +32,43 @@ export async function openBook() {
   // Matches the portrait breakpoint in codex.css, where the spread is one column.
   const spread = !matchMedia('(max-aspect-ratio: 1/1)').matches;
 
-  // Let the sigil finish tooling, but never hold the reader past 3.5s.
-  await Promise.race([Promise.all([loaded(), document.fonts.ready, wait(1700)]), wait(3500)]);
+  // Let the sigil tool in, but never hold the reader past 2.5s.
+  await Promise.race([Promise.all([loaded(), document.fonts.ready, wait(900)]), wait(2500)]);
 
+  // Once the board is over, the pages (blank while it opened) fade in and
+  // everything on them starts at once: the plates engrave, the banderoles
+  // unroll, and the text is written in with the quill (Codex.astro).
+  const uncover = () => {
+    root.classList.add('uncovered');
+    (window as unknown as { codexWrite?: () => void }).codexWrite?.();
+    document.dispatchEvent(new Event(OPENED));
+  };
   const done = () => {
-    root.classList.remove('opening');
+    root.classList.remove('opening', 'uncovered');
     gsap.set([book, board, verso, ...faces], { clearProps: 'all' });
   };
 
   const tl = gsap.timeline({ onComplete: done });
   // The book lifts a touch, then the board swings over on the spine.
-  tl.to(board, { z: 18, duration: 0.35, ease: 'power1.out' });
-  tl.to(board, { rotateY: -180, z: 0, duration: 1.5, ease: 'power2.inOut' }, '>-0.05');
+  tl.to(board, { z: 18, duration: 0.25, ease: 'power1.out' });
+  tl.to(board, { rotateY: -180, z: 0, duration: 1.15, ease: 'power2.inOut' }, '>-0.05');
   if (spread) {
     // Closed, the book sits centred; open, the spread is. The left page is
     // uncovered from the spine as the board passes over it.
     // x: 0 matters: GSAP reads the CSS translateX(-25%) as a pixel x and would
     // stack it under xPercent, holding the book off-centre until clearProps.
-    tl.fromTo(book, { x: 0, xPercent: -25 }, { x: 0, xPercent: 0, duration: 1.5, ease: 'power2.inOut' }, '<');
+    tl.fromTo(book, { x: 0, xPercent: -25 }, { x: 0, xPercent: 0, duration: 1.15, ease: 'power2.inOut' }, '<');
     tl.fromTo(
       verso,
       { clipPath: 'inset(0% 0% 0% 100%)' },
-      { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.75, ease: 'power2.out' },
-      '<0.75',
+      { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.6, ease: 'power2.out' },
+      '<0.55',
     );
   } else {
     tl.to(faces, { autoAlpha: 0, duration: 0.6, ease: 'power1.in' }, '<0.7');
   }
-  // The plate starts engraving as its page is uncovered.
-  tl.call(() => document.dispatchEvent(new Event(OPENED)), [], '<');
-  // The inside of the board is blank endpaper; it lifts away off the left page.
-  tl.to(faces, { autoAlpha: 0, duration: 0.5, ease: 'power1.inOut' });
+  // The inside of the board is blank endpaper; it lifts away off the left
+  // page as the pages come alive.
+  tl.call(uncover, [], '>-0.1');
+  tl.to(faces, { autoAlpha: 0, duration: 0.5, ease: 'power1.inOut' }, '<');
 }

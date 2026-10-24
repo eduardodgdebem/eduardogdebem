@@ -1,6 +1,7 @@
 import * as THREE from 'three';
+import { createBanner, redrawOnSpread } from './banner';
 import { gsap } from 'gsap';
-import { createBanner, createInk, createPasses, fine, inscriptionTexture, merge, plateZoom } from './passes';
+import { createInk, createPasses, fine, inscriptionTexture, merge, plateZoom } from './passes';
 import { amphitheatrum } from './ludus-models';
 import { createWalker } from './walker';
 import { createZoom } from './zoom';
@@ -476,7 +477,9 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
 
   /* ── Banderole: carried with the view, across the head of the plate ── */
 
-  const banner = createBanner(camera, name, shared.uLight);
+  const banner = createBanner(canvas, name, shared.uLight);
+
+  const stopRedraw = redrawOnSpread(canvas, shared.uReveal, banner);
 
   /* ── The passes ── */
 
@@ -498,7 +501,6 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     camera.updateProjectionMatrix();
     // Line spacing follows the plate's scale, so it holds on screen.
     shared.uFreq.value = LINE_FREQ * (FIT_H / 2 / halfH);
-    banner.place(halfW, halfH, 6);
     if (!running) render();
   };
 
@@ -702,7 +704,6 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
 
   const render = () => {
     camera.updateMatrixWorld(true);
-    banner.update();
     shared.uLight.value.set(lamp.x * 1.5 + 0.25, lamp.y * 1.2 + 0.3, 0.8).normalize();
     passes.uniforms.uReveal.value = shared.uReveal.value;
     passes.render(scene);
@@ -747,7 +748,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     banner.uniforms.uReveal.value = 0;
     after.then(() => {
       gsap.to(shared.uReveal, { value: 1, duration: 3.2, ease: 'power1.out', delay: 0.4 });
-      gsap.to(banner.uniforms.uReveal, { value: 1, duration: 2.4, ease: 'power1.inOut', delay: 1.2 });
+      gsap.to(banner.uniforms.uReveal, { value: 1, duration: 1.8, ease: 'power1.inOut', delay: 0.2 });
     });
   };
 
@@ -788,6 +789,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
         if (o instanceof THREE.Mesh || o instanceof THREE.Line) o.geometry.dispose();
       });
       banner.dispose();
+      stopRedraw();
       passes.dispose();
       materials.forEach((m) => m.dispose());
       textures.forEach((t) => t.dispose());

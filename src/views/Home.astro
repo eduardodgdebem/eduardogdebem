@@ -1,9 +1,9 @@
 ---
 // The index spread, in English (/) or Portuguese (/pt/).
-import { getCollection } from 'astro:content';
 import Codex from '../layouts/Codex.astro';
 import PlateTools from '../components/PlateTools.astro';
-import { CV_PDF, SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import { CV_PDF, SHOW_NOW_PLAYING, SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import Woodcut from '../components/Woodcut.astro';
 import { tr, type Lang } from '../i18n/strings';
 import { PATHS, href } from '../i18n/paths';
 import { PERSON, WEBSITE } from '../seo';
@@ -22,22 +22,6 @@ const META = {
       'Eduardo de Bem, desenvolvedor full stack em Florianópolis. TypeScript, Angular, React, Node.js e .NET; pipelines de dados para a BMW Europa na Zallpy.',
   },
 }[lang];
-
-const posts = (await getCollection('blog'))
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-  .slice(0, 3);
-
-const roman = (n: number) =>
-  ([['M', 1000], ['CM', 900], ['D', 500], ['CD', 400], ['C', 100], ['XC', 90], ['L', 50], ['XL', 40], ['X', 10], ['IX', 9], ['V', 5], ['IV', 4], ['I', 1]] as const).reduce(
-    (acc, [s, v]) => {
-      while (acc.n >= v) {
-        acc.out += s;
-        acc.n -= v;
-      }
-      return acc;
-    },
-    { n, out: '' },
-  ).out;
 
 // The places in the forum on the left page, each standing for a page. Their
 // notes are in src/i18n/strings.ts, under place.<id>.
@@ -83,9 +67,15 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
 
   <!-- Recto: who this is and how to reach him, the index, and what he is listening to -->
   <Fragment slot="recto">
+    <!-- The hero, set as a title page: the name, opened with a woodcut initial as old books open their text. -->
     <header class="author">
-      <h1>Eduardo de Bem</h1>
+      <h1 class="title">
+        <Woodcut letter="E" class="title-initial" />
+        <span class="sr-only">E</span><span class="title-name"><span class="title-line">duardo</span><span class="title-line">de Bem</span></span>
+      </h1>
+      <p class="title-rule" aria-hidden="true"><span></span><span class="fl">❦</span><span></span></p>
       <p class="role" data-i18n="home.role">{s('home.role')}</p>
+      <p class="tagline" data-i18n="home.tagline">{s('home.tagline')}</p>
       <p class="links">
         <a href="mailto:eduardogdebem@gmail.com" data-i18n="link.email">{s('link.email')}</a>
         <a href="https://linkedin.com/in/eduardogdebem" target="_blank" rel="noopener noreferrer">LinkedIn</a>
@@ -95,40 +85,29 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
       </p>
     </header>
 
-    <div class="bio">
-      <p class="lede" data-i18n-html="home.lede" set:html={s('home.lede')} />
-      <p class="more" data-i18n="home.more">{s('home.more')}</p>
-    </div>
-
     <nav class="contents" aria-label="Contents">
       <p class="rubric">Index</p>
       <ol>
         <li class="chapter">
-          <a href={href(lang, 'notes')} data-place="bibliotheca"><span class="num">I.</span><span class="label" data-i18n="home.index.notes">{s('home.index.notes')}</span><span class="leader"></span><span class="pg" data-i18n="home.index.notes.pg">{s('home.index.notes.pg')}</span></a>
-          <ol class="sub">
-            {posts.map((p) => (
-              <li>
-                <a href={`/blog/${p.id}/`} data-place="bibliotheca"><span class="label">{p.data.title}</span><span class="leader"></span><span class="pg">{roman(p.data.pubDate.getFullYear())}</span></a>
-              </li>
-            ))}
-          </ol>
+          <a href={href(lang, 'notes')} data-place="bibliotheca"><span class="point" aria-hidden="true">☞</span><span class="num">I.</span><span class="label" data-i18n="home.index.notes">{s('home.index.notes')}</span><span class="leader"><i></i></span><span class="pg" data-i18n="home.index.notes.pg">{s('home.index.notes.pg')}</span></a>
         </li>
         <li class="chapter">
-          <a href={href(lang, 'about')} data-place="statua"><span class="num">II.</span><span class="label" data-i18n="home.index.author">{s('home.index.author')}</span><span class="leader"></span><span class="pg" data-i18n="home.index.author.pg">{s('home.index.author.pg')}</span></a>
+          <a href={href(lang, 'about')} data-place="statua"><span class="point" aria-hidden="true">☞</span><span class="num">II.</span><span class="label" data-i18n="home.index.author">{s('home.index.author')}</span><span class="leader"><i></i></span><span class="pg" data-i18n="home.index.author.pg">{s('home.index.author.pg')}</span></a>
         </li>
         <li class="chapter">
-          <a href="https://github.com/eduardodgdebem" target="_blank" rel="noopener noreferrer" data-place="fabrica"><span class="num">III.</span><span class="label" data-i18n="home.index.workshop">{s('home.index.workshop')}</span><span class="leader"></span><span class="pg">github</span></a>
+          <a href="https://github.com/eduardodgdebem" target="_blank" rel="noopener noreferrer" data-place="fabrica"><span class="point" aria-hidden="true">☞</span><span class="num">III.</span><span class="label" data-i18n="home.index.workshop">{s('home.index.workshop')}</span><span class="leader"><i></i></span><span class="pg">github</span></a>
         </li>
         <li class="chapter">
-          <a href={href(lang, 'ludus')} data-place="amphitheatrum"><span class="num">IV.</span><span class="label" data-i18n="home.index.ludus">{s('home.index.ludus')}</span><span class="leader"></span><span class="pg" data-i18n="home.index.ludus.pg">{s('home.index.ludus.pg')}</span></a>
+          <a href={href(lang, 'ludus')} data-place="amphitheatrum"><span class="point" aria-hidden="true">☞</span><span class="num">IV.</span><span class="label" data-i18n="home.index.ludus">{s('home.index.ludus')}</span><span class="leader"><i></i></span><span class="pg" data-i18n="home.index.ludus.pg">{s('home.index.ludus.pg')}</span></a>
         </li>
         <li class="chapter">
-          <a href={`${href(lang, 'about')}#correspondence`}><span class="num">V.</span><span class="label" data-i18n="home.index.letters">{s('home.index.letters')}</span><span class="leader"></span><span class="pg" data-i18n="home.index.letters.pg">{s('home.index.letters.pg')}</span></a>
+          <a href={`${href(lang, 'about')}#correspondence`}><span class="point" aria-hidden="true">☞</span><span class="num">V.</span><span class="label" data-i18n="home.index.letters">{s('home.index.letters')}</span><span class="leader"><i></i></span><span class="pg" data-i18n="home.index.letters.pg">{s('home.index.letters.pg')}</span></a>
         </li>
       </ol>
     </nav>
 
-    <!-- Jellyfin: the cover, re-drawn as an engraving; hidden if it can't be reached. -->
+    <!-- Jellyfin: the cover, re-drawn as an engraving; hidden if it can't be reached. Off for now (SHOW_NOW_PLAYING). -->
+    {SHOW_NOW_PLAYING && (
     <aside class="listening" data-media hidden aria-label="What I'm listening to and watching">
       <figure class="cover" data-cover hidden>
         <canvas id="cover" aria-hidden="true"></canvas>
@@ -143,6 +122,7 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
         </p>
       </div>
     </aside>
+    )}
   </Fragment>
 </Codex>
 
@@ -292,12 +272,14 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
   /* ── Jellyfin: cover engraving and marginal note ── */
 
   type Entry = { title: string; subtitle: string; image: string | null; live: boolean; paused: boolean } | null;
-  const media = document.querySelector<HTMLElement>('[data-media]')!;
-  const coverFig = document.querySelector<HTMLElement>('[data-cover]')!;
-  const cover = createCoverEngraving(document.getElementById('cover') as HTMLCanvasElement, { reducedMotion: reduced });
+  // Only when the note is on the page (SHOW_NOW_PLAYING).
+  const media = document.querySelector<HTMLElement>('[data-media]');
+  const coverFig = document.querySelector<HTMLElement>('[data-cover]');
+  const cover = media && createCoverEngraving(document.getElementById('cover') as HTMLCanvasElement, { reducedMotion: reduced });
   const VERBS = { listening: ['Nunc audit', 'Nuper audivit'], watching: ['Nunc spectat:', 'Nuper spectavit:'] } as const;
 
   const refresh = async () => {
+    if (!media || !coverFig) return;
     try {
       const res = await fetch('/api/now-playing.json');
       if (!res.ok) throw new Error(String(res.status));
@@ -320,8 +302,10 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
       media.hidden = true;
     }
   };
-  refresh();
-  setInterval(() => !document.hidden && refresh(), 60_000);
+  if (media) {
+    refresh();
+    setInterval(() => !document.hidden && refresh(), 60_000);
+  }
 
   /* ── Arrival (skipped when arriving by page turn: the leaf is the entrance) ── */
 
@@ -330,7 +314,23 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
     // Under a closed board the right page is already set; only the plate's
     // furniture waits for the book to open.
     const opening = root.classList.contains('opening');
-    if (!opening) gsap.from('.recto .page-body > *', { autoAlpha: 0, y: 8, duration: 1.4, stagger: 0.12, ease: 'power2.out', delay: 0.6 });
+    if (!opening) gsap.from('.recto .page-body > *:not(.author)', { autoAlpha: 0, y: 8, duration: 1.4, stagger: 0.12, ease: 'power2.out', delay: 1.4 });
+    // The title page lands first: the initial is cut (ground, vines, leaves,
+    // then the letter), the name is set beside it, and the rule is drawn out.
+    const title = gsap.timeline({ paused: true, defaults: { ease: 'power2.out' } });
+    title
+      .from('.title-initial .wc-ground', { autoAlpha: 0, duration: 0.6 })
+      .fromTo('.title-initial .wc-vine', { strokeDasharray: 1, strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 1.3, ease: 'power1.inOut' }, '<0.1')
+      .from('.title-initial .wc-leaves path', { scale: 0, transformOrigin: '0% 50%', duration: 0.5, stagger: 0.06 }, '-=0.7')
+      .from('.title-initial .wc-letter', { autoAlpha: 0, scale: 1.35, transformOrigin: '50% 60%', duration: 0.9, ease: 'power3.out' }, '-=0.6')
+      .from('.title-line', { autoAlpha: 0, x: -14, duration: 0.9, stagger: 0.15 }, '-=0.6')
+      .from('.title-rule span:not(.fl)', { scaleX: 0, duration: 0.9, ease: 'power2.inOut' }, '-=0.5')
+      .from('.title-rule .fl', { autoAlpha: 0, rotate: -90, duration: 0.6 }, '<0.3');
+    // After the opening the quill writes those in; otherwise they rise in.
+    if (!opening) title.from('.author .role, .author .tagline, .author .links', { autoAlpha: 0, y: 6, duration: 0.8, stagger: 0.1 }, '-=0.5');
+    // (Its from-states are set at once, so nothing shows before it plays.)
+    if (opening) bookOpened().then(() => title.play());
+    else title.delay(0.2).play();
     bookOpened().then(() => gsap.from('.plate-caption, .plate-nav', { autoAlpha: 0, duration: 1.4, delay: opening ? 1.2 : 2.4 }));
   }
 
@@ -376,83 +376,260 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
     color: var(--ink-soft);
   }
 
-  /* ── Recto ── */
+  /* ── Recto: the hero, set as a title page, then the index ── */
 
+  /* The right page is the first thing read: the title stands in the middle of
+     the space above the index, centred as a title page is. */
   .author {
-    flex: none;
-    margin: clamp(2px, 1.1vh, 16px) 0 0;
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: clamp(8px, 3vh, 40px) 0;
   }
 
-  .author h1 {
-    font-size: clamp(1.9rem, 2.9vw, 2.9rem);
-    line-height: 1;
+  /* The name, large, in two lines beside a woodcut initial as tall as both. */
+  .title {
+    display: flex;
+    align-items: stretch;
+    gap: 0.12em;
+    font-size: clamp(2.8rem, min(6.4vw, 9.4vh), 7.4rem);
+    line-height: 0.98;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    text-align: left;
     margin: 0;
   }
 
-  .role {
-    margin: 0.25rem 0 0;
+  .title :global(.title-initial) {
+    width: 1.96em;
+    height: 1.96em;
+    margin-top: 0.04em;
+    filter: drop-shadow(1px 2px 0 rgb(80 60 30 / 0.12));
+  }
+
+  .title-name {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 0.02em 0 0.06em;
+  }
+
+  .title-line {
+    display: block;
+  }
+
+  /* The second line set in from the first, as a title page staggers its lines. */
+  .title-line + .title-line {
+    padding-left: 0.5em;
     font-style: italic;
+  }
+
+  /* A double rule with a fleuron, drawn out from the middle on arrival. */
+  .title-rule {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: min(100%, 34rem);
+    margin: clamp(10px, 2.2vh, 24px) 0 0;
+    color: var(--rubric);
+    font-size: 1.2rem;
+    line-height: 1;
+  }
+
+  .title-rule span:not(.fl) {
+    flex: 1;
+    height: 0;
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+    padding-top: 2px;
+  }
+
+  .title-rule span:first-child {
+    transform-origin: 100% 50%;
+  }
+
+  .title-rule span:last-child {
+    transform-origin: 0% 50%;
+  }
+
+  .fl {
+    display: inline-block;
+  }
+
+  .role {
+    margin: clamp(8px, 1.6vh, 18px) 0 0;
+    font-family: 'IM Fell English SC', serif;
+    font-size: clamp(1.05rem, 0.5vw + 0.75rem, 1.3rem);
+    letter-spacing: 0.1em;
+    color: var(--ink);
+  }
+
+  .tagline {
+    max-width: 34ch;
+    margin: 0.35rem 0 0;
+    font-style: italic;
+    font-size: clamp(1.05rem, 0.5vw + 0.75rem, 1.28rem);
+    line-height: 1.4;
     color: var(--ink-soft);
+    text-wrap: balance;
   }
 
   .links {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.1rem 1.1rem;
-    margin: 0.35rem 0 0;
+    justify-content: center;
+    gap: 0.2rem 1.4rem;
+    margin: clamp(10px, 2vh, 22px) 0 0;
     font-family: 'IM Fell English SC', serif;
+    font-size: 1.08rem;
     letter-spacing: 0.06em;
   }
 
+  /* A link is underlined with a stroke of the pen, drawn left to right as
+     the pointer comes to it, and its ink darkens. */
   .links a {
+    position: relative;
     color: var(--rubric);
     text-decoration: none;
+    padding-bottom: 0.18em;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 8' preserveAspectRatio='none'%3E%3Cpath d='M1,5.2 C18,2.6 34,6.6 52,4.2 S84,2.8 99,4.6 L98.6,6 C82,4.6 66,7.4 50,6 S16,5.4 1.4,6.6Z' fill='%239b2d20'/%3E%3C/svg%3E")
+      0 100% / 0% 0.34em no-repeat;
+    transition:
+      background-size 0.45s cubic-bezier(0.6, 0, 0.2, 1),
+      color 0.3s;
   }
 
-  .links a:hover {
-    text-decoration: underline;
+  .links a:focus-visible {
+    background-size: 100% 0.34em;
+    color: #6e1d14;
   }
 
-  .bio {
-    margin-top: clamp(8px, 1.8vh, 20px);
+  @media (hover: hover) {
+    .links a:hover {
+      background-size: 100% 0.34em;
+      color: #6e1d14;
+    }
   }
 
-  .lede,
-  .more {
-    font-size: clamp(1.02rem, 0.55vw + 0.62rem, 1.22rem);
-    line-height: 1.5;
-    max-width: 54ch;
-    margin: 0 0 0.6rem;
-    hyphens: auto;
-    text-align: justify;
-  }
-
-  .more {
-    color: var(--ink-soft);
-  }
+  /* ── The index: short, at the foot of the page ── */
 
   .contents {
-    margin-top: clamp(10px, 2vh, 24px);
+    flex: none;
+    width: min(100%, 36rem);
+    margin: 0 auto clamp(4px, 1.5vh, 18px);
+  }
+
+  .contents > .rubric {
+    text-align: center;
+  }
+
+  /* Room in the margin for the manicule. */
+  .contents > ol {
+    padding-left: 1.9em !important;
   }
 
   .chapter > a {
-    font-size: 1.1rem;
+    position: relative;
+    font-size: 1.12rem;
+    transition: transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
 
-  /* Lit from the forum: its building is under the pointer. */
-  .contents a.is-lit {
+  /* On a chapter: a manicule points to it from the margin, the dotted leader
+     is inked over in red from the title to the page, the page's number steps
+     out to meet it, and the line leans in a little. (Lit, too, when its
+     building is under the pointer in the forum.) */
+  .point {
+    position: absolute;
+    left: -1.7em;
+    color: var(--rubric);
+    opacity: 0;
+    transform: translateX(-0.6em) rotate(-8deg);
+    transition:
+      opacity 0.25s,
+      transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .contents .leader {
+    position: relative;
+  }
+
+  .contents .leader i {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 1.5px;
+    background: var(--rubric);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    transition: transform 0.5s cubic-bezier(0.6, 0, 0.2, 1);
+  }
+
+  .contents .pg,
+  .contents .num {
+    transition:
+      color 0.3s,
+      letter-spacing 0.4s;
+  }
+
+  .contents a.is-lit,
+  .contents a:focus-visible {
+    transform: translateX(0.5ch);
+  }
+
+  .contents a.is-lit .point,
+  .contents a:focus-visible .point {
+    opacity: 1;
+    transform: none;
+  }
+
+  .contents a.is-lit .leader i,
+  .contents a:focus-visible .leader i {
+    transform: scaleX(1);
+    transition-delay: 0.08s;
+  }
+
+  .contents a.is-lit .label,
+  .contents a.is-lit .pg {
     color: var(--rubric);
   }
 
-  .sub {
-    padding-left: 3.1ch !important;
-    margin-bottom: 0.3rem !important;
+  .contents a.is-lit .pg,
+  .contents a:focus-visible .pg {
+    letter-spacing: 0.08em;
   }
 
-  .sub a {
-    font-style: italic;
-    font-size: 0.95rem;
-    color: var(--ink-soft);
+  @media (hover: hover) {
+    .contents a:hover {
+      transform: translateX(0.5ch);
+    }
+
+    .contents a:hover .point {
+      opacity: 1;
+      transform: none;
+    }
+
+    .contents a:hover .leader i {
+      transform: scaleX(1);
+      transition-delay: 0.08s;
+    }
+
+    .contents a:hover .pg {
+      color: var(--rubric);
+      letter-spacing: 0.08em;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chapter > a,
+    .point,
+    .contents .leader i,
+    .links a {
+      transition: none;
+    }
   }
 
   /* ── Listening: the engraved cover beside its note ── */
@@ -514,8 +691,6 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
   /* ── Shorter screens: shed the secondary lines first ── */
 
   @media (max-height: 760px) and (min-aspect-ratio: 1/1) {
-    .more,
-    .sub li:nth-child(n + 2),
     .watching {
       display: none;
     }

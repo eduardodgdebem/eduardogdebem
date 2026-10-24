@@ -1,9 +1,10 @@
 import * as THREE from 'three';
+import { createBanner, redrawOnSpread } from './banner';
 import { gsap } from 'gsap';
 import { arcus, cypress, laurea, matrona, statua, togatus } from './forum-models';
 import { buildModel, type PlateId } from './models';
 import { basis, bench, capsa, medicus, pavingRings, porticus } from './plaza-models';
-import { createBanner, createInk, createPasses, fine, inscriptionTexture, merge, plateZoom } from './passes';
+import { createInk, createPasses, fine, inscriptionTexture, merge, plateZoom } from './passes';
 import { createWalker } from './walker';
 import { createZoom } from './zoom';
 
@@ -266,7 +267,9 @@ export function createPlaza(canvas: HTMLCanvasElement, { monuments, name, reduce
   };
   arrive();
 
-  const banner = createBanner(camera, name, shared.uLight);
+  const banner = createBanner(canvas, name, shared.uLight);
+
+  const stopRedraw = redrawOnSpread(canvas, shared.uReveal, banner);
   const passes = createPasses(renderer, camera, pixel);
 
   /* ── Focus ── */
@@ -510,7 +513,6 @@ export function createPlaza(canvas: HTMLCanvasElement, { monuments, name, reduce
     Object.assign(camera, { left: -halfW, right: halfW, top: halfH, bottom: -halfH });
     camera.updateProjectionMatrix();
     shared.uFreq.value = LINE_FREQ * (FIT_H / 2 / halfH);
-    banner.place(halfW, halfH, 6);
     if (!running) render();
   };
 
@@ -553,7 +555,6 @@ export function createPlaza(canvas: HTMLCanvasElement, { monuments, name, reduce
       m.object.rotation.y = m.spin.value + (k === focusedMon ? clock * 0.6 : 0);
     });
     camera.updateMatrixWorld(true);
-    banner.update();
     shared.uLight.value.set(lamp.x * 1.5 + 0.25, lamp.y * 1.2 + 0.3, 0.8).normalize();
     passes.uniforms.uReveal.value = shared.uReveal.value;
     passes.render(scene);
@@ -609,7 +610,7 @@ export function createPlaza(canvas: HTMLCanvasElement, { monuments, name, reduce
     banner.uniforms.uReveal.value = 0;
     after.then(() => {
       gsap.to(shared.uReveal, { value: 1, duration: 2.8, ease: 'power1.out', delay: 0.3 });
-      gsap.to(banner.uniforms.uReveal, { value: 1, duration: 2.2, ease: 'power1.inOut', delay: 1.0 });
+      gsap.to(banner.uniforms.uReveal, { value: 1, duration: 1.8, ease: 'power1.inOut', delay: 0.2 });
     });
   };
 
@@ -647,6 +648,7 @@ export function createPlaza(canvas: HTMLCanvasElement, { monuments, name, reduce
       document.removeEventListener('visibilitychange', onVisibility);
       canvas.removeEventListener('webglcontextlost', onLost);
       banner.dispose();
+      stopRedraw();
       scene.traverse((o) => {
         if (o instanceof THREE.Mesh || o instanceof THREE.Line) o.geometry.dispose();
       });

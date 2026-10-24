@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { createBanner, redrawOnSpread } from './banner';
 import { gsap } from 'gsap';
 import { PLATES, type PlateId, buildModel, disposeModel } from './models';
 
@@ -228,7 +229,17 @@ export const compositeFragment = /* glsl */ `
     // Ink sits a little unevenly on the plate.
     coverage *= 0.86 + 0.14 * noise(px * 0.35);
     col = mix(col, inkColour, coverage);
+  #ifdef CUTOUT
+    // Only the thing drawn is paper; round it lies a soft shadow, cast down and
+    // to the right, and the rest is clear.
+    float a = clamp(max(covered, edge), 0.0, 1.0);
+    float shade = 0.0;
+    for (int i = 1; i <= 4; i++) shade += texture2D(tNormal, vUv + vec2(-1.5, 2.5) * float(i) * uPixel * t).a;
+    shade *= 0.06 * (1.0 - a);
+    gl_FragColor = vec4(col * a + uInk * shade, a + shade);
+  #else
     gl_FragColor = vec4(col, 1.0);
+  #endif
   }
 `;
 
@@ -237,10 +248,10 @@ export const compositeFragment = /* glsl */ `
  * caps with rubricated initials, a fleuron either side, and ruled edges the
  * length of the ribbon. Red is drawn pure red; the shader reads it as rubric.
  */
-export function letteringTexture(text: string) {
+export function letteringTexture(text: string, height = 200) {
   const canvas = document.createElement('canvas');
   canvas.width = 2400;
-  canvas.height = 200;
+  canvas.height = height;
   const ctx = canvas.getContext('2d')!;
   const BLACK = '#000';
   const RED = '#f00';
@@ -253,7 +264,7 @@ export function letteringTexture(text: string) {
   // Set the name glyph by glyph so the initials can be larger and red.
   const glyphs = [...text.toUpperCase()];
   const initial = (k: number) => glyphs[k] !== ' ' && (k === 0 || glyphs[k - 1] === ' ');
-  let size = 132;
+  let size = height * 0.66;
   const layout = (sz: number) => {
     const track = sz * 0.1;
     return glyphs.map((c, k) => {
@@ -415,29 +426,12 @@ export function createEngraving(canvas: HTMLCanvasElement, { name, plates = PLAT
   armillary.traverse((o) => o.layers.set(1));
   scene.add(armillary);
 
-  /* ── Banderole: a ribbon across the plate carrying the name ── */
+  /* ── Banderole: a ribbon across the head of the plate carrying the name ── */
 
-  const nameTexture = letteringTexture(name);
-  const ribbonUniforms = {
-    uLight: engraveUniforms.uLight,
-    uFreq: { value: 22 },
-    uReveal: { value: 1 },
-    uObjectInverse: { value: new THREE.Matrix4() },
-    uText: { value: nameTexture },
-    uHasText: { value: 1 },
-    uGlow: { value: 0 },
-    uPale: { value: 0 },
-    uBlue: { value: 0 },
-  };
-  const ribbonMat = new THREE.ShaderMaterial({
-    uniforms: ribbonUniforms,
-    vertexShader: engraveVertex,
-    fragmentShader: engraveFragment,
-    side: THREE.DoubleSide,
-  });
-  const ribbon = new THREE.Mesh(banderole(), ribbonMat);
-  scene.add(ribbon);
-  turntable.position.y = 0.45;
+  const banner = createBanner(canvas, name, engraveUniforms.uLight);
+
+  const stopRedraw = redrawOnSpread(canvas, engraveUniforms.uReveal, banner);
+  turntable.position.y = -0.35;
 
   /* ── Targets and the paper pass ── */
 
@@ -628,10 +622,10 @@ export function createEngraving(canvas: HTMLCanvasElement, { name, plates = PLAT
   const intro = (after: Promise<void> = Promise.resolve()) => {
     if (reducedMotion) return;
     engraveUniforms.uReveal.value = 0;
-    ribbonUniforms.uReveal.value = 0;
+    banner.uniforms.uReveal.value = 0;
     after.then(() => {
       gsap.to(engraveUniforms.uReveal, { value: 1, duration: 2.8, ease: 'power1.out', delay: 0.5 });
-      gsap.to(ribbonUniforms.uReveal, { value: 1, duration: 2.4, ease: 'power1.inOut', delay: 1.4 });
+      gsap.to(banner.uniforms.uReveal, { value: 1, duration: 1.8, ease: 'power1.inOut', delay: 0.2 });
     });
   };
 
@@ -651,10 +645,9 @@ export function createEngraving(canvas: HTMLCanvasElement, { name, plates = PLAT
     intro,
     dispose() {
       stop();
-      gsap.killTweensOf([engraveUniforms.uReveal, ribbonUniforms.uReveal]);
-      ribbon.geometry.dispose();
-      ribbonMat.dispose();
-      nameTexture.dispose();
+      gsap.killTweensOf([engraveUniforms.uReveal, banner.uniforms.uReveal]);
+      banner.dispose();
+      stopRedraw();
       window.removeEventListener('resize', resize);
       window.removeEventListener('pointermove', onPointerMove);
       canvas.removeEventListener('pointerdown', onDown);
