@@ -1038,24 +1038,149 @@ html:active-view-transition-type(back)::view-transition-new(recto) {
     view-transition-name: leaf;
   }
 
+  /* A scroll isn't turned but rolled: the bottom roller winds the page up to
+     the top, then lets the next one down. The roller and the edge of the
+     page travel together (the same span and timing). */
+  .roller--bottom {
+    view-transition-name: roller;
+  }
+
   ::view-transition-group(leaf) {
     animation: none;
   }
 
   ::view-transition-old(leaf) {
-    z-index: 2;
-    transform-origin: left center;
-    backface-visibility: hidden;
-    animation: leaf-lift-left 0.8s cubic-bezier(0.45, 0.05, 0.3, 1) both;
+    animation: scroll-wind 0.42s cubic-bezier(0.5, 0, 0.75, 0) both;
   }
 
   ::view-transition-new(leaf) {
-    animation: none;
+    animation: scroll-unwind 0.5s cubic-bezier(0.25, 1, 0.5, 1) 0.42s both;
   }
 
-  html:active-view-transition-type(back)::view-transition-old(leaf) {
-    transform-origin: right center;
-    animation: leaf-lift-right 0.8s cubic-bezier(0.45, 0.05, 0.3, 1) both;
+  ::view-transition-group(roller) {
+    z-index: 3;
+    animation: roller-travel 0.92s both;
+  }
+
+  ::view-transition-old(roller),
+  ::view-transition-new(roller) {
+    animation: none;
+  }
+}
+
+@keyframes scroll-wind {
+  from {
+    clip-path: inset(0 0 0 0);
+  }
+  to {
+    clip-path: inset(0 0 100% 0);
+  }
+}
+
+@keyframes scroll-unwind {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes roller-travel {
+  0% {
+    translate: 0 0;
+    animation-timing-function: cubic-bezier(0.5, 0, 0.75, 0);
+  }
+  45.6% {
+    translate: 0 var(--scroll-travel);
+    animation-timing-function: cubic-bezier(0.25, 1, 0.5, 1);
+  }
+  100% {
+    translate: 0 0;
+  }
+}
+
+/* ── On a phone, a scroll: the page between two rollers ── */
+
+.roller {
+  display: none;
+}
+
+@media (max-aspect-ratio: 1/1) {
+  :root {
+    /* The rollers' height and their inset from the screen's edge. */
+    --roll: 22px;
+    --roll-at: 5px;
+    /* From the bottom roller's place to the top one's: the length of the page. */
+    --scroll-travel: calc(-100dvh + 2 * var(--roll-at) + var(--roll));
+  }
+
+  /* No boards on a scroll: it lies on the dark of the desk. */
+  .codex::before {
+    display: none;
+  }
+
+  .book {
+    inset: calc(var(--roll-at) + var(--roll) - 3px) 10px;
+    border-radius: 0;
+    box-shadow:
+      0 0 24px rgb(0 0 0 / 0.55),
+      inset 0 0 60px rgb(120 90 40 / 0.2);
+  }
+
+  /* Each roller: the paper wound round a rod, turned wooden ends (cornua) out
+     past it either side, and the shade of a cylinder. */
+  .roller {
+    display: block;
+    position: fixed;
+    left: 6px;
+    right: 6px;
+    height: var(--roll);
+    z-index: 25;
+    pointer-events: none;
+    border-radius: calc(var(--roll) / 2.4);
+    background:
+      repeating-linear-gradient(180deg, transparent 0 3px, rgb(90 70 40 / 0.1) 3px 4px),
+      linear-gradient(180deg, #8f805f 0%, #d9cdae 22%, #f4ecd8 42%, #e9dfc4 58%, #c3b591 80%, #7f7051 100%);
+    box-shadow: 0 3px 8px rgb(0 0 0 / 0.5);
+  }
+
+  .roller::before,
+  .roller::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 9px;
+    height: calc(var(--roll) + 8px);
+    translate: 0 -50%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #3c2412, #8a5a32 45%, #b07a48 55%, #5a3519);
+    box-shadow: 0 2px 4px rgb(0 0 0 / 0.5);
+  }
+
+  .roller::before {
+    left: -6px;
+  }
+
+  .roller::after {
+    right: -6px;
+  }
+
+  /* A plate spread over the screen is above the scroll, rollers and all. */
+  .roller {
+    transition: opacity 0.2s ease;
+  }
+
+  html.plate-is-full .roller {
+    opacity: 0;
+  }
+
+  .roller--top {
+    top: var(--roll-at);
+  }
+
+  .roller--bottom {
+    bottom: var(--roll-at);
   }
 }
 
@@ -1251,14 +1376,25 @@ html.opening.uncovered .recto > * {
   border-radius: 0;
 }
 
-/* On portrait screens the spread is one column: the board covers it all. */
+/* On portrait screens it's a scroll, not a book: no board, and it's unrolled
+   from the middle (opening.ts) on blank paper. */
 @media (max-aspect-ratio: 1/1) {
   html.opening .binding {
-    inset: 0;
+    display: none;
   }
 
   html.opening .book {
     transform: none;
+    background: var(--paper);
+    clip-path: inset(50% 0 50% 0);
+  }
+
+  html.opening .roller--top {
+    translate: 0 calc(var(--scroll-travel) / -2);
+  }
+
+  html.opening .roller--bottom {
+    translate: 0 calc(var(--scroll-travel) / 2);
   }
 
   html.opening .verso {
