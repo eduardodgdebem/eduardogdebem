@@ -325,8 +325,9 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
       .from('.title-initial .wc-letter', { autoAlpha: 0, scale: 1.35, transformOrigin: '50% 60%', duration: 0.9, ease: 'power3.out' }, '-=0.6')
       .from('.title-line', { autoAlpha: 0, x: -14, duration: 0.9, stagger: 0.15 }, '-=0.6')
       .from('.title-rule span:not(.fl)', { scaleX: 0, duration: 0.9, ease: 'power2.inOut' }, '-=0.5')
-      .from('.title-rule .fl', { autoAlpha: 0, rotate: -90, duration: 0.6 }, '<0.3')
-      .from('.author .role, .author .tagline, .author .links', { autoAlpha: 0, y: 6, duration: 0.8, stagger: 0.1 }, '-=0.5');
+      .from('.title-rule .fl', { autoAlpha: 0, rotate: -90, duration: 0.6 }, '<0.3');
+    // After the opening the quill writes those in; otherwise they rise in.
+    if (!opening) title.from('.author .role, .author .tagline, .author .links', { autoAlpha: 0, y: 6, duration: 0.8, stagger: 0.1 }, '-=0.5');
     // (Its from-states are set at once, so nothing shows before it plays.)
     if (opening) bookOpened().then(() => title.play());
     else title.delay(0.2).play();

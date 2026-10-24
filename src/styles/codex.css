@@ -1091,6 +1091,12 @@ html.opening .verso {
   clip-path: inset(0 0 0 100%);
 }
 
+/* The book opens on blank pages; what's on them comes once it's open. */
+html.opening .verso > *,
+html.opening .recto > * {
+  visibility: hidden;
+}
+
 .book,
 .book::before {
   transition:

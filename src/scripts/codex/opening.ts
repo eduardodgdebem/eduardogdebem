@@ -7,7 +7,7 @@ import { gsap } from 'gsap';
 const root = document.documentElement;
 const OPENED = 'codex:opened';
 
-/** Resolves once the board is open (immediately when the book never closed). */
+/** Resolves once the board has opened (immediately when the book never closed). */
 export function bookOpened(): Promise<void> {
   return new Promise((resolve) => {
     if (!root.classList.contains('opening')) return resolve();
@@ -35,9 +35,14 @@ export async function openBook() {
   // Let the sigil finish tooling, but never hold the reader past 3.5s.
   await Promise.race([Promise.all([loaded(), document.fonts.ready, wait(1700)]), wait(3500)]);
 
+  // Open, the pages are uncovered (they were blank while it opened) and
+  // everything on them starts at once: the plates engrave, the banderoles
+  // unroll, and the text is written in with the quill (Codex.astro).
   const done = () => {
     root.classList.remove('opening');
     gsap.set([book, board, verso, ...faces], { clearProps: 'all' });
+    (window as unknown as { codexWrite?: () => void }).codexWrite?.();
+    document.dispatchEvent(new Event(OPENED));
   };
 
   const tl = gsap.timeline({ onComplete: done });
@@ -59,8 +64,6 @@ export async function openBook() {
   } else {
     tl.to(faces, { autoAlpha: 0, duration: 0.6, ease: 'power1.in' }, '<0.7');
   }
-  // The plate starts engraving as its page is uncovered.
-  tl.call(() => document.dispatchEvent(new Event(OPENED)), [], '<');
   // The inside of the board is blank endpaper; it lifts away off the left page.
   tl.to(faces, { autoAlpha: 0, duration: 0.5, ease: 'power1.inOut' });
 }
