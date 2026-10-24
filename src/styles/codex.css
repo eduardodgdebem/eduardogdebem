@@ -115,8 +115,11 @@
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--rule) transparent;
-  margin-right: -10px;
-  padding-right: 10px;
+  /* Room inside the scroller, which clips, for a plate's banderole to spill
+     past its frame; the margins give it back, so the text doesn't move. */
+  --spill: clamp(14px, 2.4vw, 30px);
+  margin: calc(-1 * var(--spill)) calc(-10px - var(--spill)) 0 calc(-1 * var(--spill));
+  padding: var(--spill) calc(10px + var(--spill)) 0 var(--spill);
 }
 
 .running {
@@ -609,6 +612,20 @@ a.subject:hover,
   cursor: grabbing;
 }
 
+/* The banderole: its own canvas over the head of the plate, a little wider and
+   higher than the frame so the ribbon spills onto the page (sized in banner.ts).
+   It takes no pointer: the plate under it does. */
+.plate-banner {
+  position: absolute;
+  z-index: 2;
+  display: block;
+  pointer-events: none;
+}
+
+.no-webgl .plate-banner {
+  display: none;
+}
+
 .plate-fallback {
   display: none;
   place-items: end center;
@@ -889,8 +906,8 @@ html:active-view-transition-type(back)::view-transition-new(recto) {
 
   .page-body {
     overflow: visible;
-    margin-right: 0;
-    padding-right: 0;
+    margin: 0;
+    padding: 0;
   }
 
   /* One column, every page scrolling as one long page (the home spread only

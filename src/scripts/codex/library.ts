@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { createBanner } from './banner';
 import { gsap } from 'gsap';
 import { laurea, matrona, togatus } from './forum-models';
 import {
@@ -17,7 +18,7 @@ import {
   rollParts,
   spiral,
 } from './library-models';
-import { createBanner, createInk, createPasses, fine, inscriptionTexture, merge, plateZoom } from './passes';
+import { createInk, createPasses, fine, inscriptionTexture, merge, plateZoom } from './passes';
 import { createWalker } from './walker';
 import { createZoom } from './zoom';
 
@@ -396,7 +397,7 @@ export function createLibrary(canvas: HTMLCanvasElement, { rolls, name, reducedM
   };
   arrive();
 
-  const banner = createBanner(camera, name, shared.uLight);
+  const banner = createBanner(canvas, name, shared.uLight);
   const passes = createPasses(renderer, camera, pixel);
 
   /* ── Focus: the roll the citizen stands at, the pointer's, or the list's ── */
@@ -592,7 +593,6 @@ export function createLibrary(canvas: HTMLCanvasElement, { rolls, name, reducedM
     Object.assign(camera, { left: -halfW, right: halfW, top: halfH, bottom: -halfH });
     camera.updateProjectionMatrix();
     shared.uFreq.value = LINE_FREQ * (FIT_H / 2 / halfH);
-    banner.place(halfW, halfH, 6);
     if (!running) render();
   };
 
@@ -666,7 +666,6 @@ export function createLibrary(canvas: HTMLCanvasElement, { rolls, name, reducedM
       p.group.rotation.z = Math.sin(Math.min(p.pull.value, 1) * Math.PI * 0.5) * 0.08;
     }
     camera.updateMatrixWorld(true);
-    banner.update();
     shared.uLight.value.set(lamp.x * 1.5 + 0.25, lamp.y * 1.2 + 0.3, 0.8).normalize();
     passes.uniforms.uReveal.value = shared.uReveal.value;
     passes.render(scene);

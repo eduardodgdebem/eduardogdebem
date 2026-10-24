@@ -5,18 +5,16 @@ import {
   INK,
   PAPER,
   RUBRIC,
-  banderole,
   compositeFragment,
   compositeVertex,
   engraveFragment,
   engraveVertex,
-  letteringTexture,
   raw,
 } from './engraving';
 
 // The pieces every engraved scene (the forum, the shelf) is drawn with: the
-// hatching material, the three passes (ink, normals + depth, paper), and the
-// name banderole carried at the head of the plate.
+// hatching material and the three passes (ink, normals + depth, paper). The
+// banderole at the head of the plate is in banner.ts.
 
 /* ── Ink: one set of hatching uniforms, a material per thing that can glow red ── */
 
@@ -118,7 +116,8 @@ export interface Passes {
   dispose(): void;
 }
 
-export function createPasses(renderer: THREE.WebGLRenderer, camera: THREE.OrthographicCamera | THREE.PerspectiveCamera, pixel: number): Passes {
+/** `cutout`: only what's drawn is inked on paper; the rest of the canvas is left clear. */
+export function createPasses(renderer: THREE.WebGLRenderer, camera: THREE.OrthographicCamera | THREE.PerspectiveCamera, pixel: number, { cutout = false } = {}): Passes {
   const inkTarget = new THREE.WebGLRenderTarget(1, 1);
   const normalTarget = new THREE.WebGLRenderTarget(1, 1, { depthTexture: new THREE.DepthTexture(1, 1) });
   const normalMat = new THREE.MeshNormalMaterial({ side: THREE.DoubleSide });
@@ -138,7 +137,14 @@ export function createPasses(renderer: THREE.WebGLRenderer, camera: THREE.Orthog
     uRed: { value: raw(RUBRIC) },
     uBlue: { value: raw(BLUE) },
   };
-  const quadMat = new THREE.ShaderMaterial({ uniforms, vertexShader: compositeVertex, fragmentShader: compositeFragment, depthTest: false, depthWrite: false });
+  const quadMat = new THREE.ShaderMaterial({
+    uniforms,
+    defines: cutout ? { CUTOUT: '' } : {},
+    vertexShader: compositeVertex,
+    fragmentShader: compositeFragment,
+    depthTest: false,
+    depthWrite: false,
+  });
   const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), quadMat);
   const quadScene = new THREE.Scene().add(quad);
   const quadCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -178,61 +184,6 @@ export function createPasses(renderer: THREE.WebGLRenderer, camera: THREE.Orthog
       normalMat.dispose();
       inkTarget.dispose();
       normalTarget.dispose();
-    },
-  };
-}
-
-/* ── The banderole, carried with the camera across the head of the plate ── */
-
-export interface Banner {
-  uniforms: { uReveal: { value: number } };
-  /** Lay it across the top of a view `halfW` × `halfH` wide at `depth` in front of the camera. */
-  place(halfW: number, halfH: number, depth: number): void;
-  /** Call each frame before rendering: the ribbon hatches in its own space. */
-  update(): void;
-  dispose(): void;
-}
-
-export function createBanner(camera: THREE.Camera, name: string, light: { value: THREE.Vector3 }): Banner {
-  const texture = letteringTexture(name);
-  const uniforms = {
-    uLight: light,
-    uFreq: { value: 22 },
-    uReveal: { value: 1 },
-    uObjectInverse: { value: new THREE.Matrix4() },
-    uText: { value: texture },
-    uHasText: { value: 1 },
-    uGlow: { value: 0 },
-    uPale: { value: 0 },
-    uBlue: { value: 0 },
-  };
-  const material = new THREE.ShaderMaterial({ uniforms, vertexShader: engraveVertex, fragmentShader: engraveFragment, side: THREE.DoubleSide });
-  const geometry = banderole();
-  geometry.computeBoundingBox();
-  geometry.translate(...geometry.boundingBox!.getCenter(new THREE.Vector3()).negate().toArray());
-  geometry.computeBoundingBox();
-  const size = geometry.boundingBox!.getSize(new THREE.Vector3());
-  const ribbon = new THREE.Mesh(geometry, material);
-  // Tipped back a little, so its twist reads in depth.
-  ribbon.rotation.x = -0.25;
-  camera.add(ribbon);
-
-  return {
-    uniforms,
-    place(halfW, halfH, depth) {
-      const k = Math.min((halfW * 2 * 0.98) / size.x, (halfH * 0.24) / size.y);
-      ribbon.scale.setScalar(k);
-      ribbon.position.set(0, halfH - (size.y * k) / 2 - halfH * 0.025, -depth);
-    },
-    update() {
-      ribbon.updateMatrixWorld(true);
-      uniforms.uObjectInverse.value.copy(ribbon.matrixWorld).invert();
-    },
-    dispose() {
-      camera.remove(ribbon);
-      geometry.dispose();
-      material.dispose();
-      texture.dispose();
     },
   };
 }
