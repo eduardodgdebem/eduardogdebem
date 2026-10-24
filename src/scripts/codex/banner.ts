@@ -128,13 +128,15 @@ export function createBanner(plate: HTMLCanvasElement, name: string, light: { va
     const fw = frame.clientWidth;
     const fh = frame.clientHeight;
     if (!fw || !fh) return;
+    // Measured from inside the frame's ornamented border, which the ribbon also covers.
     const room = roomAround(frame);
-    const side = Math.max(0, Math.round(Math.min(fw * 0.075, room.left, room.right) - 2));
+    const band = frame.clientLeft;
+    const side = Math.max(0, Math.round(band + Math.min(fw * 0.075, room.left, room.right) - 2));
     const w = fw + side * 2;
     // Across the plate, but no longer than the plate is high (a spread plate is wide).
     const k = Math.min(Math.min(w * 0.98, fh * 1.15) / size.x, (fh * 0.3) / size.y);
     const ribbonH = size.y * k;
-    const over = Math.max(0, Math.round(Math.min(ribbonH * 0.3, 22, room.top - 2)));
+    const over = Math.max(0, Math.round(band + Math.min(ribbonH * 0.3, 22, room.top - 2)));
     const h = Math.ceil(ribbonH * 1.18 + 8);
     Object.assign(canvas.style, { left: `${-side}px`, top: `${-over}px`, width: `${w}px`, height: `${h}px` });
     passes.setSize(w, h);

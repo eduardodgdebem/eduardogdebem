@@ -583,17 +583,21 @@ a.subject:hover,
   margin: 0.2rem 0 0;
 }
 
-/* Plate mark: the dent a copper plate leaves in the paper, plus a ruled border. */
+/* The plate's border, as an old book frames its plates: a Greek-key band
+   between ruled lines, a boss with a rubric dot at each corner, and round it
+   the faint dent a copper plate leaves in the paper. The border is one SVG,
+   sliced nine ways; the key repeats along the sides in whole turns. */
 .plate-frame {
   position: relative;
   flex: 1;
   min-height: 0;
-  border: 1px solid var(--ink);
-  outline: 1px solid var(--ink);
-  outline-offset: 5px;
+  --band: 19px;
+  border: var(--band) solid var(--ink);
+  border-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'><g fill='none' stroke='%231b2419' stroke-width='1' stroke-linecap='square'><rect x='0.6' y='0.6' width='54.8' height='54.8' stroke-width='1.2'/><rect x='2.6' y='2.6' width='50.8' height='50.8' stroke-width='0.6'/><rect x='13.6' y='13.6' width='28.8' height='28.8' stroke-width='0.6'/><rect x='15.3' y='15.3' width='25.4' height='25.4' stroke-width='1.4'/><path d='M16,11.5V4.5H24V9.2H19.5V6.8H21.8M28,11.5V4.5H36V9.2H31.5V6.8H33.8M16,11.5H40' transform='rotate%280 28 28%29'/><path d='M16,11.5V4.5H24V9.2H19.5V6.8H21.8M28,11.5V4.5H36V9.2H31.5V6.8H33.8M16,11.5H40' transform='rotate%2890 28 28%29'/><path d='M16,11.5V4.5H24V9.2H19.5V6.8H21.8M28,11.5V4.5H36V9.2H31.5V6.8H33.8M16,11.5H40' transform='rotate%28180 28 28%29'/><path d='M16,11.5V4.5H24V9.2H19.5V6.8H21.8M28,11.5V4.5H36V9.2H31.5V6.8H33.8M16,11.5H40' transform='rotate%28270 28 28%29'/><g transform='translate%280 0%29'><rect x='2.6' y='2.6' width='11' height='11' fill='%23efe6d0' stroke-width='.6'/><path d='M8.1,4.3L11.9,8.1L8.1,11.9L4.3,8.1Z' stroke-width='.8'/><circle cx='8.1' cy='8.1' r='1.4' fill='%239b2d20' stroke='none'/></g><g transform='translate%2839.8 0%29'><rect x='2.6' y='2.6' width='11' height='11' fill='%23efe6d0' stroke-width='.6'/><path d='M8.1,4.3L11.9,8.1L8.1,11.9L4.3,8.1Z' stroke-width='.8'/><circle cx='8.1' cy='8.1' r='1.4' fill='%239b2d20' stroke='none'/></g><g transform='translate%280 39.8%29'><rect x='2.6' y='2.6' width='11' height='11' fill='%23efe6d0' stroke-width='.6'/><path d='M8.1,4.3L11.9,8.1L8.1,11.9L4.3,8.1Z' stroke-width='.8'/><circle cx='8.1' cy='8.1' r='1.4' fill='%239b2d20' stroke='none'/></g><g transform='translate%2839.8 39.8%29'><rect x='2.6' y='2.6' width='11' height='11' fill='%23efe6d0' stroke-width='.6'/><path d='M8.1,4.3L11.9,8.1L8.1,11.9L4.3,8.1Z' stroke-width='.8'/><circle cx='8.1' cy='8.1' r='1.4' fill='%239b2d20' stroke='none'/></g></g></svg>") 16 / var(--band) round;
   box-shadow:
-    0 0 0 11px var(--paper),
-    0 0 0 12px rgb(80 60 30 / 0.28);
+    0 0 0 5px var(--paper),
+    0 0 0 6px rgb(80 60 30 / 0.22),
+    0 1px 10px 6px rgb(80 60 30 / 0.08);
   margin: 12px;
 }
 
@@ -933,6 +937,7 @@ html:active-view-transition-type(back)::view-transition-new(recto) {
      margins): with only an aspect ratio, Safari sizes the frame wider than
      the page and it sits off to the right. */
   .book .plate-frame {
+    --band: 14px;
     flex: none;
     width: calc(100% - 24px);
     aspect-ratio: 4 / 5;
