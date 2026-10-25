@@ -139,21 +139,30 @@ html.opening:not(.uncovered) .codex::before {
 
 /* A grain over the whole screen, very faint, as if all of it were printed on
    one sheet. Fixed above everything (pages, boards, plates) and deaf to the
-   pointer; its own page-turn layer keeps it on top while a leaf turns. */
+   pointer. Its faintness is in the image itself (dark specks at a few percent),
+   not opacity or a blend mode: a page turn snapshots it, and a snapshot can't
+   carry a blend, so it would flash. During a turn it holds still on top. */
 .codex::after {
-  content: "";
+  content: '';
   position: fixed;
   inset: 0;
   z-index: 100;
   pointer-events: none;
-  opacity: 0.4;
-  mix-blend-mode: multiply;
   view-transition-name: grain;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -0.12 0 0 0 0.12'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 ::view-transition-group(grain) {
   z-index: 100;
+  animation: none;
+}
+
+/* One sheet of grain through the turn, not two cross-fading. */
+::view-transition-old(grain) {
+  display: none;
+}
+
+::view-transition-new(grain) {
   animation: none;
 }
 
