@@ -8,6 +8,7 @@ export const ICONS = {
   plus: svg('<path d="M12 5v14M5 12h14"/>'),
   minus: svg('<path d="M5 12h14"/>'),
   expand: svg('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>'),
+  info: svg('<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5"/><path d="M12 7.6v.1" stroke-width="2.2"/>'),
   shrink: svg('<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>'),
   // Units.
   legionarius: svg('<path d="M12 3l1.6 2.2v9.3h-3.2V5.2z"/><path d="M8.5 14.5h7M12 14.5V20"/><circle cx="12" cy="20.5" r="0.6"/>'),

@@ -1,23 +1,44 @@
 ---
-// The plate's own controls, in its corner: zoom in and out (the scene listens
-// for `plate:zoom` on its canvas; see src/scripts/codex/zoom.ts), and full
-// screen, which spreads the plate over the whole window.
+// The plate's own controls, one ruled set down its right side, the same on
+// every plate: how to get about (a card of the scene's controls, when it has
+// any), zoom in and out (the scene listens for `plate:zoom` on its canvas; see
+// src/scripts/codex/zoom.ts), and spreading the plate over the open book.
 import { ICONS } from './icons';
 import { tr, type Lang } from '../i18n/strings';
 
 interface Props {
   lang?: Lang;
+  /** The scene whose controls the info card lists (`<scene>.hint`, `<scene>.touch`). */
+  info?: 'home' | 'library' | 'plaza';
 }
 
-const { lang = 'en' } = Astro.props;
+const { lang = 'en', info } = Astro.props;
 const s = tr(lang);
+// The hint is one line of keys, parted by middots: a line each on the card.
+const keys = info ? s(`${info}.hint`).split(' · ') : [];
 ---
 
 <div class="plate-tools" data-plate-tools data-full-label={s('tools.full')} data-exit-label={s('tools.exit')}>
+  {
+    info && (
+      <button type="button" data-info aria-expanded="false" aria-label={s('tools.info')} title={s('tools.info')} set:html={ICONS.info} />
+    )
+  }
   <button type="button" data-zoom="1.25" aria-label={s('tools.in')} title={s('tools.in')} set:html={ICONS.plus} />
   <button type="button" data-zoom="0.8" aria-label={s('tools.out')} title={s('tools.out')} set:html={ICONS.minus} />
   <button type="button" data-full aria-label={s('tools.full')} title={s('tools.full')} set:html={ICONS.expand} />
 </div>
+{
+  info && (
+    <aside class="plate-info" data-info-card role="note" aria-label={s('tools.info')} hidden>
+      <p class="plate-info-title" data-i18n="tools.info">{s('tools.info')}</p>
+      <ul class="plate-info-keys">
+        {keys.map((k) => <li set:html={k} />)}
+      </ul>
+      <p class="plate-info-touch" data-i18n={`${info}.touch`}>{s(`${info}.touch`)}</p>
+    </aside>
+  )
+}
 
 <script>
   import { ICONS } from './icons';
@@ -73,6 +94,33 @@ const s = tr(lang);
       full.title = label;
     };
     full.addEventListener('click', () => setFull(!spread));
-    document.addEventListener('keydown', (e) => e.key === 'Escape' && spread && setFull(false));
+
+    // The card of controls: opened by its button, closed by it again, by
+    // Escape, or by a click anywhere else.
+    const infoButton = tools.querySelector<HTMLButtonElement>('[data-info]');
+    const card = frame.querySelector<HTMLElement>('[data-info-card]');
+    const showInfo = (on: boolean) => {
+      if (!infoButton || !card || on === !card.hidden) return;
+      infoButton.setAttribute('aria-expanded', String(on));
+      if (on) card.hidden = false;
+      const shown = card.animate(
+        [
+          { opacity: 0, transform: 'translate(6px, -50%) scale(0.98)' },
+          { opacity: 1, transform: 'translate(0, -50%)' },
+        ],
+        { duration: still ? 0 : 220, easing: 'cubic-bezier(0.2, 0.7, 0.2, 1)', direction: on ? 'normal' : 'reverse' },
+      );
+      if (!on) shown.onfinish = () => (card.hidden = true);
+    };
+    infoButton?.addEventListener('click', () => showInfo(!!card?.hidden));
+    document.addEventListener('pointerdown', (e) => {
+      if (card && !card.hidden && !card.contains(e.target as Node) && !infoButton?.contains(e.target as Node)) showInfo(false);
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      if (card && !card.hidden) showInfo(false);
+      else if (spread) setFull(false);
+    });
   }
 </script>

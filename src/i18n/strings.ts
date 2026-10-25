@@ -9,6 +9,7 @@ const EN = {
   'tools.out': 'Zoom out',
   'tools.full': 'Spread over the book',
   'tools.exit': 'Back to the page',
+  'tools.info': 'How to get about',
 
   'link.email': 'Email',
   'link.contact': 'Contact',
@@ -24,7 +25,7 @@ const EN = {
   'home.index.letters': 'Correspondence',
   'home.index.letters.pg': 'contact',
   'home.hint':
-    '<kbd>←</kbd><kbd>→</kbd> or <kbd>A</kbd><kbd>D</kbd> to walk · <kbd>Enter</kbd> at a door to go in · or click a building',
+    '<kbd>←</kbd><kbd>→</kbd> or <kbd>A</kbd><kbd>D</kbd> to walk · <kbd>Enter</kbd> at a door to go in · Click the street to walk there, a building to go in',
   'home.touch': 'Tap the street to walk there, or a building to go in.',
   'home.door.key': 'Press Enter to go in.',
   'home.door.touch': 'Tap its label to go in.',
@@ -44,7 +45,7 @@ const EN = {
   'notes.empty': 'Nothing written on this yet.',
   'library.note': 'the reading room; every red-tagged roll is a chapter.',
   'library.hint':
-    '<kbd>←</kbd><kbd>→</kbd> or <kbd>A</kbd><kbd>D</kbd> to walk · <kbd>Enter</kbd> at a roll to read it · or click one',
+    '<kbd>←</kbd><kbd>→</kbd> or <kbd>A</kbd><kbd>D</kbd> to walk · <kbd>Enter</kbd> at a roll to read it · Click the floor to walk there, a roll to read it',
   'library.touch': 'Tap the floor to walk there, or a roll to read it.',
   'library.read': 'Tap here to read it ›',
   'exitus.page': 'back out to the Via Sacra',
@@ -92,7 +93,7 @@ const EN = {
   'letters.cv.value': 'Download it (PDF, in English)',
   'plaza.note': 'the author’s square; a monument for each of his concerns.',
   'plaza.hint':
-    '<kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to walk · up to a monument to read it · <kbd>Enter</kbd> to turn it',
+    '<kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to walk · Walk up to a monument to read it · <kbd>Enter</kbd> to turn it · Click the square to walk there',
   'plaza.touch': 'Tap the square to walk there; walk up to a monument to read it.',
   'plaza.turn': 'Tap here to turn it ›',
   'statua.by': 'the author, in stone',
@@ -178,6 +179,7 @@ const PT: Record<StringKey, string> = {
   'tools.out': 'Afastar',
   'tools.full': 'Abrir sobre o livro',
   'tools.exit': 'Voltar à página',
+  'tools.info': 'Como andar por aqui',
 
   'link.email': 'E-mail',
   'link.contact': 'Contato',
@@ -193,7 +195,7 @@ const PT: Record<StringKey, string> = {
   'home.index.letters': 'Correspondência',
   'home.index.letters.pg': 'contato',
   'home.hint':
-    '<kbd>←</kbd><kbd>→</kbd> ou <kbd>A</kbd><kbd>D</kbd> para andar · <kbd>Enter</kbd> numa porta para entrar · ou clique num prédio',
+    '<kbd>←</kbd><kbd>→</kbd> ou <kbd>A</kbd><kbd>D</kbd> para andar · <kbd>Enter</kbd> numa porta para entrar · Clique na rua para andar até lá, num prédio para entrar',
   'home.touch': 'Toque na rua para andar até lá, ou num prédio para entrar.',
   'home.door.key': 'Aperte Enter para entrar.',
   'home.door.touch': 'Toque na etiqueta para entrar.',
@@ -213,7 +215,7 @@ const PT: Record<StringKey, string> = {
   'notes.empty': 'Nada escrito sobre isso ainda.',
   'library.note': 'a sala de leitura; cada rolo de etiqueta vermelha é um capítulo.',
   'library.hint':
-    '<kbd>←</kbd><kbd>→</kbd> ou <kbd>A</kbd><kbd>D</kbd> para andar · <kbd>Enter</kbd> num rolo para lê-lo · ou clique num',
+    '<kbd>←</kbd><kbd>→</kbd> ou <kbd>A</kbd><kbd>D</kbd> para andar · <kbd>Enter</kbd> num rolo para lê-lo · Clique no chão para andar até lá, num rolo para lê-lo',
   'library.touch': 'Toque no chão para andar até lá, ou num rolo para lê-lo.',
   'library.read': 'Toque aqui para ler ›',
   'exitus.page': 'de volta à Via Sacra',
@@ -261,7 +263,7 @@ const PT: Record<StringKey, string> = {
   'letters.cv.value': 'Baixar (PDF, em inglês)',
   'plaza.note': 'a praça do autor; um monumento para cada um dos seus interesses.',
   'plaza.hint':
-    '<kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> ou <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> para andar · chegue num monumento para lê-lo · <kbd>Enter</kbd> para girá-lo',
+    '<kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> ou <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> para andar · Chegue num monumento para lê-lo · <kbd>Enter</kbd> para girá-lo · Clique na praça para andar até lá',
   'plaza.touch': 'Toque na praça para andar até lá; chegue perto de um monumento para lê-lo.',
   'plaza.turn': 'Toque aqui para girá-lo ›',
   'statua.by': 'o autor, em pedra',

@@ -438,10 +438,6 @@ html.opening:not(.uncovered) .codex::before {
   color: var(--rubric);
 }
 
-.touch-hint {
-  display: none;
-}
-
 @media (hover: none) {
   .place-tag.is-actionable {
     pointer-events: auto;
@@ -452,13 +448,6 @@ html.opening:not(.uncovered) .codex::before {
     display: block;
   }
 
-  .touch-hint {
-    display: block;
-    margin: 0.4rem 12px 0;
-    font-style: italic;
-    font-size: 0.85rem;
-    color: var(--ink-soft);
-  }
 }
 
 /* ── The language toggle, and the quill that rewrites the page ── */
@@ -1417,16 +1406,26 @@ html.opening.uncovered .recto > * {
 
 /* ── A plate's own controls (PlateTools.astro), and the plate at full screen ── */
 
+/* One ruled column down the right of every plate, set like the plate's own
+   border: square cells of paper between hairlines, inside a double rule. */
 .plate-tools {
   position: absolute;
-  right: 8px;
-  bottom: 8px;
+  right: 10px;
+  top: 50%;
+  translate: 0 -50%;
   z-index: 3;
   display: flex;
-  gap: 4px;
+  flex-direction: column;
+  background: rgb(239 230 208 / 0.94);
+  border: 1px solid var(--ink);
+  box-shadow:
+    0 0 0 2px rgb(239 230 208 / 0.94),
+    0 0 0 3px var(--ink),
+    0 3px 10px 3px rgb(60 40 20 / 0.18);
 }
 
 .plate-tools button {
+  position: relative;
   display: grid;
   place-items: center;
   width: 34px;
@@ -1434,15 +1433,111 @@ html.opening.uncovered .recto > * {
   padding: 0;
   font-size: 18px;
   color: var(--ink);
-  background: rgb(239 230 208 / 0.9);
-  border: 1px solid var(--ink);
-  border-radius: 50%;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
   cursor: pointer;
+  transition:
+    color 0.2s,
+    background-color 0.2s;
 }
 
-.plate-tools button:hover {
+.plate-tools button + button {
+  border-top: 1px solid var(--rule);
+}
+
+/* Under the pointer a cell is inked: rubric, on a warmer paper. */
+.plate-tools button:hover,
+.plate-tools button:focus-visible,
+.plate-tools button[aria-expanded='true'] {
   color: var(--rubric);
-  border-color: var(--rubric);
+  background: rgb(155 45 32 / 0.08);
+}
+
+.plate-tools button svg {
+  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.plate-tools button:hover svg {
+  transform: scale(1.12);
+}
+
+/* The card of a scene's controls, beside the tools: an engraved note. */
+.plate-info {
+  position: absolute;
+  right: 56px;
+  top: 50%;
+  transform: translate(0, -50%);
+  z-index: 3;
+  width: max-content;
+  max-width: min(17rem, calc(100% - 80px));
+  padding: 0.7rem 0.95rem 0.75rem;
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  box-shadow:
+    0 0 0 3px var(--paper),
+    0 0 0 4px var(--ink),
+    0 6px 18px 4px rgb(60 40 20 / 0.2);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.plate-info[hidden] {
+  display: none;
+}
+
+.plate-info-title {
+  margin: 0 0 0.35rem;
+  font-family: 'IM Fell English SC', serif;
+  letter-spacing: 0.08em;
+  color: var(--rubric);
+}
+
+.plate-info-keys {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.plate-info-keys li {
+  padding-left: 1.1em;
+  text-indent: -1.1em;
+}
+
+.plate-info-keys li::before {
+  content: '❧';
+  display: inline-block;
+  width: 1.1em;
+  text-indent: 0;
+  color: var(--rubric);
+}
+
+.plate-info kbd {
+  font-family: inherit;
+  font-size: 0.82em;
+  padding: 0 0.32em;
+  margin: 0 0.08em;
+  border: 1px solid var(--ink-soft);
+  border-bottom-width: 2px;
+  border-radius: 2px;
+  background: rgb(255 255 255 / 0.25);
+}
+
+.plate-info-touch {
+  display: none;
+  margin: 0;
+  font-style: italic;
+}
+
+/* No keys on a touch screen: only the line about tapping. */
+@media (hover: none) {
+  .plate-info-keys {
+    display: none;
+  }
+
+  .plate-info-touch {
+    display: block;
+  }
 }
 
 .plate-frame.is-full {
@@ -1481,7 +1576,7 @@ html.plate-is-full .recto {
 
 @media (max-aspect-ratio: 1/1) {
   .plate-tools button {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
   }
 }

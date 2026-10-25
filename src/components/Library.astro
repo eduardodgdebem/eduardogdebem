@@ -35,7 +35,7 @@ const s = tr(lang);
       <span class="tag-by" data-tag-by></span>
       <span class="tag-act" data-tag-act></span>
     </div>
-    <PlateTools lang={lang} />
+    <PlateTools lang={lang} info="library" />
   </div>
   <figcaption class="plate-caption">
     <span class="tab">Tab. IV</span>
@@ -43,8 +43,6 @@ const s = tr(lang);
     <span class="cap-note" data-i18n="library.note">{s('library.note')}</span>
   </figcaption>
 </figure>
-<p class="touch-hint" data-i18n="library.touch">{s('library.touch')}</p>
-<p class="library-hint" data-i18n-html="library.hint" set:html={s('library.hint')} />
 
 <script>
   import { createLibrary, type Subject } from '../scripts/codex/library';
@@ -166,27 +164,4 @@ const s = tr(lang);
     text-align: center;
   }
 
-  .library-hint {
-    margin: 0.4rem 12px 0;
-    text-align: right;
-    font-style: italic;
-    font-size: 0.85rem;
-    color: var(--ink-soft);
-  }
-
-  .library-hint :global(kbd) {
-    font-family: inherit;
-    font-style: normal;
-    font-size: 0.8em;
-    padding: 0 0.3em;
-    margin: 0 0.1em;
-    border: 1px solid var(--rule);
-    border-radius: 2px;
-  }
-
-  @media (max-aspect-ratio: 1/1) {
-    .library-hint {
-      display: none;
-    }
-  }
 </style>

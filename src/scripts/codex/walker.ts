@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { gsap } from 'gsap';
+import { createMarker, type Marker } from './marker';
 
 // The reader's citizen on foot, shared by the walkable plates (the forum, the
 // library): arrow keys or WASD walk him, a clicked spot draws him to it, and a
@@ -8,8 +9,10 @@ import { gsap } from 'gsap';
 export interface Walker {
   /** Advance one frame. Returns whether he is moving. */
   step(dt: number): boolean;
-  /** Make for a spot on the floor (it is clamped to where he may walk). */
+  /** Make for a spot on the floor (it is clamped to where he may walk); it's marked with a ping. */
   walkTo(point: THREE.Vector3): void;
+  /** Mark the spot under the pointer as where he'd go (clamped too), or clear it (null). */
+  aim(point: THREE.Vector3 | null): void;
   /** Walk a path on his own, ignoring the keys; fades him into a doorway at the end if asked. */
   follow(points: THREE.Vector3[], options?: { intoDoorway?: boolean }): Promise<void>;
   /** Walking on his own along a path. */
@@ -54,6 +57,13 @@ export function createWalker(citizen: THREE.Object3D, { speed, clamp, reducedMot
   let stride = 0;
   let stroll: THREE.Vector3 | null = null;
   let path: gsap.core.Tween | null = null;
+  // The marks on the ground, sized to him, hung in his scene once he's in one.
+  const height = new THREE.Box3().setFromObject(citizen).getSize(new THREE.Vector3()).y || 1;
+  let marker: Marker | null = null;
+  const marks = () => {
+    if (!marker && citizen.parent) marker = createMarker(citizen.parent, height * 0.2, reducedMotion);
+    return marker;
+  };
 
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.metaKey || e.ctrlKey || e.altKey || typing(e.target)) return;
@@ -78,6 +88,7 @@ export function createWalker(citizen: THREE.Object3D, { speed, clamp, reducedMot
 
   return {
     step(dt) {
+      marker?.update(dt);
       if (path) {
         turn(dt);
         citizen.position.y = Math.abs(Math.sin(stride)) * 0.06;
@@ -111,6 +122,13 @@ export function createWalker(citizen: THREE.Object3D, { speed, clamp, reducedMot
     walkTo(point) {
       stroll = point.clone().setY(0);
       clamp(stroll);
+      marks()?.ping(stroll);
+    },
+    aim(point) {
+      if (!point || path) return marks()?.aim(null);
+      const spot = point.clone().setY(0);
+      clamp(spot);
+      marks()?.aim(spot);
     },
     follow(points, { intoDoorway = false } = {}) {
       keys.clear();
@@ -169,6 +187,7 @@ export function createWalker(citizen: THREE.Object3D, { speed, clamp, reducedMot
     },
     dispose() {
       path?.kill();
+      marker?.dispose();
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
       window.removeEventListener('blur', onBlur);
