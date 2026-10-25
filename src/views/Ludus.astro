@@ -520,14 +520,32 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
   /** Big words over the sand, for a moment. */
   const callout = $('[data-callout]');
   let calloutT: ReturnType<typeof setTimeout> | undefined;
+  // Each shout in Latin on a ribbon like the plate's banderole, with what it
+  // means underneath (shout.<word> in strings.ts).
+  const RIBBON = `<svg class="ribbon" viewBox="0 0 400 100" preserveAspectRatio="none" aria-hidden="true">
+    <path class="tail" d="M70 34 H4 L26 59 L4 84 H70 Z" />
+    <path class="tail" d="M330 34 H396 L374 59 L396 84 H330 Z" />
+    <path class="fold" d="M70 84 L48 74 V24 L70 34 Z" />
+    <path class="fold" d="M330 84 L352 74 V24 L330 34 Z" />
+    <path class="band" d="M48 14 Q200 4 352 14 V74 Q200 64 48 74 Z" />
+    <path class="rule" d="M58 21 Q200 11 342 21 M58 67 Q200 57 342 67" />
+  </svg>`;
   const shout = (text: string, side: 'roma' | 'gallia' | '' = '') => {
-    callout.textContent = text;
+    const word = document.createElement('b');
+    word.textContent = text;
+    const gloss = document.createElement('small');
+    gloss.textContent = t(`shout.${text.replace(/!$/, '').toLowerCase().replace(/\s+/g, '-')}`);
+    const band = document.createElement('span');
+    band.className = 'band-text';
+    band.innerHTML = RIBBON;
+    band.append(word);
+    callout.replaceChildren(band, gloss);
     callout.dataset.side = side;
     callout.classList.remove('is-shown');
     void callout.offsetWidth;
     callout.classList.add('is-shown');
     clearTimeout(calloutT);
-    calloutT = setTimeout(() => callout.classList.remove('is-shown'), 1300);
+    calloutT = setTimeout(() => callout.classList.remove('is-shown'), 1700);
   };
   // Shouted only now and then, so they stay an event.
   let lastShout = -9;
@@ -846,52 +864,111 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
     transition: width 0.4s ease;
   }
 
-  /* Big words over the sand, stamped in and gone. */
+  /* Big words over the sand, lettered on a ribbon like the plate's banderole:
+     the Latin in rubric (or the Gauls' blue) on the band, what it means in
+     italic under it; stamped in, held, and gone. */
   .callout {
     position: absolute;
     left: 50%;
-    top: 40%;
+    top: 42%;
     z-index: 4;
-    font-family: 'IM Fell English SC', serif;
-    font-size: clamp(2rem, 6vw, 3.6rem);
-    letter-spacing: 0.06em;
-    color: var(--rubric);
-    text-shadow:
-      0 0 3px var(--paper),
-      0 0 3px var(--paper),
-      0 0 10px var(--paper);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+    text-align: center;
     white-space: nowrap;
     pointer-events: none;
     opacity: 0;
     transform: translate(-50%, -50%);
+    filter: drop-shadow(0 4px 6px rgb(40 25 10 / 0.25));
+    --hue: var(--rubric);
   }
 
   .callout[data-side='gallia'] {
-    color: #1e3a78;
+    --hue: #1e3a78;
+  }
+
+  .callout :global(.band-text) {
+    position: relative;
+    display: block;
+    padding: 0.55rem 3.4rem 0.75rem;
+  }
+
+  .callout :global(.ribbon) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .callout :global(.ribbon path) {
+    vector-effect: non-scaling-stroke;
+    stroke: var(--ink);
+    stroke-width: 1.2;
+    stroke-linejoin: round;
+  }
+
+  .callout :global(.ribbon .band),
+  .callout :global(.ribbon .tail) {
+    fill: var(--paper);
+  }
+
+  /* The turn of the ribbon behind the band, in shadow. */
+  .callout :global(.ribbon .fold) {
+    fill: #cbbd9a;
+  }
+
+  .callout :global(.ribbon .rule) {
+    fill: none;
+    stroke-width: 0.8;
+    opacity: 0.6;
+  }
+
+  .callout :global(b) {
+    position: relative;
+    font-family: 'IM Fell English SC', serif;
+    font-weight: 400;
+    font-size: clamp(1.6rem, 3.4vw, 2.3rem);
+    line-height: 1;
+    letter-spacing: 0.08em;
+    color: var(--hue);
+  }
+
+  .callout :global(small) {
+    font-style: italic;
+    font-size: 1.12rem;
+    color: var(--ink);
+    text-shadow:
+      0 0 2px var(--paper),
+      0 0 4px var(--paper),
+      0 0 8px var(--paper);
   }
 
   .callout.is-shown {
-    animation: shout 1.3s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+    animation: shout 1.7s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
   }
 
   @keyframes shout {
     0% {
       opacity: 0;
-      transform: translate(-50%, -50%) scale(1.8) rotate(-4deg);
+      transform: translate(-50%, -50%) scale(1.25) rotate(-2deg);
     }
-    14% {
+    12% {
       opacity: 1;
-      transform: translate(-50%, -50%) scale(0.95) rotate(-2deg);
+      transform: translate(-50%, -50%) scale(0.98) rotate(-1deg);
     }
-    22% {
-      transform: translate(-50%, -50%) scale(1) rotate(-2deg);
+    18% {
+      transform: translate(-50%, -50%) scale(1) rotate(-1deg);
     }
-    75% {
+    80% {
       opacity: 1;
+      transform: translate(-50%, -50%) scale(1) rotate(-1deg);
     }
     100% {
       opacity: 0;
-      transform: translate(-50%, -62%) scale(1) rotate(-2deg);
+      transform: translate(-50%, -58%) scale(1) rotate(-1deg);
     }
   }
 
