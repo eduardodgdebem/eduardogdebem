@@ -17,10 +17,9 @@
   overflow: hidden;
   margin: 0;
   background:
-    radial-gradient(ellipse at 50% 120%, #2a1d14 0%, transparent 60%),
-    #17110c;
+    radial-gradient(ellipse at 50% 120%, #2a1d14 0%, transparent 60%), #17110c;
   color: var(--ink);
-  font-family: 'IM Fell English', Georgia, serif;
+  font-family: "IM Fell English", Georgia, serif;
   font-size: 17px;
   line-height: 1.5;
 }
@@ -34,7 +33,7 @@
 .codex h2,
 .codex h3,
 .codex h4 {
-  font-family: 'IM Fell English', Georgia, serif;
+  font-family: "IM Fell English", Georgia, serif;
   font-weight: 400;
   letter-spacing: normal;
   line-height: 1.1;
@@ -62,13 +61,24 @@
    worn at the edges, with a gilt fillet tooled round it. It comes in as the
    book opens; until then the book lies closed on the desk. */
 .codex::before {
-  content: '';
+  content: "";
   position: fixed;
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(90deg, transparent 47%, rgb(0 0 0 / 0.35) 49.4%, rgb(0 0 0 / 0.5) 50%, rgb(0 0 0 / 0.35) 50.6%, transparent 53%),
-    radial-gradient(ellipse at 28% 18%, rgb(255 240 200 / 0.07), transparent 55%),
+    linear-gradient(
+      90deg,
+      transparent 47%,
+      rgb(0 0 0 / 0.35) 49.4%,
+      rgb(0 0 0 / 0.5) 50%,
+      rgb(0 0 0 / 0.35) 50.6%,
+      transparent 53%
+    ),
+    radial-gradient(
+      ellipse at 28% 18%,
+      rgb(255 240 200 / 0.07),
+      transparent 55%
+    ),
     radial-gradient(ellipse at 50% 50%, rgb(0 0 0 / 0) 70%, rgb(0 0 0 / 0.32)),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
     #3a4a2e;
@@ -109,7 +119,7 @@ html.opening:not(.uncovered) .codex::before {
 
 /* Fibres in the stock. */
 .book::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -123,7 +133,28 @@ html.opening:not(.uncovered) .codex::before {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: clamp(18px, 3vh, 34px) clamp(22px, 3.4vw, 56px) clamp(14px, 2.2vh, 26px);
+  padding: clamp(18px, 3vh, 34px) clamp(22px, 3.4vw, 56px)
+    clamp(14px, 2.2vh, 26px);
+}
+
+/* A grain over the whole screen, very faint, as if all of it were printed on
+   one sheet. Fixed above everything (pages, boards, plates) and deaf to the
+   pointer; its own page-turn layer keeps it on top while a leaf turns. */
+.codex::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0.4;
+  mix-blend-mode: multiply;
+  view-transition-name: grain;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+::view-transition-group(grain) {
+  z-index: 100;
+  animation: none;
 }
 
 /* Each page carries its half of the gutter crease, so the crease travels with
@@ -132,15 +163,13 @@ html.opening:not(.uncovered) .codex::before {
 .board-back {
   background:
     linear-gradient(90deg, transparent calc(100% - 34px), rgb(60 40 20 / 0.1)),
-    linear-gradient(90deg, transparent 88%, rgb(60 40 20 / 0.1)),
-    var(--paper);
+    linear-gradient(90deg, transparent 88%, rgb(60 40 20 / 0.1)), var(--paper);
 }
 
 .recto {
   background:
     linear-gradient(90deg, rgb(60 40 20 / 0.1), transparent 34px),
-    linear-gradient(90deg, rgb(60 40 20 / 0.12), transparent 12%),
-    var(--paper);
+    linear-gradient(90deg, rgb(60 40 20 / 0.12), transparent 12%), var(--paper);
 }
 
 /* Long pages scroll inside the page, not the window. */
@@ -171,7 +200,7 @@ html.opening:not(.uncovered) .codex::before {
   display: flex;
   align-items: center;
   gap: 0.8rem;
-  font-family: 'IM Fell English SC', serif;
+  font-family: "IM Fell English SC", serif;
   font-size: 0.85rem;
   letter-spacing: 0.12em;
   color: var(--ink-soft);
@@ -195,7 +224,7 @@ html.opening:not(.uncovered) .codex::before {
   margin-left: auto;
 }
 
-.running-nav a[aria-current='page'] {
+.running-nav a[aria-current="page"] {
   color: var(--rubric);
 }
 
@@ -203,7 +232,7 @@ html.opening:not(.uncovered) .codex::before {
   flex: none;
   display: flex;
   justify-content: space-between;
-  font-family: 'IM Fell English SC', serif;
+  font-family: "IM Fell English SC", serif;
   font-size: 0.85rem;
   color: var(--ink-soft);
   border-top: 1px solid var(--rule);
@@ -269,7 +298,7 @@ html.opening:not(.uncovered) .codex::before {
 /* Where the corner was: the next leaf, in the folded page's shadow. */
 .fold::before,
 .fold::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
 }
@@ -282,7 +311,13 @@ html.opening:not(.uncovered) .codex::before {
 /* The corner itself, folded back: the crease catches the light, the tip doesn't. */
 .fold::after {
   clip-path: polygon(0 0, 100% 0, 0 100%);
-  background: linear-gradient(to bottom right, #d9cba8, #f1e9d4 38%, #f8f2e2 48%, #e3d7b8 50%);
+  background: linear-gradient(
+    to bottom right,
+    #d9cba8,
+    #f1e9d4 38%,
+    #f8f2e2 48%,
+    #e3d7b8 50%
+  );
 }
 
 .corner-label {
@@ -362,7 +397,7 @@ html.opening:not(.uncovered) .codex::before {
 
 /* A pointer down to the building. */
 .place-tag::after {
-  content: '';
+  content: "";
   position: absolute;
   left: 50%;
   bottom: -9px;
@@ -391,7 +426,7 @@ html.opening:not(.uncovered) .codex::before {
 }
 
 .tag-latin {
-  font-family: 'IM Fell English SC', serif;
+  font-family: "IM Fell English SC", serif;
   font-size: 1.05rem;
   letter-spacing: 0.08em;
   color: var(--rubric);
@@ -404,7 +439,7 @@ html.opening:not(.uncovered) .codex::before {
 }
 
 .tag-by {
-  font-family: 'IM Fell English SC', serif;
+  font-family: "IM Fell English SC", serif;
   font-size: 0.72rem;
   letter-spacing: 0.04em;
   color: var(--ink-soft);
@@ -439,7 +474,7 @@ html.opening:not(.uncovered) .codex::before {
 .tag-act {
   display: none;
   margin-top: 0.15rem;
-  font-family: 'IM Fell English SC', serif;
+  font-family: "IM Fell English SC", serif;
   font-size: 0.8rem;
   letter-spacing: 0.06em;
   color: var(--rubric);
@@ -454,7 +489,6 @@ html.opening:not(.uncovered) .codex::before {
   .place-tag.is-actionable .tag-act {
     display: block;
   }
-
 }
 
 /* ── The language toggle, and the quill that rewrites the page ── */
@@ -463,7 +497,7 @@ html.opening:not(.uncovered) .codex::before {
   display: flex;
   gap: 0.1rem;
   margin-left: 1rem;
-  font-family: 'IM Fell English SC', serif;
+  font-family: "IM Fell English SC", serif;
 }
 
 .lang a {
@@ -520,7 +554,7 @@ html.opening:not(.uncovered) .codex::before {
 /* ── Book typography ── */
 
 .rubric {
-  font-family: 'IM Fell English SC', serif;
+  font-family: "IM Fell English SC", serif;
   color: var(--rubric);
   letter-spacing: 0.12em;
   margin: 0 0 0.4rem;
@@ -558,7 +592,7 @@ html.opening:not(.uncovered) .codex::before {
 }
 
 .contents .num {
-  font-family: 'IM Fell English SC', serif;
+  font-family: "IM Fell English SC", serif;
   color: var(--rubric);
   min-width: 2.6ch;
 }
@@ -578,31 +612,37 @@ html.opening:not(.uncovered) .codex::before {
 }
 
 .contents .pg {
-  font-family: 'IM Fell English SC', serif;
+  font-family: "IM Fell English SC", serif;
   font-size: 0.85em;
   color: var(--ink-soft);
 }
 
 .contents a:hover .label,
 .contents a:focus-visible .label,
-.contents a[aria-current='page'] .label {
+.contents a[aria-current="page"] .label {
   color: var(--rubric);
 }
 
 /* Subject tags, set as small caps in brackets. */
 .subject {
-  font-family: 'IM Fell English SC', serif;
+  font-family: "IM Fell English SC", serif;
   font-size: 0.85rem;
   letter-spacing: 0.06em;
   color: var(--ink-soft);
   text-decoration: none;
 }
 
-.subject::before { content: '['; color: var(--rule); }
-.subject::after { content: ']'; color: var(--rule); }
+.subject::before {
+  content: "[";
+  color: var(--rule);
+}
+.subject::after {
+  content: "]";
+  color: var(--rule);
+}
 
 a.subject:hover,
-.subject[aria-current='page'] {
+.subject[aria-current="page"] {
   color: var(--rubric);
 }
 
@@ -626,7 +666,8 @@ a.subject:hover,
   min-height: 0;
   --band: 19px;
   border: var(--band) solid var(--ink);
-  border-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'><g fill='none' stroke='%231b2419' stroke-width='1' stroke-linecap='square'><rect x='0.6' y='0.6' width='54.8' height='54.8' stroke-width='1.2'/><rect x='2.6' y='2.6' width='50.8' height='50.8' stroke-width='0.6'/><rect x='13.6' y='13.6' width='28.8' height='28.8' stroke-width='0.6'/><rect x='15.3' y='15.3' width='25.4' height='25.4' stroke-width='1.4'/><path d='M16,11.5V4.5H24V9.2H19.5V6.8H21.8M28,11.5V4.5H36V9.2H31.5V6.8H33.8M16,11.5H40' transform='rotate%280 28 28%29'/><path d='M16,11.5V4.5H24V9.2H19.5V6.8H21.8M28,11.5V4.5H36V9.2H31.5V6.8H33.8M16,11.5H40' transform='rotate%2890 28 28%29'/><path d='M16,11.5V4.5H24V9.2H19.5V6.8H21.8M28,11.5V4.5H36V9.2H31.5V6.8H33.8M16,11.5H40' transform='rotate%28180 28 28%29'/><path d='M16,11.5V4.5H24V9.2H19.5V6.8H21.8M28,11.5V4.5H36V9.2H31.5V6.8H33.8M16,11.5H40' transform='rotate%28270 28 28%29'/><g transform='translate%280 0%29'><rect x='2.6' y='2.6' width='11' height='11' fill='%23efe6d0' stroke-width='.6'/><path d='M8.1,4.3L11.9,8.1L8.1,11.9L4.3,8.1Z' stroke-width='.8'/><circle cx='8.1' cy='8.1' r='1.4' fill='%239b2d20' stroke='none'/></g><g transform='translate%2839.8 0%29'><rect x='2.6' y='2.6' width='11' height='11' fill='%23efe6d0' stroke-width='.6'/><path d='M8.1,4.3L11.9,8.1L8.1,11.9L4.3,8.1Z' stroke-width='.8'/><circle cx='8.1' cy='8.1' r='1.4' fill='%239b2d20' stroke='none'/></g><g transform='translate%280 39.8%29'><rect x='2.6' y='2.6' width='11' height='11' fill='%23efe6d0' stroke-width='.6'/><path d='M8.1,4.3L11.9,8.1L8.1,11.9L4.3,8.1Z' stroke-width='.8'/><circle cx='8.1' cy='8.1' r='1.4' fill='%239b2d20' stroke='none'/></g><g transform='translate%2839.8 39.8%29'><rect x='2.6' y='2.6' width='11' height='11' fill='%23efe6d0' stroke-width='.6'/><path d='M8.1,4.3L11.9,8.1L8.1,11.9L4.3,8.1Z' stroke-width='.8'/><circle cx='8.1' cy='8.1' r='1.4' fill='%239b2d20' stroke='none'/></g></g></svg>") 16 / var(--band) round;
+  border-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'><g fill='none' stroke='%231b2419' stroke-width='1' stroke-linecap='square'><rect x='0.6' y='0.6' width='54.8' height='54.8' stroke-width='1.2'/><rect x='2.6' y='2.6' width='50.8' height='50.8' stroke-width='0.6'/><rect x='13.6' y='13.6' width='28.8' height='28.8' stroke-width='0.6'/><rect x='15.3' y='15.3' width='25.4' height='25.4' stroke-width='1.4'/><path d='M16,11.5V4.5H24V9.2H19.5V6.8H21.8M28,11.5V4.5H36V9.2H31.5V6.8H33.8M16,11.5H40' transform='rotate%280 28 28%29'/><path d='M16,11.5V4.5H24V9.2H19.5V6.8H21.8M28,11.5V4.5H36V9.2H31.5V6.8H33.8M16,11.5H40' transform='rotate%2890 28 28%29'/><path d='M16,11.5V4.5H24V9.2H19.5V6.8H21.8M28,11.5V4.5H36V9.2H31.5V6.8H33.8M16,11.5H40' transform='rotate%28180 28 28%29'/><path d='M16,11.5V4.5H24V9.2H19.5V6.8H21.8M28,11.5V4.5H36V9.2H31.5V6.8H33.8M16,11.5H40' transform='rotate%28270 28 28%29'/><g transform='translate%280 0%29'><rect x='2.6' y='2.6' width='11' height='11' fill='%23efe6d0' stroke-width='.6'/><path d='M8.1,4.3L11.9,8.1L8.1,11.9L4.3,8.1Z' stroke-width='.8'/><circle cx='8.1' cy='8.1' r='1.4' fill='%239b2d20' stroke='none'/></g><g transform='translate%2839.8 0%29'><rect x='2.6' y='2.6' width='11' height='11' fill='%23efe6d0' stroke-width='.6'/><path d='M8.1,4.3L11.9,8.1L8.1,11.9L4.3,8.1Z' stroke-width='.8'/><circle cx='8.1' cy='8.1' r='1.4' fill='%239b2d20' stroke='none'/></g><g transform='translate%280 39.8%29'><rect x='2.6' y='2.6' width='11' height='11' fill='%23efe6d0' stroke-width='.6'/><path d='M8.1,4.3L11.9,8.1L8.1,11.9L4.3,8.1Z' stroke-width='.8'/><circle cx='8.1' cy='8.1' r='1.4' fill='%239b2d20' stroke='none'/></g><g transform='translate%2839.8 39.8%29'><rect x='2.6' y='2.6' width='11' height='11' fill='%23efe6d0' stroke-width='.6'/><path d='M8.1,4.3L11.9,8.1L8.1,11.9L4.3,8.1Z' stroke-width='.8'/><circle cx='8.1' cy='8.1' r='1.4' fill='%239b2d20' stroke='none'/></g></g></svg>")
+    16 / var(--band) round;
   box-shadow:
     0 0 0 5px var(--paper),
     0 0 0 6px rgb(80 60 30 / 0.22),
@@ -667,11 +708,15 @@ a.subject:hover,
   display: none;
   place-items: end center;
   padding-bottom: 12%;
-  font-family: 'IM Fell English SC', serif;
+  font-family: "IM Fell English SC", serif;
   font-size: 2rem;
   letter-spacing: 0.14em;
   background:
-    repeating-linear-gradient(115deg, transparent 0 5px, rgb(27 36 25 / 0.1) 5px 6px),
+    repeating-linear-gradient(
+      115deg,
+      transparent 0 5px,
+      rgb(27 36 25 / 0.1) 5px 6px
+    ),
     var(--paper);
 }
 
@@ -692,13 +737,13 @@ a.subject:hover,
 }
 
 .plate-caption .tab {
-  font-family: 'IM Fell English SC', serif;
+  font-family: "IM Fell English SC", serif;
   color: var(--rubric);
   letter-spacing: 0.08em;
 }
 
 .plate-caption .cap-latin {
-  font-family: 'IM Fell English SC', serif;
+  font-family: "IM Fell English SC", serif;
   font-size: 1.25rem;
   letter-spacing: 0.16em;
 }
@@ -758,7 +803,7 @@ a.subject:hover,
 .codex-prose h1,
 .codex-prose h2,
 .codex-prose h3 {
-  font-family: 'IM Fell English SC', serif;
+  font-family: "IM Fell English SC", serif;
   color: var(--rubric);
   letter-spacing: 0.08em;
   font-size: 1.15em;
@@ -784,7 +829,7 @@ a.subject:hover,
 }
 
 .codex-prose ul {
-  list-style: '❧  ';
+  list-style: "❧  ";
 }
 
 .codex-prose li::marker {
@@ -800,7 +845,7 @@ a.subject:hover,
 }
 
 .codex-prose code {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   font-size: 0.82em;
   background: rgb(27 36 25 / 0.06);
   color: var(--ink);
@@ -838,7 +883,7 @@ a.subject:hover,
 }
 
 .codex-prose hr::after {
-  content: '❦';
+  content: "❦";
   color: var(--rubric);
 }
 
@@ -856,8 +901,12 @@ a.subject:hover,
    its back is the next spread's left page. The new right page is already
    underneath. Back: the left-hand leaf turns over to the right. */
 
-.verso { view-transition-name: verso; }
-.recto { view-transition-name: recto; }
+.verso {
+  view-transition-name: verso;
+}
+.recto {
+  view-transition-name: recto;
+}
 
 ::view-transition-group(verso),
 ::view-transition-group(recto),
@@ -903,13 +952,25 @@ a.subject:hover,
 }
 
 @keyframes leaf-lift-left {
-  from { transform: perspective(2600px) rotateY(0deg); filter: brightness(1); }
-  to { transform: perspective(2600px) rotateY(-180deg); filter: brightness(0.6); }
+  from {
+    transform: perspective(2600px) rotateY(0deg);
+    filter: brightness(1);
+  }
+  to {
+    transform: perspective(2600px) rotateY(-180deg);
+    filter: brightness(0.6);
+  }
 }
 
 @keyframes leaf-land-left {
-  from { transform: perspective(2600px) rotateY(180deg); filter: brightness(0.6); }
-  to { transform: perspective(2600px) rotateY(0deg); filter: brightness(1); }
+  from {
+    transform: perspective(2600px) rotateY(180deg);
+    filter: brightness(0.6);
+  }
+  to {
+    transform: perspective(2600px) rotateY(0deg);
+    filter: brightness(1);
+  }
 }
 
 /* Back */
@@ -937,13 +998,25 @@ html:active-view-transition-type(back)::view-transition-new(recto) {
 }
 
 @keyframes leaf-lift-right {
-  from { transform: perspective(2600px) rotateY(0deg); filter: brightness(1); }
-  to { transform: perspective(2600px) rotateY(180deg); filter: brightness(0.6); }
+  from {
+    transform: perspective(2600px) rotateY(0deg);
+    filter: brightness(1);
+  }
+  to {
+    transform: perspective(2600px) rotateY(180deg);
+    filter: brightness(0.6);
+  }
 }
 
 @keyframes leaf-land-right {
-  from { transform: perspective(2600px) rotateY(-180deg); filter: brightness(0.6); }
-  to { transform: perspective(2600px) rotateY(0deg); filter: brightness(1); }
+  from {
+    transform: perspective(2600px) rotateY(-180deg);
+    filter: brightness(0.6);
+  }
+  to {
+    transform: perspective(2600px) rotateY(0deg);
+    filter: brightness(1);
+  }
 }
 
 /* ── Portrait: one page at a time ── */
@@ -1136,21 +1209,39 @@ html:active-view-transition-type(back)::view-transition-new(recto) {
     pointer-events: none;
     border-radius: calc(var(--roll) / 2.4);
     background:
-      repeating-linear-gradient(180deg, transparent 0 3px, rgb(90 70 40 / 0.1) 3px 4px),
-      linear-gradient(180deg, #8f805f 0%, #d9cdae 22%, #f4ecd8 42%, #e9dfc4 58%, #c3b591 80%, #7f7051 100%);
+      repeating-linear-gradient(
+        180deg,
+        transparent 0 3px,
+        rgb(90 70 40 / 0.1) 3px 4px
+      ),
+      linear-gradient(
+        180deg,
+        #8f805f 0%,
+        #d9cdae 22%,
+        #f4ecd8 42%,
+        #e9dfc4 58%,
+        #c3b591 80%,
+        #7f7051 100%
+      );
     box-shadow: 0 3px 8px rgb(0 0 0 / 0.5);
   }
 
   .roller::before,
   .roller::after {
-    content: '';
+    content: "";
     position: absolute;
     top: 50%;
     width: 9px;
     height: calc(var(--roll) + 8px);
     translate: 0 -50%;
     border-radius: 4px;
-    background: linear-gradient(90deg, #3c2412, #8a5a32 45%, #b07a48 55%, #5a3519);
+    background: linear-gradient(
+      90deg,
+      #3c2412,
+      #8a5a32 45%,
+      #b07a48 55%,
+      #5a3519
+    );
     box-shadow: 0 2px 4px rgb(0 0 0 / 0.5);
   }
 
@@ -1257,7 +1348,13 @@ html.opening.uncovered .recto > * {
   padding: clamp(18px, 3vw, 40px);
   background:
     /* the spine's hinge */
-    linear-gradient(90deg, rgb(0 0 0 / 0.55), rgb(0 0 0 / 0) 4%, rgb(255 255 255 / 0.04) 5%, rgb(0 0 0 / 0) 7%),
+    linear-gradient(
+      90deg,
+      rgb(0 0 0 / 0.55),
+      rgb(0 0 0 / 0) 4%,
+      rgb(255 255 255 / 0.04) 5%,
+      rgb(0 0 0 / 0) 7%
+    ),
     /* wear at the edges */
     radial-gradient(ellipse at 50% 45%, rgb(0 0 0 / 0) 55%, rgb(0 0 0 / 0.45)),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
@@ -1271,7 +1368,7 @@ html.opening.uncovered .recto > * {
 /* Two gilt fillets tooled round the board. */
 .board-front::before,
 .board-front::after {
-  content: '';
+  content: "";
   position: absolute;
   pointer-events: none;
   border: 1px solid var(--gilt);
@@ -1299,7 +1396,7 @@ html.opening.uncovered .recto > * {
 
 .board-title {
   margin: 0;
-  font-family: 'Cinzel', 'IM Fell English SC', serif;
+  font-family: "Cinzel", "IM Fell English SC", serif;
   font-size: clamp(1.4rem, 2.6vw, 2.6rem);
   letter-spacing: 0.4em;
   margin-right: -0.4em;
@@ -1309,7 +1406,7 @@ html.opening.uncovered .recto > * {
 
 .board-year {
   margin: 0;
-  font-family: 'Cinzel', serif;
+  font-family: "Cinzel", serif;
   font-size: 0.8rem;
   letter-spacing: 0.5em;
   margin-right: -0.5em;
@@ -1456,7 +1553,7 @@ html.opening.uncovered .recto > * {
 /* Under the pointer a cell is inked: rubric, on a warmer paper. */
 .plate-tools button:hover,
 .plate-tools button:focus-visible,
-.plate-tools button[aria-expanded='true'] {
+.plate-tools button[aria-expanded="true"] {
   color: var(--rubric);
   background: rgb(155 45 32 / 0.08);
 }
@@ -1495,7 +1592,7 @@ html.opening.uncovered .recto > * {
 
 .plate-info-title {
   margin: 0 0 0.35rem;
-  font-family: 'IM Fell English SC', serif;
+  font-family: "IM Fell English SC", serif;
   letter-spacing: 0.08em;
   color: var(--rubric);
 }
@@ -1512,7 +1609,7 @@ html.opening.uncovered .recto > * {
 }
 
 .plate-info-keys li::before {
-  content: '❧';
+  content: "❧";
   display: inline-block;
   width: 1.1em;
   text-indent: 0;
@@ -1563,7 +1660,10 @@ html.opening.uncovered .recto > * {
 /* The plate's page lets go of it, so it spreads over the book (both pages).
    The pages' page-turn names make each its own layer, which would keep the
    plate under the facing page: they're dropped while it's spread. */
-:is(html.plate-is-full, html.plate-spread:has(.plate-tools)) .page:has(:is(.plate-frame.is-full, html.plate-spread .plate-frame:has(.plate-tools))) {
+:is(html.plate-is-full, html.plate-spread:has(.plate-tools))
+  .page:has(
+    :is(.plate-frame.is-full, html.plate-spread .plate-frame:has(.plate-tools))
+  ) {
   position: static;
 }
 
