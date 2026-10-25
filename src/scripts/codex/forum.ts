@@ -548,10 +548,12 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     // leave it leaning wherever it last touched).
     if (inside && e.pointerType === 'mouse') tiltTarget.set(x, y);
     else tiltTarget.set(0, 0);
-    if (e.pointerType !== 'mouse' || entering) return;
+    if (e.pointerType !== 'mouse' || entering) return walker.aim(null);
     const hit = inside ? pick(e) : null;
     pointed = (hit?.object.userData.place as Place) ?? null;
     canvas.style.cursor = hit ? 'pointer' : '';
+    // Over the street, where he'd go is marked on it.
+    walker.aim(hit && !pointed ? hit.point : null);
     refocus();
   };
   const onDown = (e: PointerEvent) => {
@@ -570,6 +572,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   };
   const onLeave = () => {
     tiltTarget.set(0, 0);
+    walker.aim(null);
     pointed = null;
     refocus();
   };

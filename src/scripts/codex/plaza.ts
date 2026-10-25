@@ -330,8 +330,10 @@ export function createPlaza(canvas: HTMLCanvasElement, { monuments, name, reduce
     // The view leans toward a mouse only: a finger would leave it leaning wherever it last touched.
     const leaning = inside && e.pointerType === 'mouse';
     tiltTarget.set(leaning ? x : 0, leaning ? y : 0);
-    if (e.pointerType !== 'mouse' || busy) return;
+    if (e.pointerType !== 'mouse' || busy) return walker.aim(null);
     const subject = inside ? pickAt(e) : null;
+    // Over the square, where he'd go is marked on it.
+    walker.aim(inside && subject === null ? ray.ray.intersectPlane(floorPlane, new THREE.Vector3()) : null);
     canvas.style.cursor = subject !== null ? 'pointer' : '';
     if (subject !== pointed) {
       pointed = subject;
@@ -356,6 +358,7 @@ export function createPlaza(canvas: HTMLCanvasElement, { monuments, name, reduce
   };
   const onLeave = () => {
     tiltTarget.set(0, 0);
+    walker.aim(null);
     if (pointed !== null) {
       pointed = null;
       refocus();

@@ -76,6 +76,11 @@ const nav = [
       // and so does a page reloaded; pages turned to (links, back and forward)
       // don't. Set before first paint so the closed board is what paints; if
       // the opening script never runs, the book opens itself.
+      // A plate spread over the book stays spread on the next page (PlateTools
+      // keeps 'plate-spread'); set now so it's laid out spread from the first paint.
+      try {
+        if (sessionStorage.getItem('plate-spread')) document.documentElement.classList.add('plate-spread');
+      } catch {}
       try {
         const reloaded = performance.getEntriesByType('navigation')[0]?.type === 'reload';
         if ((reloaded || !sessionStorage.getItem('codex-opened')) && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -251,6 +256,13 @@ const nav = [
       import { foldCorners } from '../scripts/codex/corners';
       openBook();
       foldCorners();
+      // A page whose plate can't be spread (no plate tools) lets the spread go.
+      if (!document.querySelector('[data-plate-tools]')) {
+        document.documentElement.classList.remove('plate-spread');
+        try {
+          sessionStorage.removeItem('plate-spread');
+        } catch {}
+      }
     </script>
   </body>
 </html>

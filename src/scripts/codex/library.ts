@@ -451,12 +451,14 @@ export function createLibrary(canvas: HTMLCanvasElement, { rolls, name, reducedM
     // The view leans toward a mouse only: a finger would leave it leaning wherever it last touched.
     const leaning = inside && e.pointerType === 'mouse';
     tiltTarget.set(leaning ? x : 0, leaning ? y : 0);
-    if (e.pointerType !== 'mouse' || busy) return;
+    if (e.pointerType !== 'mouse' || busy) return walker.aim(null);
     let subject: Subject | null = null;
     if (inside) {
       aimRay(e);
       subject = subjectOf(ray.intersectObjects(pickables, false)[0]);
     }
+    // Over the floor, where he'd go is marked on it.
+    walker.aim(inside && subject === null ? ray.ray.intersectPlane(floorPlane, new THREE.Vector3()) : null);
     canvas.style.cursor = subject !== null ? 'pointer' : '';
     if (subject !== pointed) {
       pointed = subject;
@@ -482,6 +484,7 @@ export function createLibrary(canvas: HTMLCanvasElement, { rolls, name, reducedM
   };
   const onLeave = () => {
     tiltTarget.set(0, 0);
+    walker.aim(null);
     if (pointed !== null) {
       pointed = null;
       refocus();

@@ -50,7 +50,7 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
           <span class="tag-by" data-tag-by></span>
           <span class="tag-act" data-tag-act></span>
         </div>
-        <PlateTools lang={lang} />
+        <PlateTools lang={lang} info="home" />
       </div>
       <figcaption class="plate-caption" data-places={JSON.stringify(PLACES)}>
         <span class="tab">Tab. I</span>
@@ -59,10 +59,6 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
       </figcaption>
     </figure>
 
-    <p class="plate-nav">
-      <span class="hint" data-i18n-html="home.hint" set:html={s('home.hint')} />
-    </p>
-    <p class="touch-hint" data-i18n="home.touch">{s('home.touch')}</p>
   </Fragment>
 
   <!-- Recto: who this is and how to reach him, the index, and what he is listening to -->
@@ -331,7 +327,7 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
     // (Its from-states are set at once, so nothing shows before it plays.)
     if (opening) bookOpened().then(() => title.play());
     else title.delay(0.2).play();
-    bookOpened().then(() => gsap.from('.plate-caption, .plate-nav', { autoAlpha: 0, duration: 1.4, delay: opening ? 1.2 : 2.4 }));
+    bookOpened().then(() => gsap.from('.plate-caption', { autoAlpha: 0, duration: 1.4, delay: opening ? 1.2 : 2.4 }));
   }
 
   // Kept alive when the page goes into the back/forward cache.
@@ -346,34 +342,10 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
   /* ── Verso ── */
 
 
-  .plate-nav {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    margin: 0.5rem 12px 0;
-  }
-
   /* The street isn't dragged: the cursor is plain, a hand over a building. */
   #engraving,
   #engraving:active {
     cursor: default;
-  }
-
-  .hint :global(kbd) {
-    font-family: inherit;
-    font-style: normal;
-    font-size: 0.8em;
-    padding: 0 0.3em;
-    margin: 0 0.1em;
-    border: 1px solid var(--rule);
-    border-radius: 2px;
-  }
-
-  .hint {
-    margin-left: auto;
-    font-style: italic;
-    font-size: 0.85rem;
-    color: var(--ink-soft);
   }
 
   /* ── Recto: the hero, set as a title page, then the index ── */
@@ -703,11 +675,6 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
   /* ── Portrait: one long page, name and links first, then the forum, then the rest ── */
 
   @media (max-aspect-ratio: 1/1) {
-    .hint {
-      display: none;
-    }
-
-
     .cover {
       width: 72px;
     }
