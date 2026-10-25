@@ -48,6 +48,11 @@ export interface Ludus {
   slotAt(x: number, y: number): number | null;
   /** Ring a place in red (while something is dragged over it). */
   hover(slot: number | null): void;
+  /**
+   * While a soldier is dragged: show the cohort faintly at `slot` (null: off
+   * the rings), and fade the one it's being moved `from` (null: from the tray).
+   */
+  preview(drag: { kind: Kind; formation: Formation; slot: number | null; from: number | null } | null): void;
   /** Fight it. Events come to `onEvent` as they happen. */
   fight(plan: Plan): Battle;
   /** The one horn call; false if it's been used, or the battle isn't on. */
@@ -189,16 +194,18 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
   const redCloth = material({ value: 1 });
   const blueCloth = material();
   blueCloth.uniforms.uBlue.value = 1;
-  const CLOTH = { w: 1.0, h: 0.62, segs: 8 };
-  const flags = Array.from({ length: 22 }, (_, i) => {
+  // Sized to the people in the stands (about half a metre tall at this scale).
+  const CLOTH = { w: 0.34, h: 0.22, segs: 6 };
+  const POLE = 0.78;
+  const flags = Array.from({ length: 30 }, (_, i) => {
     const tier = 1 + ((i * 5) % 6);
-    const a = Math.PI + 0.22 + ((i + 0.5) / 22) * (Math.PI - 0.44) + Math.sin(i * 12.9) * 0.03;
+    const a = Math.PI + 0.22 + ((i + 0.5) / 30) * (Math.PI - 0.44) + Math.sin(i * 12.9) * 0.03;
     const rx = SAND.rx + 0.6 + tier * 0.85 - 0.35;
     const rz = SAND.rz + 0.6 + tier * 0.85 - 0.35;
     const g = new THREE.Group();
-    g.position.set(Math.cos(a) * rx, 1.2 + tier * 0.55 + 0.2, Math.sin(a) * rz);
-    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.5, 5).translate(0, 0.75, 0), stone);
-    const geo = new THREE.PlaneGeometry(CLOTH.w, CLOTH.h, CLOTH.segs, 1).translate(CLOTH.w / 2, 1.5 - CLOTH.h / 2, 0);
+    g.position.set(Math.cos(a) * rx, 1.2 + tier * 0.55 + 0.25, Math.sin(a) * rz);
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.011, POLE, 4).translate(0, POLE / 2, 0), stone);
+    const geo = new THREE.PlaneGeometry(CLOTH.w, CLOTH.h, CLOTH.segs, 1).translate(CLOTH.w / 2, POLE - CLOTH.h / 2, 0);
     const cloth = new THREE.Mesh(geo, i % 3 === 2 ? blueCloth : redCloth);
     g.add(pole, cloth);
     // Leaning, as an arm holds it up.
@@ -206,9 +213,45 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
     scene.add(g);
     return { g, geo, rest: Float32Array.from(geo.attributes.position.array as Float32Array), part: i % 2, phase: i * 1.9, base: g.position.y, lean: g.rotation.z };
   });
+  // Banners hung down the podium wall over the sand, red and blue by turns,
+  // stirring a little in the air (and more when the crowd roars).
+  const BANNER = { w: 1.0, h: 1.0, segs: 6 };
+  const banners = Array.from({ length: 9 }, (_, i) => {
+    const a = Math.PI + 0.25 + ((i + 0.5) / 9) * (Math.PI - 0.5);
+    // Just proud of the podium wall's face (at rx + 0.2), on the sand side.
+    const x = Math.cos(a) * (SAND.rx + 0.13);
+    const z = Math.sin(a) * (SAND.rz + 0.13);
+    const geo = new THREE.PlaneGeometry(BANNER.w, BANNER.h, 2, BANNER.segs);
+    // A swallowtail at the foot.
+    const p = geo.attributes.position as THREE.BufferAttribute;
+    for (let v = 0; v < p.count; v++) if (p.getY(v) < -BANNER.h / 2 + 0.01 && Math.abs(p.getX(v)) < 0.01) p.setY(v, -BANNER.h / 2 + 0.22);
+    geo.translate(0, -BANNER.h / 2, 0);
+    const mesh = new THREE.Mesh(geo, i % 2 ? blueCloth : redCloth);
+    mesh.position.set(x, 1.06, z);
+    mesh.rotation.y = Math.atan2(-x, -z);
+    scene.add(mesh);
+    // A rod across the head.
+    const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, BANNER.w + 0.1, 4).rotateZ(Math.PI / 2), stone);
+    rod.position.copy(mesh.position);
+    rod.rotation.y = mesh.rotation.y;
+    scene.add(rod);
+    return { geo, rest: Float32Array.from(p.array as Float32Array), phase: i * 2.3 };
+  });
+  const stirBanners = (t: number) => {
+    for (const b of banners) {
+      const pos = b.geo.attributes.position as THREE.BufferAttribute;
+      for (let v = 0; v < pos.count; v++) {
+        const down = -b.rest[v * 3 + 1] / BANNER.h; // 0 at the rod, 1 at the foot
+        pos.setZ(v, Math.sin(t * (0.8 + roar * 1.2) + down * 3 + b.phase) * down * (0.03 + roar * 0.07));
+      }
+      pos.needsUpdate = true;
+      b.geo.computeVertexNormals();
+    }
+  };
   const waveFlags = (t: number) => {
-    const speed = 3 + roar * 7;
-    const amp = 0.04 + roar * 0.12;
+    stirBanners(t);
+    const speed = 1.2 + roar * 2.2;
+    const amp = 0.015 + roar * 0.05;
     for (const f of flags) {
       const pos = f.geo.attributes.position as THREE.BufferAttribute;
       for (let v = 0; v < pos.count; v++) {
@@ -220,9 +263,9 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
       pos.needsUpdate = true;
       f.geo.computeVertexNormals();
       // Raised higher, and swung, the louder it gets.
-      const lift = Math.max(0, Math.sin(t * (2 + roar * 4) + f.phase)) * roar * 0.25;
+      const lift = Math.max(0, Math.sin(t * (0.9 + roar * 1.6) + f.phase)) * roar * 0.12;
       f.g.position.y = f.base + stands[f.part].position.y + lift;
-      f.g.rotation.z = f.lean + Math.sin(t * (1.5 + roar * 5) + f.phase) * (0.05 + roar * 0.3);
+      f.g.rotation.z = f.lean + Math.sin(t * (0.6 + roar * 1.6) + f.phase) * (0.04 + roar * 0.22);
     }
   };
   // The sand raked in rings, and a slab of floor under it all.
@@ -262,6 +305,24 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
     scene.add(mesh);
     troops[kind] = mesh;
   }
+  // The same men, faint: a cohort in the reader's hand while it's dragged. Drawn
+  // in the ink pass only and blended over the sand, so it doesn't hide it.
+  const ghostMat = material();
+  ghostMat.transparent = true;
+  ghostMat.depthWrite = false;
+  const ghosts = {} as Record<Kind, THREE.InstancedMesh>;
+  for (const kind of Object.keys(troops) as Kind[]) {
+    const mesh = new THREE.InstancedMesh(troops[kind].geometry, ghostMat, CAP);
+    mesh.count = 0;
+    mesh.frustumCulled = false;
+    mesh.setColorAt(0, new THREE.Color(0, 0, 0));
+    mesh.layers.set(1);
+    mesh.renderOrder = 2;
+    scene.add(mesh);
+    ghosts[kind] = mesh;
+  }
+  let drag: { kind: Kind; formation: Formation; slot: number | null; from: number | null } | null = null;
+  const FAINT = new THREE.Color(0.6, 0, 0.62); // red ink, at a little over a third its strength
   const standards = {
     pole: new THREE.InstancedMesh(merge(signum().pole.map((g) => g.scale(SCALE * 1.15, SCALE * 1.15, SCALE * 1.15))), stone, 12),
     cloth: new THREE.InstancedMesh(merge(signum().cloth.map((g) => g.scale(SCALE * 1.15, SCALE * 1.15, SCALE * 1.15))), dyed, 12),
@@ -330,7 +391,16 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
 
   const drawMen = (dt: number) => {
     const counts = {} as Record<Kind, number>;
-    for (const k of Object.keys(troops) as Kind[]) counts[k] = 0;
+    const faint = {} as Record<Kind, number>;
+    for (const k of Object.keys(troops) as Kind[]) counts[k] = faint[k] = 0;
+    const ghost = (kind: Kind, x: number, z: number, yaw: number) => {
+      const i = faint[kind]++;
+      if (i >= CAP) return;
+      q.setFromAxisAngle(up, yaw);
+      m4.compose(pos.set(x, 0, z), q, one);
+      ghosts[kind].setMatrixAt(i, m4);
+      ghosts[kind].setColorAt(i, FAINT);
+    };
     const put = (kind: Kind, x: number, y: number, z: number, yaw: number, down: boolean, tone: Tone) => {
       const mesh = troops[kind];
       const i = counts[kind]++;
@@ -369,6 +439,11 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
         if (c.state !== 'gone' || c.men === 0) fallen.push({ kind: c.kind, x: m.x, z: m.z, yaw: m.yaw + (rand() - 0.5) * 1.5 });
       }
       if (c.state === 'gone') continue;
+      // Being moved: drawn faint where it stood.
+      if (!fight && drag && drag.from === c.id && c.side === 'roma') {
+        list.forEach((m) => ghost(c.kind, m.x, m.z, m.yaw));
+        continue;
+      }
       const lit = !fight && selected === c.id ? 'lit' : c.side;
       list.forEach((m, i) => {
         const goal = at(i);
@@ -399,6 +474,19 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
       }
     }
     for (const f of fallen) put(f.kind, f.x, 0.04, f.z, f.yaw, true, 'fallen');
+    // The cohort in hand, faint at the ring it's over.
+    if (!fight && drag && drag.slot !== null && drag.slot !== drag.from) {
+      const s = SLOTS[drag.slot];
+      const cav = STATS[drag.kind].role === 'cavalry';
+      // Facing the Gauls, as a planned Roman cohort stands (yaw π: see at() above).
+      for (const [lx, lz] of places(drag.formation, Math.ceil(STATS[drag.kind].men / 2), cav)) ghost(drag.kind, s.x - lx, s.z + lz, Math.PI);
+    }
+    for (const kind of Object.keys(ghosts) as Kind[]) {
+      const mesh = ghosts[kind];
+      mesh.count = Math.min(CAP, faint[kind]);
+      mesh.instanceMatrix.needsUpdate = true;
+      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    }
     for (const kind of Object.keys(troops) as Kind[]) {
       const mesh = troops[kind];
       mesh.count = Math.min(CAP, counts[kind]);
@@ -680,6 +768,9 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
     slotAt: (x, y) => slotAt({ clientX: x, clientY: y }),
     hover(slot) {
       dragged = slot;
+    },
+    preview(next) {
+      drag = next;
     },
     sound: (call) => fight?.sound(call) ?? false,
     reset() {

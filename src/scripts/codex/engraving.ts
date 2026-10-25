@@ -45,6 +45,7 @@ export const engraveVertex = /* glsl */ `
   varying vec2 vUv;
   varying float vInstanceGlow;
   varying float vInstanceBlue;
+  varying float vInstanceFade;
   void main() {
     vUv = uv;
     // Instanced meshes (a crowd of soldiers) carry a transform each, and may
@@ -58,9 +59,11 @@ export const engraveVertex = /* glsl */ `
     #ifdef USE_INSTANCING_COLOR
       vInstanceGlow = instanceColor.r;
       vInstanceBlue = instanceColor.g;
+      vInstanceFade = instanceColor.b;
     #else
       vInstanceGlow = 0.0;
       vInstanceBlue = 0.0;
+      vInstanceFade = 0.0;
     #endif
     vec4 world = modelMatrix * local;
     vObj = (uObjectInverse * world).xyz;
@@ -80,6 +83,7 @@ export const engraveFragment = /* glsl */ `
   uniform float uGlow;      // 1 = picked out in red (a hovered building)
   varying float vInstanceGlow; // the same, for one instance of an instanced mesh
   varying float vInstanceBlue; // and blue ink, for one instance (a Gaul, against a red Roman)
+  varying float vInstanceFade; // and how faint, for one instance (a cohort being dragged)
   uniform float uPale;      // lightens a surface's shading (ground under fine joints)
   uniform float uBlue;      // 1 = drawn in blue ink (a certain police box)
   varying vec3 vObj;
@@ -138,7 +142,7 @@ export const engraveFragment = /* glsl */ `
       red = max(red, tx.r * letters);
     }
     // Red ink in r, blue ink in g, coverage in a.
-    gl_FragColor = vec4(red, max(uBlue, vInstanceBlue), 0.0, ink);
+    gl_FragColor = vec4(red, max(uBlue, vInstanceBlue), 0.0, ink * (1.0 - vInstanceFade));
   }
 `;
 

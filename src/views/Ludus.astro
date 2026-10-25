@@ -385,8 +385,14 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
     ghost.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
     const slot = ludus?.slotAt(e.clientX, e.clientY) ?? null;
     ludus?.hover(slot);
+    // The cohort shows, faint, at the ring under the pointer (and where it's moving from).
+    const moving = drag.from === 'slot' ? plan[drag.slot] : null;
+    const kind = drag.from === 'tray' ? drag.kind : moving?.kind;
+    if (kind) ludus?.preview({ kind, formation: moving?.formation ?? 'acies', slot, from: drag.from === 'slot' ? drag.slot : null });
     // Off the plate, a cohort being dragged would be sent away.
     ghost.classList.toggle('is-leaving', drag.from === 'slot' && offPlate(e.clientX, e.clientY));
+    // Out of the way of what's being set down.
+    $('[data-empty-hint]').classList.remove('is-shown');
   });
   window.addEventListener('pointerup', (e) => {
     if (!drag || e.pointerId !== drag.id) return;
@@ -394,6 +400,7 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
     drag = null;
     ghost.hidden = true;
     ludus?.hover(null);
+    ludus?.preview(null);
     if (!d.moved) {
       // A tap: on a tile, take that kind in hand; on a badge, pick the cohort out.
       if (d.from === 'tray') hand = d.kind;
@@ -1421,10 +1428,11 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
     z-index: 80;
     display: grid;
     place-items: center;
-    width: 44px;
-    height: 44px;
-    margin: -22px 0 0 -22px;
-    font-size: 26px;
+    width: 36px;
+    height: 36px;
+    /* Held above the pointer, so the faint cohort under it can be seen. */
+    margin: -64px 0 0 -18px;
+    font-size: 21px;
     color: var(--rubric);
     background: var(--paper);
     border: 2px solid var(--rubric);
