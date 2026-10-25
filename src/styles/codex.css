@@ -155,8 +155,15 @@ html.opening:not(.uncovered) .codex::before {
   /* Room inside the scroller, which clips, for a plate's banderole to spill
      past its frame; the margins give it back, so the text doesn't move. */
   --spill: clamp(14px, 2.4vw, 30px);
-  margin: calc(-1 * var(--spill)) calc(-10px - var(--spill)) 0 calc(-1 * var(--spill));
-  padding: var(--spill) calc(10px + var(--spill)) 0 var(--spill);
+  margin: 0 calc(-10px - var(--spill)) 0 calc(-1 * var(--spill));
+  padding: 0 calc(10px + var(--spill)) 0 var(--spill);
+}
+
+/* Over the head of the page too, but only where there's a plate: on a page of
+   text, what scrolls must stay under the running head's rule. */
+.page-body:has(.plate-frame) {
+  margin-top: calc(-1 * var(--spill));
+  padding-top: var(--spill);
 }
 
 .running {
