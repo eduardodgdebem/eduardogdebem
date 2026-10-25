@@ -64,10 +64,23 @@ const keys = info ? s(`${info}.hint`).split(' · ') : [];
       requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
     };
     let spread = false;
+    const remember = (on: boolean) => {
+      try {
+        if (on) sessionStorage.setItem('plate-spread', '1');
+        else sessionStorage.removeItem('plate-spread');
+      } catch {}
+    };
+    const mark = (on: boolean) => {
+      full.innerHTML = on ? ICONS.shrink : ICONS.expand;
+      const label = on ? tools.dataset.exitLabel! : tools.dataset.fullLabel!;
+      full.setAttribute('aria-label', label);
+      full.title = label;
+    };
     const setFull = (on: boolean) => {
       // A second press while it's changing waits for this one.
       if (fading) return;
       spread = on;
+      remember(on);
       if (still) {
         lay(on);
       } else {
@@ -88,12 +101,17 @@ const keys = info ? s(`${info}.hint`).split(' · ') : [];
           back.onfinish = () => (fading = null);
         };
       }
-      full.innerHTML = on ? ICONS.shrink : ICONS.expand;
-      const label = on ? tools.dataset.exitLabel! : tools.dataset.fullLabel!;
-      full.setAttribute('aria-label', label);
-      full.title = label;
+      mark(on);
     };
     full.addEventListener('click', () => setFull(!spread));
+    // Spread on the page before: it arrives spread (Codex.astro laid it out so
+    // with html.plate-spread), and from here it's this plate's own state.
+    if (root.classList.contains('plate-spread')) {
+      spread = true;
+      lay(true);
+      root.classList.remove('plate-spread');
+      mark(true);
+    }
 
     // The card of controls: opened by its button, closed by it again, by
     // Escape, or by a click anywhere else.
