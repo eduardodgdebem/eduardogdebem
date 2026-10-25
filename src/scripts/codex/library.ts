@@ -566,6 +566,7 @@ export function createLibrary(canvas: HTMLCanvasElement, { rolls, name, reducedM
   let halfW = FIT_W / 2;
   let halfH = FIT_H / 2;
   const view = { x: citizen.position.x, z: 0 };
+  let closing = 0; // how far the view has closed on the citizen, with the zoom
   let small = 1; // closer on a phone's narrow plate
   const target = new THREE.Vector3();
   const lean = new THREE.Vector3();
@@ -576,9 +577,12 @@ export function createLibrary(canvas: HTMLCanvasElement, { rolls, name, reducedM
     const k = reducedMotion ? 1 : 1 - Math.exp(-dt * 3);
     view.x += (x - view.x) * k;
     // Closed in on a phone: follow him from the shelves to the front of the room too.
-    view.z += ((small < 1 ? (citizen.position.z - VIEW_Z) * 0.5 : 0) - view.z) * k;
+    // Zoomed in, the view closes on him: his height, and where he stands in the room.
+    closing += (THREE.MathUtils.clamp((zoom.value - 1) / 1.2, 0, 1) - closing) * k;
+    const deep = small < 1 ? (citizen.position.z - VIEW_Z) * 0.5 : 0;
+    view.z += (THREE.MathUtils.lerp(deep, citizen.position.z - VIEW_Z, closing) - view.z) * k;
     if (!reducedMotion) tilt.lerp(tiltTarget, 1 - Math.exp(-dt * 4));
-    target.set(view.x, VIEW_Y, VIEW_Z + view.z);
+    target.set(view.x, THREE.MathUtils.lerp(VIEW_Y, 0.9, closing), VIEW_Z + view.z);
     lean.set(tilt.x * 0.1, -tilt.y * 0.055, 0).add(VIEW_DIR).normalize();
     camera.position.copy(target).addScaledVector(lean, VIEW_DIST);
     camera.lookAt(target);

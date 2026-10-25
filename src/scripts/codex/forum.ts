@@ -5,6 +5,7 @@ import { createInk, createPasses, fine, inscriptionTexture, merge, plateZoom } f
 import { amphitheatrum } from './ludus-models';
 import { createWalker } from './walker';
 import { createZoom } from './zoom';
+import { createFountain } from './fons';
 import {
   arcus,
   basilica,
@@ -84,6 +85,9 @@ const DOOR_REACH = 1.3;
 // The orator's platform on the south pavement; come within earshot to hear him.
 const ORATOR = new THREE.Vector3(-6.4, 0, 3.3);
 const EARSHOT = 2.6;
+// The fountain, on the south side; near enough to toss a coin in.
+const FONS = new THREE.Vector3(2.6, 0, 4.0);
+const FONS_REACH = 2.1;
 
 /* ── The view: raised, turned a little down the street, orthographic ── */
 
@@ -159,6 +163,9 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   backRow(insula(1.5, 2), -9.6);
   backRow(insula(1.6, 3), 14.2);
   backRow(insula(3.0, 3), -29.6);
+  // Out past the arches the street goes on: more houses west, toward the Velia.
+  backRow(insula(2.6, 2), -33.4);
+  for (const x of [-36.2, -37.2]) build(cypress(2.4), [x, FRONT - 0.8]);
 
   // Behind the frontage: a second row of houses, kept low so the sky still shows,
   // and a great temple over the basilica. Nothing stands behind the statue, so
@@ -202,7 +209,14 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   for (const x of [-21, -15, -4.5, 7.5, 14.5, 20]) build(cypress(2.6 + (Math.abs(x) % 3) * 0.3), [x, 3.9]);
   // Market stalls facing the street, a fountain, and the speaker's platform.
   for (const x of [-17, -12.6, 10.6]) build(stall(), [x, 3.75], Math.PI);
-  build(fons(), [2.6, 4.0]);
+  build(fons(), [FONS.x, FONS.z]);
+  // Beyond the Arch of Titus, a little market; beyond Severus's, the crowd for the games.
+  for (const x of [-28.4, -32.8]) build(stall(), [x, 3.75], Math.PI);
+  build(columnaHonoraria(), [-36, 4.0]);
+  for (const x of [-26.4, -30.6, -34.8]) build(cypress(2.3 + (Math.abs(x) % 2) * 0.4), [x, 3.9]);
+  build(stall(), [27.4, 3.75], Math.PI);
+  for (const x of [25.6, 34.2, 36.6]) build(cypress(2.4 + (x % 2) * 0.3), [x, 3.9]);
+  const fountain = createFountain(scene, FONS, reducedMotion);
   build([new THREE.BoxGeometry(1.6, 0.45, 1.0).translate(0, 0.225, 0), new THREE.BoxGeometry(1.75, 0.08, 1.15).translate(0, 0.49, 0)], [-6.4, 3.2]);
 
   /* ── The places ── */
@@ -274,6 +288,13 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   ground.layers.set(2);
   scene.add(ground);
   pickables.push(ground);
+  // And the fountain, to throw a coin in.
+  const fonsProxy = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1.3, 16).translate(0, 0.65, 0), proxyMat);
+  fonsProxy.position.copy(FONS);
+  fonsProxy.layers.set(2);
+  fonsProxy.userData.fons = true;
+  scene.add(fonsProxy);
+  pickables.push(fonsProxy);
 
   // Smoke: threads from the forge chimney, redrawn each frame.
   const SMOKE_POINTS = 36;
@@ -407,6 +428,10 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     const child = rand() > 0.85;
     pass(KINDS[i % KINDS.length], -26 + rand() * 52, z, rand() > 0.5 ? 1 : -1, 0.55 + rand() * 0.6, child ? 0.62 : 0.92 + rand() * 0.14, onWalk ? 21 : 27);
   }
+  // Some go the whole length, out through the arches and back.
+  for (let i = 0; i < 6; i++) {
+    pass(KINDS[i % KINDS.length], -34 + rand() * 68, -1.2 + rand() * 2.6, rand() > 0.5 ? 1 : -1, 0.5 + rand() * 0.5, 0.9 + rand() * 0.15, 34);
+  }
   // A contubernium on the march, in step.
   for (let k = 0; k < 4; k++) pass('miles', 8 + k * 0.75, -0.2 + (k % 2) * 0.55, -1, 1.0, 1, 27);
 
@@ -430,6 +455,24 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   stand('matrona', 1.6, 3.2, Math.PI * 0.75, 0.04, 0.93);
   stand('matrona', 2.3, 2.85, -Math.PI * 0.9, 0.04, 0.9);
   for (const x of [-END + 1.4, END - 1.5]) stand('miles', x, -2.5, Math.PI / 2 * Math.sign(-x), 0.01);
+  // The market past the western arch: sellers, buyers, a mother and child.
+  for (const x of [-28.4, -32.8]) {
+    stand(rand() > 0.5 ? 'civis' : 'matrona', x + 0.2, 4.35, Math.PI, 0.03, 0.95);
+    stand(rand() > 0.5 ? 'matrona' : 'civis', x - 0.5, 2.85, 0, 0.03, 0.92);
+  }
+  stand('matrona', -30.4, 1.9, Math.PI * 0.6, 0.04, 0.92);
+  stand('civis', -29.6, 2.2, -Math.PI * 0.45, 0.04, 0.62);
+  stand('civis', -35.2, -1.6, Math.PI * 0.3, 0.03, 0.95);
+  stand('matrona', -34.5, -1.1, -Math.PI * 0.7, 0.03, 0.9);
+  // The crowd for the games: a queue along the pavement to the arena's gate,
+  // two soldiers keeping it, and a seller of something to eat.
+  for (let k = 0; k < 6; k++) {
+    stand(KINDS[k % KINDS.length], AT.amphitheatrum - 2.2 - k * 0.7, FRONT + 1.1 + (k % 2) * 0.25, Math.PI / 2, 0.035, k === 3 ? 0.62 : 0.9 + rand() * 0.1);
+  }
+  for (const dx of [-1.2, 1.2]) stand('miles', AT.amphitheatrum + dx, FRONT + 0.7, 0, 0.01);
+  stand('civis', 27.6, 4.35, Math.PI, 0.03, 0.95);
+  stand('matrona', 27.0, 2.85, 0, 0.03, 0.9);
+  stand('civis', 27.9, 2.75, -0.4, 0.03, 0.62);
 
   const drawPeople = (dt: number, t: number) => {
     for (const p of passers) {
@@ -455,24 +498,44 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
 
   /* ── Birds wheeling over the roofs ── */
 
-  const birds = Array.from({ length: 9 }, (_, i) => {
+  const bird = () => {
     const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()]), fineMat);
     scene.add(fine(line));
-    return { line, cx: -20 + (i % 5) * 10 + rand() * 4, cz: FRONT - 2 - rand() * 4, r: 1.5 + rand() * 2.5, y: 7 + rand() * 2, speed: (0.25 + rand() * 0.3) * (i % 2 ? 1 : -1), phase: rand() * 6 };
-  });
+    return line;
+  };
+  const wings = (line: THREE.Line, x: number, y: number, z: number, flap: number, span = 0.16) => {
+    const p = line.geometry.attributes.position as THREE.BufferAttribute;
+    p.setXYZ(0, x - span, y + flap, z);
+    p.setXYZ(1, x, y - span * 0.25, z);
+    p.setXYZ(2, x + span, y + flap, z);
+    p.needsUpdate = true;
+  };
+  // Wheeling, the whole length of the street, out past the arches.
+  const birds = Array.from({ length: 20 }, (_, i) => ({
+    line: bird(),
+    cx: -34 + (i % 10) * 7.4 + rand() * 3,
+    cz: FRONT - 1 - rand() * 5,
+    r: 1.2 + rand() * 2.8,
+    y: 6.5 + rand() * 3,
+    speed: (0.25 + rand() * 0.35) * (i % 2 ? 1 : -1),
+    phase: rand() * 6,
+  }));
+  // And now and then a flock in a V, crossing the sky from end to end.
+  const FLOCK = [[0, 0], [-0.7, 0.45], [-0.7, -0.45], [-1.4, 0.9], [-1.4, -0.9], [-2.1, 1.35], [-2.1, -1.35]];
+  const flock = FLOCK.map(() => bird());
   const drawBirds = (t: number) => {
     for (const b of birds) {
       const a = t * b.speed + b.phase;
-      const x = b.cx + Math.cos(a) * b.r;
-      const z = b.cz + Math.sin(a) * b.r * 0.5;
-      const y = b.y + Math.sin(a * 2) * 0.3;
-      const flap = Math.sin(t * 10 + b.phase) * 0.09;
-      const p = b.line.geometry.attributes.position as THREE.BufferAttribute;
-      p.setXYZ(0, x - 0.16, y + flap, z);
-      p.setXYZ(1, x, y - 0.04, z);
-      p.setXYZ(2, x + 0.16, y + flap, z);
-      p.needsUpdate = true;
+      wings(b.line, b.cx + Math.cos(a) * b.r, b.y + Math.sin(a * 2) * 0.3, b.cz + Math.sin(a) * b.r * 0.5, Math.sin(t * 10 + b.phase) * 0.09);
     }
+    // Across in 40s, then 25s of empty sky.
+    const lap = (t % 65) / 40;
+    const lead = -46 + lap * 92;
+    flock.forEach((line, i) => {
+      const [dx, dz] = FLOCK[i];
+      const off = lap > 1 ? 200 : 0; // out of sight between crossings
+      wings(line, lead + dx + off, 10.5 + Math.sin(t * 0.7 + i) * 0.15, FRONT - 7 + dz, Math.sin(t * 8 + i * 0.9) * 0.12, 0.2);
+    });
   };
 
   /* ── Banderole: carried with the view, across the head of the plate ── */
@@ -520,6 +583,26 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   });
   let entering = false;
   let nearOrator = false;
+  let nearFons = false;
+  let coinPending = false; // walking over to the fountain to throw one
+
+  /* ── The fountain: click it, and a coin goes in ── */
+
+  const hand = new THREE.Vector3();
+  const throwCoin = () => {
+    if (entering) return;
+    if (!nearFons) {
+      // Over to the near side of the basin first, then in it goes.
+      const spot = FONS.clone().add(new THREE.Vector3(THREE.MathUtils.clamp(citizen.position.x - FONS.x, -1, 1), 0, -1.5));
+      walker.walkTo(spot);
+      coinPending = true;
+      return;
+    }
+    coinPending = false;
+    walker.face(Math.atan2(FONS.x - citizen.position.x, FONS.z - citizen.position.z));
+    hand.set(Math.sin(citizen.rotation.y) * 0.3, 1.15, Math.cos(citizen.rotation.y) * 0.3).add(citizen.position);
+    fountain.toss(hand);
+  };
 
   /* ── Pointer: picks places, picks a spot to walk to, tilts the view ── */
 
@@ -553,7 +636,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     pointed = (hit?.object.userData.place as Place) ?? null;
     canvas.style.cursor = hit ? 'pointer' : '';
     // Over the street, where he'd go is marked on it.
-    walker.aim(hit && !pointed ? hit.point : null);
+    walker.aim(hit && !pointed && !hit.object.userData.fons ? hit.point : null);
     refocus();
   };
   const onDown = (e: PointerEvent) => {
@@ -567,7 +650,9 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     const hit = pick(e);
     if (!hit) return;
     const place = hit.object.userData.place as Place | undefined;
+    coinPending = false;
     if (place) onEnter?.(place);
+    else if (hit.object.userData.fons) throwCoin();
     else walker.walkTo(hit.point);
   };
   const onLeave = () => {
@@ -633,6 +718,8 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     walker.step(dt);
     if (entering) return;
     nearOrator = Math.hypot(citizen.position.x - ORATOR.x, citizen.position.z - ORATOR.z) < EARSHOT;
+    nearFons = Math.hypot(citizen.position.x - FONS.x, citizen.position.z - FONS.z) < FONS_REACH;
+    if (coinPending && nearFons) throwCoin();
 
     // At a door?
     const door = (Object.keys(AT) as Place[]).find((p) => Math.abs(citizen.position.x - AT[p]) < DOOR_REACH && citizen.position.z < FRONT + 1.4) ?? null;
@@ -645,6 +732,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   /* ── The view follows the citizen (or the place named in the index) ── */
 
   const view = { x: citizen.position.x, z: 0 };
+  let closing = 0; // how far the view has closed on the citizen, with the zoom
   const target = new THREE.Vector3();
   const tilt = new THREE.Vector2();
   const tiltTarget = new THREE.Vector2();
@@ -657,8 +745,11 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     const k = reducedMotion ? 1 : 1 - Math.exp(-dt * 3);
     view.x += (x - view.x) * k;
     // Closed in on a phone: follow him across the street too.
-    view.z += ((small < 1 ? citizen.position.z * 0.6 : 0) - view.z) * k;
-    target.set(view.x, VIEW_Y, VIEW_Z + view.z);
+    // Zoomed in, the view closes on him: his height, and his place across the street.
+    closing += (THREE.MathUtils.clamp((zoom.value - 1) / 1.2, 0, 1) - closing) * k;
+    const across = small < 1 ? citizen.position.z * 0.6 : 0;
+    view.z += (THREE.MathUtils.lerp(across, citizen.position.z - VIEW_Z, closing) - view.z) * k;
+    target.set(view.x, THREE.MathUtils.lerp(VIEW_Y, 0.9, closing), VIEW_Z + view.z);
     // A few degrees of tilt toward the pointer: round the street, and up or down it.
     if (!reducedMotion) tilt.lerp(tiltTarget, 1 - Math.exp(-dt * 4));
     lean.set(tilt.x * 0.1, -tilt.y * 0.055, 0).add(VIEW_DIR).normalize();
@@ -723,6 +814,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     drawLife(clock);
     drawBirds(clock);
     if (!reducedMotion) drawPeople(dt, clock);
+    fountain.update(dt, clock);
     if (!reducedMotion) rings.rotation.y += dt * 0.02;
     render();
     pinTag();
@@ -778,6 +870,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     intro,
     dispose() {
       stop();
+      fountain.dispose();
       gsap.killTweensOf([shared.uReveal, banner.uniforms.uReveal, ...Object.values(places).map((p) => p.glow)]);
       window.removeEventListener('resize', resize);
       window.removeEventListener('pointermove', onPointerMove);

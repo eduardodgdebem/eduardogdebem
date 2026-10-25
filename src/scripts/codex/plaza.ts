@@ -486,6 +486,7 @@ export function createPlaza(canvas: HTMLCanvasElement, { monuments, name, reduce
   let halfW = FIT_W / 2;
   let halfH = FIT_H / 2;
   const view = new THREE.Vector2(citizen.position.x, citizen.position.z);
+  let closing = 0; // how far the view has closed on the citizen, with the zoom
   let small = 1; // closer on a phone's narrow plate
   const target = new THREE.Vector3();
   const lean = new THREE.Vector3();
@@ -495,8 +496,10 @@ export function createPlaza(canvas: HTMLCanvasElement, { monuments, name, reduce
     const k = reducedMotion ? 1 : 1 - Math.exp(-dt * 3);
     view.x += (THREE.MathUtils.clamp(goal.x, -limX, limX) - view.x) * k;
     view.y += (THREE.MathUtils.clamp(goal.z, -3.2, 2.2) - view.y) * k;
+    // Zoomed in, the view closes on him: down to his height, onto where he stands.
+    closing += (THREE.MathUtils.clamp((zoom.value - 1) / 1.4, 0, 1) - closing) * k;
     if (!reducedMotion) tilt.lerp(tiltTarget, 1 - Math.exp(-dt * 4));
-    target.set(view.x, VIEW_Y, view.y - 0.8);
+    target.set(view.x, THREE.MathUtils.lerp(VIEW_Y, 0.9, closing), view.y - 0.8 * (1 - closing));
     lean.set(tilt.x * 0.1, -tilt.y * 0.055, 0).add(VIEW_DIR).normalize();
     camera.position.copy(target).addScaledVector(lean, VIEW_DIST);
     camera.lookAt(target);
