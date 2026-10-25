@@ -178,6 +178,53 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
   });
   /** Who won, and since when: the survivors leap and the crowd rises. */
   let cheer: { side: Cohort['side']; t0: number } | null = null;
+  // How loud the stands are (0 quiet, 1 on their feet): each blow on the sand
+  // raises it, and it dies away. The flags wave with it, the camera shakes with
+  // the biggest.
+  let roar = 0;
+  let shake = 0;
+
+  // Flags in the stands: red for Rome, blue for the Gauls, each on a pole held
+  // up by someone in the crowd, its cloth waving.
+  const redCloth = material({ value: 1 });
+  const blueCloth = material();
+  blueCloth.uniforms.uBlue.value = 1;
+  const CLOTH = { w: 1.0, h: 0.62, segs: 8 };
+  const flags = Array.from({ length: 22 }, (_, i) => {
+    const tier = 1 + ((i * 5) % 6);
+    const a = Math.PI + 0.22 + ((i + 0.5) / 22) * (Math.PI - 0.44) + Math.sin(i * 12.9) * 0.03;
+    const rx = SAND.rx + 0.6 + tier * 0.85 - 0.35;
+    const rz = SAND.rz + 0.6 + tier * 0.85 - 0.35;
+    const g = new THREE.Group();
+    g.position.set(Math.cos(a) * rx, 1.2 + tier * 0.55 + 0.2, Math.sin(a) * rz);
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.5, 5).translate(0, 0.75, 0), stone);
+    const geo = new THREE.PlaneGeometry(CLOTH.w, CLOTH.h, CLOTH.segs, 1).translate(CLOTH.w / 2, 1.5 - CLOTH.h / 2, 0);
+    const cloth = new THREE.Mesh(geo, i % 3 === 2 ? blueCloth : redCloth);
+    g.add(pole, cloth);
+    // Leaning, as an arm holds it up.
+    g.rotation.z = (i % 2 ? 1 : -1) * 0.12;
+    scene.add(g);
+    return { g, geo, rest: Float32Array.from(geo.attributes.position.array as Float32Array), part: i % 2, phase: i * 1.9, base: g.position.y, lean: g.rotation.z };
+  });
+  const waveFlags = (t: number) => {
+    const speed = 3 + roar * 7;
+    const amp = 0.04 + roar * 0.12;
+    for (const f of flags) {
+      const pos = f.geo.attributes.position as THREE.BufferAttribute;
+      for (let v = 0; v < pos.count; v++) {
+        const x = f.rest[v * 3];
+        const along = x / CLOTH.w;
+        pos.setZ(v, Math.sin(t * speed - along * 5 + f.phase) * amp * along);
+        pos.setY(v, f.rest[v * 3 + 1] + Math.sin(t * speed * 0.7 - along * 4 + f.phase) * amp * 0.4 * along);
+      }
+      pos.needsUpdate = true;
+      f.geo.computeVertexNormals();
+      // Raised higher, and swung, the louder it gets.
+      const lift = Math.max(0, Math.sin(t * (2 + roar * 4) + f.phase)) * roar * 0.25;
+      f.g.position.y = f.base + stands[f.part].position.y + lift;
+      f.g.rotation.z = f.lean + Math.sin(t * (1.5 + roar * 5) + f.phase) * (0.05 + roar * 0.3);
+    }
+  };
   // The sand raked in rings, and a slab of floor under it all.
   {
     const pts: THREE.Vector3[] = [];
@@ -545,14 +592,31 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
         acc -= STEP;
       }
     }
-    if (fight) for (; seenEvents < fight.events.length; seenEvents++) onEvent?.(fight.events[seenEvents], fight);
+    if (fight)
+      for (; seenEvents < fight.events.length; seenEvents++) {
+        const e = fight.events[seenEvents];
+        // The crowd answers what happens on the sand.
+        const loud = { start: 0.6, contact: 0.25, flank: 0.45, rear: 0.55, broken: 0.6, destroyed: 0.75, horn: 0.8, end: 1 }[e.type] ?? 0;
+        roar = Math.min(1, roar + loud);
+        if (e.type === 'broken' || e.type === 'destroyed' || e.type === 'horn' || e.type === 'end') shake = Math.max(shake, e.type === 'end' ? 0.5 : 0.3);
+        onEvent?.(e, fight);
+      }
+    roar = cheer ? 1 : roar * Math.exp(-dt * 0.45);
+    shake *= Math.exp(-dt * 6);
     if (fight?.result && !cheer && fight.result !== 'aequum') cheer = { side: fight.result === 'vicisti' ? 'roma' : 'gallia', t0: clock };
     // The stands on their feet, half after half.
     stands.forEach((m, i) => {
       const t = cheer && !reducedMotion ? clock - cheer.t0 : 0;
-      m.position.y = t > 0 ? Math.max(0, Math.sin(t * 5 + i * Math.PI)) * 0.22 * Math.min(1, t) : 0;
+      // Short of a victory, they still bob in their seats when the fight's loud.
+      const stir = reducedMotion ? 0 : Math.max(0, Math.sin(clock * 6 + i * Math.PI)) * roar * 0.08;
+      m.position.y = t > 0 ? Math.max(0, Math.sin(t * 5 + i * Math.PI)) * 0.22 * Math.min(1, t) : stir;
     });
     aim(dt);
+    if (shake > 0.01 && !reducedMotion) {
+      camera.position.x += (Math.random() - 0.5) * shake;
+      camera.position.y += (Math.random() - 0.5) * shake * 0.6;
+    }
+    if (!reducedMotion) waveFlags(clock);
     drawMen(dt);
     drawArrows();
     render();
@@ -622,6 +686,7 @@ export function createLudus(canvas: HTMLCanvasElement, { name, reducedMotion, on
       fight = null;
       selected = null;
       cheer = null;
+      roar = 0;
       clear();
     },
     intro(after = Promise.resolve()) {

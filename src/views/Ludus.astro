@@ -74,7 +74,8 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
         <!-- The head of the plate: what's spent, and how the sides stand. -->
         <div class="hud-top">
           <span class="purse" data-purse title={s('ludus.treasury')}>
-            <span class="ic" set:html={ICONS.coin} /><b data-spent>0</b>/{BUDGET}
+            <span class="ic coin" data-coin set:html={ICONS.coin} /><b data-left>{BUDGET}</b>
+            <i class="purse-bar"><i data-purse-bar></i></i>
             <span class="sep">·</span>
             <span class="ic" set:html={ICONS.legionarius} /><b data-count>0</b>/{MAX_COHORTS}
           </span>
@@ -82,6 +83,7 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
             <span class="side roma" title={s('ludus.roma')}><i></i><b data-roma>0</b></span>
             <span class="clock" data-time>0:00</span>
             <span class="side gallia" title={s('ludus.gallia')}><i></i><b data-gallia>0</b></span>
+            <i class="tug" aria-hidden="true"><i data-tug></i></i>
           </span>
         </div>
 
@@ -134,6 +136,10 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
         </div>
 
         <div class="message" data-message role="status" aria-live="polite"></div>
+        <!-- Big words over the sand when something happens: the count-in, a flank, a rout. -->
+        <div class="callout" data-callout aria-hidden="true"></div>
+        <!-- An empty sand: where to begin. -->
+        <p class="empty-hint" data-empty-hint data-i18n="ludus.empty">{s('ludus.empty')}</p>
         <PlateTools lang={lang} />
       </div>
       <figcaption class="plate-caption">
@@ -237,8 +243,8 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
       { n, out: '' },
     ).out;
 
-  // Ready to play: the triple line is already on the sand (or a shared plan).
-  let plan: Plan = decode(new URLSearchParams(location.hash.slice(1)).get('plan') ?? '') ?? preset('triplex');
+  // The sand starts empty, the purse full (unless a shared plan came with the link).
+  let plan: Plan = decode(new URLSearchParams(location.hash.slice(1)).get('plan') ?? '') ?? SLOTS.map(() => null);
   let selected: number | null = null;
   let current: Battle | null = null;
   let hand: RomanKind = 'legionarius';
@@ -253,11 +259,62 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
   };
   let sayT: ReturnType<typeof setTimeout> | undefined;
 
+  /* ── The purse: what's left, counted down (or up) a coin at a time ── */
+
+  const purse = $('[data-purse]');
+  const leftEl = $('[data-left]');
+  const purseBar = $('[data-purse-bar]');
+  let shown = BUDGET;
+  let counting = 0;
+  const countTo = (n: number) => {
+    cancelAnimationFrame(counting);
+    if (reduced || shown === n) {
+      shown = n;
+      leftEl.textContent = String(n);
+      return;
+    }
+    const from = shown;
+    const t0 = performance.now();
+    const ms = 140 + Math.abs(n - from) * 45;
+    const stepIt = (now: number) => {
+      const k = Math.min(1, (now - t0) / ms);
+      shown = Math.round(from + (n - from) * k);
+      leftEl.textContent = String(shown);
+      if (k < 1) counting = requestAnimationFrame(stepIt);
+    };
+    counting = requestAnimationFrame(stepIt);
+  };
+  /** A coin's worth leaving the purse (or coming back), floated up from it. */
+  const spend = (delta: number) => {
+    if (!delta || reduced) return;
+    const tag = document.createElement('span');
+    tag.className = `coin-fly ${delta < 0 ? 'out' : 'in'}`;
+    tag.textContent = `${delta > 0 ? '+' : '−'}${Math.abs(delta)}`;
+    purse.append(tag);
+    tag.addEventListener('animationend', () => tag.remove());
+    purse.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.08)' }, { transform: 'scale(1)' }], { duration: 260 });
+  };
+  /** Not enough: the purse shakes, empty-handed. */
+  const short = () => {
+    if (reduced) return;
+    purse.animate(
+      [{ transform: 'translateX(0)' }, { transform: 'translateX(-5px)' }, { transform: 'translateX(5px)' }, { transform: 'translateX(-3px)' }, { transform: 'translateX(0)' }],
+      { duration: 320 },
+    );
+  };
+  let lastCost = cost(plan);
+
   /** Keep the purse, the tray and the plate in step with the plan. */
   const refresh = () => {
-    $('[data-spent]').textContent = String(cost(plan));
+    const spent = cost(plan);
+    if (spent !== lastCost) spend(lastCost - spent);
+    lastCost = spent;
+    const left = BUDGET - spent;
+    countTo(left);
+    purseBar.style.width = `${(left / BUDGET) * 100}%`;
+    purse.classList.toggle('is-low', left < 3);
     $('[data-count]').textContent = String(count(plan));
-    const left = BUDGET - cost(plan);
+    $('[data-empty-hint]').classList.toggle('is-shown', !current && count(plan) === 0);
     tiles.forEach((b) => {
       const kind = b.dataset.kind as RomanKind;
       b.setAttribute('aria-pressed', String(kind === hand));
@@ -282,6 +339,7 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
     next[slot] = { kind, formation: was && ALLOWED[kind].includes(was.formation) ? was.formation : 'acies' };
     if (!fits(next)) {
       say(t('ludus.full'));
+      short();
       return false;
     }
     plan = next;
@@ -452,7 +510,37 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
     annales.prepend(li);
   };
 
+  /** Big words over the sand, for a moment. */
+  const callout = $('[data-callout]');
+  let calloutT: ReturnType<typeof setTimeout> | undefined;
+  const shout = (text: string, side: 'roma' | 'gallia' | '' = '') => {
+    callout.textContent = text;
+    callout.dataset.side = side;
+    callout.classList.remove('is-shown');
+    void callout.offsetWidth;
+    callout.classList.add('is-shown');
+    clearTimeout(calloutT);
+    calloutT = setTimeout(() => callout.classList.remove('is-shown'), 1300);
+  };
+  // Shouted only now and then, so they stay an event.
+  let lastShout = -9;
+
   const onEvent = (e: Event, b: Battle) => {
+    const sideOf = (id: number) => b.cohorts[id].side;
+    if (b.t - lastShout > 2.5 || e.type === 'horn' || e.type === 'end') {
+      const words: Partial<Record<Event['type'], string>> = { flank: 'Ad latus!', rear: 'A tergo!', broken: 'Fugiunt!', destroyed: 'Deleti!' };
+      const word = words[e.type];
+      if (word && 'a' in e) {
+        // Told from the side that did it: a flank by Rome is Rome's moment.
+        const actor = e.type === 'broken' || e.type === 'destroyed' ? (sideOf(e.a) === 'roma' ? 'gallia' : 'roma') : sideOf(e.a);
+        shout(word, actor);
+        lastShout = b.t;
+      }
+      if (e.type === 'horn') {
+        shout(e.call === 'signum' ? 'Signum!' : 'Receptui!', 'roma');
+        lastShout = b.t;
+      }
+    }
     const fill = (key: string, a?: number, c?: number) =>
       t(key)
         .replace('{a}', a === undefined ? '' : nameOf(b, a))
@@ -497,8 +585,11 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
     if (!current) return;
     $('[data-time]').textContent = clock(current.t);
     const men = (side: string) => current!.cohorts.filter((c) => c.side === side && c.state !== 'gone' && c.state !== 'rout').reduce((n, c) => n + c.men, 0);
-    $('[data-roma]').textContent = String(men('roma'));
-    $('[data-gallia]').textContent = String(men('gallia'));
+    const r = men('roma');
+    const g = men('gallia');
+    $('[data-roma]').textContent = String(r);
+    $('[data-gallia]').textContent = String(g);
+    $('[data-tug]').style.width = `${r + g ? (r / (r + g)) * 100 : 50}%`;
     if (!current.result) requestAnimationFrame(tally);
   };
 
@@ -526,6 +617,8 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
     setGo('horn');
     refresh();
     tally();
+    lastShout = -9;
+    shout('Pugnate!', 'roma');
   };
   const replan = () => {
     current = null;
@@ -647,6 +740,219 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
 
   .purse .sep {
     color: var(--ink-soft);
+  }
+
+  /* What's left in the purse: the number counts down as you spend, a bar
+     drains under the coin, and each purchase floats off as −n. */
+  .purse {
+    position: relative;
+  }
+
+  .purse b[data-left] {
+    min-width: 1.3em;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .purse-bar {
+    display: inline-block;
+    width: 46px;
+    height: 5px;
+    margin-left: 0.15rem;
+    border: 1px solid var(--ink);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .purse-bar > i {
+    display: block;
+    height: 100%;
+    background: #b8892f;
+    transition: width 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .purse.is-low .purse-bar > i {
+    background: var(--rubric);
+  }
+
+  .purse.is-low .coin {
+    animation: coin-low 1.4s ease-in-out infinite;
+  }
+
+  @keyframes coin-low {
+    50% {
+      color: var(--rubric);
+    }
+  }
+
+  .purse :global(.coin-fly) {
+    position: absolute;
+    left: 1.4rem;
+    top: 0;
+    font-family: 'IM Fell English SC', serif;
+    font-size: 1.15rem;
+    pointer-events: none;
+    animation: coin-fly 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  }
+
+  .purse :global(.coin-fly.out) {
+    color: var(--rubric);
+  }
+
+  .purse :global(.coin-fly.in) {
+    color: #6b7d2a;
+  }
+
+  @keyframes coin-fly {
+    from {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+    to {
+      opacity: 0;
+      transform: translate(10px, -28px);
+    }
+  }
+
+  /* How the fight stands, as a rope pulled between the two sides. */
+  .tally {
+    position: relative;
+    padding-bottom: 0.45rem;
+  }
+
+  .tug {
+    position: absolute;
+    left: 0.7rem;
+    right: 0.7rem;
+    bottom: 0.18rem;
+    height: 3px;
+    background: #1e3a78;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .tug > i {
+    display: block;
+    width: 50%;
+    height: 100%;
+    background: var(--rubric);
+    transition: width 0.4s ease;
+  }
+
+  /* Big words over the sand, stamped in and gone. */
+  .callout {
+    position: absolute;
+    left: 50%;
+    top: 40%;
+    z-index: 4;
+    font-family: 'IM Fell English SC', serif;
+    font-size: clamp(2rem, 6vw, 3.6rem);
+    letter-spacing: 0.06em;
+    color: var(--rubric);
+    text-shadow:
+      0 0 3px var(--paper),
+      0 0 3px var(--paper),
+      0 0 10px var(--paper);
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-50%, -50%);
+  }
+
+  .callout[data-side='gallia'] {
+    color: #1e3a78;
+  }
+
+  .callout.is-shown {
+    animation: shout 1.3s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  }
+
+  @keyframes shout {
+    0% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(1.8) rotate(-4deg);
+    }
+    14% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(0.95) rotate(-2deg);
+    }
+    22% {
+      transform: translate(-50%, -50%) scale(1) rotate(-2deg);
+    }
+    75% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translate(-50%, -62%) scale(1) rotate(-2deg);
+    }
+  }
+
+  /* The empty sand, before the first soldier is set down. */
+  .empty-hint {
+    position: absolute;
+    left: 50%;
+    top: 62%;
+    z-index: 2;
+    max-width: min(22rem, 70%);
+    margin: 0;
+    padding: 0.4rem 0.9rem;
+    font-style: italic;
+    text-align: center;
+    background: rgb(239 230 208 / 0.92);
+    border: 1px dashed var(--ink-soft);
+    border-radius: 6px;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+
+  .empty-hint.is-shown {
+    opacity: 1;
+  }
+
+  /* The tray calls for a hand while the sand is empty. */
+  .ludus-frame:has(.empty-hint.is-shown) .tile:not(.is-dear) {
+    animation: beckon 2.2s ease-in-out infinite;
+  }
+
+  .ludus-frame:has(.empty-hint.is-shown) .tile:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+
+  .ludus-frame:has(.empty-hint.is-shown) .tile:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+
+  .ludus-frame:has(.empty-hint.is-shown) .tile:nth-child(4) {
+    animation-delay: 0.45s;
+  }
+
+  @keyframes beckon {
+    0%,
+    70%,
+    100% {
+      transform: translateY(0);
+    }
+    80% {
+      transform: translateY(-6px);
+    }
+    90% {
+      transform: translateY(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .callout.is-shown {
+      animation: none;
+      opacity: 0;
+    }
+
+    .ludus-frame .tile,
+    .purse .coin {
+      animation: none !important;
+    }
   }
 
   .tally .side i {
