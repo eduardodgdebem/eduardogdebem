@@ -1,24 +1,24 @@
 ---
-// A top page corner that turns back or forward through the browser history.
-// Resting, it's a hint of a dog-ear; under the cursor (or focus) the corner
-// lifts and folds down, showing the leaf beneath and the name of the page it
-// turns to. Hidden until src/scripts/codex/corners.ts finds history that way.
+// A top page corner that turns to the leaf before or after this one in the
+// book's order (src/lib/book.ts). Resting, it's a hint of a dog-ear; under the
+// cursor (or focus) the corner lifts and folds down, showing the leaf beneath
+// and the name of the page it turns to. None at the book's two ends.
 interface Props {
   dir: 'back' | 'forward';
+  to?: { href: string; name: string };
   /** The copy shown only on portrait screens, where the spread is one column. */
   portrait?: boolean;
 }
 
-const { dir, portrait = false } = Astro.props;
+const { dir, to, portrait = false } = Astro.props;
+const label = `${dir === 'back' ? 'Previous' : 'Next'}: ${to?.name}`;
 ---
 
-<button
-  type="button"
-  class:list={['corner', `corner--${dir}`, { 'corner--portrait': portrait }]}
-  data-turn={dir}
-  aria-label={dir === 'back' ? 'Back' : 'Forward'}
-  hidden
->
-  <span class="fold" aria-hidden="true"></span>
-  <span class="corner-label" aria-hidden="true"></span>
-</button>
+{
+  to && (
+    <a href={to.href} class:list={['corner', `corner--${dir}`, { 'corner--portrait': portrait }]} aria-label={label} title={label}>
+      <span class="fold" aria-hidden="true" />
+      <span class="corner-label" aria-hidden="true">{to.name}</span>
+    </a>
+  )
+}

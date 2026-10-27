@@ -265,6 +265,7 @@ html.opening:not(.uncovered) .codex::before {
   background: none;
   color: inherit;
   font: inherit;
+  text-decoration: none;
   cursor: pointer;
   --fold: 12px;
 }
@@ -1097,6 +1098,11 @@ html:active-view-transition-type(back)::view-transition-new(recto) {
 
   .running-nav a {
     white-space: nowrap;
+  }
+
+  /* Five sections don't fit a phone's line: the seal at the top of the page is the way home. */
+  .running-nav a:first-child {
+    display: none;
   }
 
   .lang {

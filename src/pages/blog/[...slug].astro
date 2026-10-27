@@ -24,6 +24,7 @@ const { Content, headings } = await render(post);
 
 <BlogPost
   {...post.data}
+  id={post.id}
   chapter={chapter}
   headings={headings.filter((h) => h.depth <= 3)}
   prev={prev && { href: `/blog/${prev.id}/`, title: prev.data.title }}

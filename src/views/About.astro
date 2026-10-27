@@ -50,7 +50,7 @@ const monuments: PlazaMonument[] = NOTES.map(({ key, plate, inscription }) => ({
   alternates={PATHS.about}
   title={META.title}
   description={META.description}
-  folio={3}
+  at="about"
   schema={{ '@context': 'https://schema.org', '@type': 'ProfilePage', url: `${SITE_URL}${href(lang, 'about')}`, inLanguage: lang === 'pt' ? 'pt-BR' : 'en', mainEntity: PERSON }}
 >
   <Fragment slot="verso">

@@ -9,14 +9,20 @@ import Logo from '../components/Logo.astro';
 import Binding from '../components/Binding.astro';
 import Corner from '../components/Corner.astro';
 import { STRINGS, type Lang } from '../i18n/strings';
-import { PATHS, href } from '../i18n/paths';
+import { PATHS } from '../i18n/paths';
+import { SECTIONS, book } from '../lib/book';
 
 interface Props {
   title: string;
   description: string;
   image?: ImageMetadata;
-  /** Folio of the left page; the right page is the next one. */
-  folio: number;
+  /**
+   * Where the page is in the book (src/lib/book.ts): a section, or `post:<id>`.
+   * It gives the folios, and the leaves the corners turn to.
+   */
+  at?: string;
+  /** Folio of the left page, for a page that isn't in the book's order (the not-found page). */
+  folio?: number;
   /** Keep the page out of search results. */
   noindex?: boolean;
   /** Structured data (JSON-LD). */
@@ -31,7 +37,7 @@ interface Props {
   alternates?: Record<Lang, string>;
 }
 
-const { title, description, image, folio, fit = false, noindex = false, schema, canonical = true, lang = 'en', alternates } = Astro.props;
+const { title, description, image, at, folio: loose = 99, fit = false, noindex = false, schema, canonical = true, lang = 'en', alternates } = Astro.props;
 // For scripts: this page's strings only (the 3D labels and captions are written at run time).
 const DICT = STRINGS[lang];
 
@@ -47,13 +53,15 @@ const roman = (n: number) =>
     { n, out: '' },
   ).out.toLowerCase();
 
-const path = Astro.url.pathname;
-const nav = [
-  { href: href(lang, 'home'), label: 'Index', current: path === PATHS.home[lang] },
-  { href: href(lang, 'notes'), label: 'Commentarii', current: path.startsWith(PATHS.notes[lang]) || path.startsWith('/blog') },
-  { href: href(lang, 'projects'), label: 'Officina', current: path.startsWith(PATHS.projects[lang]) },
-  { href: href(lang, 'about'), label: 'De auctore', current: path.startsWith(PATHS.about[lang]) },
-];
+// The book's order: this page's place in it, and the leaves either side.
+const leaves = await book(lang);
+const here = leaves.findIndex((l) => l.key === at);
+const folio = here >= 0 ? leaves[here].folio : loose;
+const prev = here > 0 ? leaves[here - 1] : undefined;
+const next = here >= 0 ? leaves[here + 1] : undefined;
+// The running head: the sections in the same order. A chapter is in its notes.
+const section = at?.startsWith('post:') ? 'notes' : at;
+const nav = SECTIONS.map(({ page, name }) => ({ href: PATHS[page][lang], label: name, current: page === section }));
 ---
 
 <!doctype html>
@@ -134,9 +142,9 @@ const nav = [
         <footer class="folio">
           <span>{roman(folio)}</span>
         </footer>
-        <Corner dir="back" />
+        <Corner dir="back" to={prev} />
         {/* On portrait the spread is one column: the top of the screen is this page's. */}
-        <Corner dir="forward" portrait />
+        <Corner dir="forward" to={next} portrait />
       </section>
 
       <main class="page recto">
@@ -160,7 +168,7 @@ const nav = [
           <a href="/rss.xml">rss</a>
           <span>{roman(folio + 1)}</span>
         </footer>
-        <Corner dir="forward" />
+        <Corner dir="forward" to={next} />
       </main>
     </div>
     <!-- On a phone the book is a scroll: its two rollers, above and below the page. -->
@@ -254,9 +262,7 @@ const nav = [
     </script>
     <script>
       import { openBook } from '../scripts/codex/opening';
-      import { foldCorners } from '../scripts/codex/corners';
       openBook();
-      foldCorners();
       // A page whose plate can't be spread (no plate tools) lets the spread go.
       if (!document.querySelector('[data-plate-tools]')) {
         document.documentElement.classList.remove('plate-spread');
