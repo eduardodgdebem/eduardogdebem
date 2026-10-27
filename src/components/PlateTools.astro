@@ -9,7 +9,7 @@ import { tr, type Lang } from '../i18n/strings';
 interface Props {
   lang?: Lang;
   /** The scene whose controls the info card lists (`<scene>.hint`, `<scene>.touch`). */
-  info?: 'home' | 'library' | 'plaza';
+  info?: 'home' | 'library' | 'plaza' | 'officina';
 }
 
 const { lang = 'en', info } = Astro.props;

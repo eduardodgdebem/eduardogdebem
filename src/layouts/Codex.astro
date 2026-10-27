@@ -51,6 +51,7 @@ const path = Astro.url.pathname;
 const nav = [
   { href: href(lang, 'home'), label: 'Index', current: path === PATHS.home[lang] },
   { href: href(lang, 'notes'), label: 'Commentarii', current: path.startsWith(PATHS.notes[lang]) || path.startsWith('/blog') },
+  { href: href(lang, 'projects'), label: 'Officina', current: path.startsWith(PATHS.projects[lang]) },
   { href: href(lang, 'about'), label: 'De auctore', current: path.startsWith(PATHS.about[lang]) },
 ];
 ---

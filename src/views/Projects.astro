@@ -1,0 +1,222 @@
+---
+// The projects' spread (/projects/, /pt/projetos/): the workshop on the left
+// page, what's on its benches listed on the right.
+import Codex from '../layouts/Codex.astro';
+import Officina from '../components/Officina.astro';
+import { PROJECTS } from '../data/projects';
+import { SITE_TITLE } from '../consts';
+import { tr, type Lang } from '../i18n/strings';
+import { PATHS } from '../i18n/paths';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const s = tr(lang);
+const NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+const META = {
+  en: {
+    title: `Projects — ${SITE_TITLE}`,
+    description: 'Projects by Eduardo de Bem: sites for a salon in Florida, a chain of salons and a consultancy in Brazil, and Ode, a self-hosting programming language.',
+  },
+  pt: {
+    title: `Projetos — ${SITE_TITLE}`,
+    description: 'Projetos de Eduardo de Bem: sites para um salão na Flórida, uma rede de salões e uma consultoria no Brasil, e Ode, uma linguagem de programação que compila a si mesma.',
+  },
+}[lang];
+---
+
+<Codex lang={lang} alternates={PATHS.projects} title={META.title} description={META.description} folio={8}>
+  <Fragment slot="verso">
+    <Officina lang={lang} />
+  </Fragment>
+
+  <Fragment slot="recto">
+    <header class="head">
+      <p class="rubric">Liber III · Officina</p>
+      <h1 data-i18n="officina.title">{s('officina.title')}</h1>
+      <p class="intro" data-i18n="officina.intro">{s('officina.intro')}</p>
+    </header>
+
+    <ol class="works">
+      {PROJECTS.map((p, i) => (
+        <li class="work" data-work={i}>
+          <p class="cap">
+            <span class="num">{NUMERALS[i]}.</span> {p.latin} <span class="year">· {p.year}</span>
+          </p>
+          <h2>
+            <a href={p.url} target="_blank" rel="noopener noreferrer">{p.name}</a>
+          </h2>
+          <p class="kind">{p.kind[lang]}</p>
+          <p class="summary">{p.summary[lang]}</p>
+          <p class="made">
+            <span class="label">{s('officina.made')}</span> {p.stack.join(' · ')}
+          </p>
+          {p.note && <p class="note">{p.note[lang]}</p>}
+          <p class="links">
+            <a href={p.url} target="_blank" rel="noopener noreferrer">{p.code === p.url ? s('officina.code') : s('officina.site')} <span aria-hidden="true">↗</span></a>
+            <span class="host">{p.host}</span>
+          </p>
+        </li>
+      ))}
+    </ol>
+    <p class="fleuron" aria-hidden="true">❦</p>
+  </Fragment>
+</Codex>
+
+<style>
+  .head h1 {
+    font-size: clamp(2.4rem, 3.6vw, 3.6rem);
+    margin: 0 0 0.4rem;
+  }
+
+  .intro {
+    font-style: italic;
+    color: var(--ink-soft);
+    margin: 0 0 0.6rem;
+    padding-bottom: 0.9rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .works {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .work {
+    position: relative;
+    padding: 1rem 0 0.9rem;
+    border-bottom: 1px dotted var(--rule);
+    transition: transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  /* Lit from the workshop, or under the pointer: a manicule in the margin, the name in rubric. */
+  .work::before {
+    content: '☞';
+    position: absolute;
+    left: -1.6em;
+    top: 2.05rem;
+    color: var(--rubric);
+    opacity: 0;
+    transform: translateX(-0.4em);
+    transition:
+      opacity 0.25s,
+      transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .work.is-lit::before,
+  .work:focus-within::before {
+    opacity: 1;
+    transform: none;
+  }
+
+  .work.is-lit,
+  .work:focus-within {
+    transform: translateX(0.4ch);
+  }
+
+  .work.is-lit h2 a,
+  .work:focus-within h2 a {
+    color: var(--rubric);
+  }
+
+  @media (hover: hover) {
+    .work:hover::before {
+      opacity: 1;
+      transform: none;
+    }
+
+    .work:hover {
+      transform: translateX(0.4ch);
+    }
+
+    .work:hover h2 a {
+      color: var(--rubric);
+    }
+  }
+
+  .cap {
+    margin: 0;
+    font-family: 'IM Fell English SC', serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    color: var(--rubric);
+  }
+
+  .year {
+    color: var(--ink-soft);
+  }
+
+  .work h2 {
+    margin: 0.1rem 0 0;
+    font-size: clamp(1.45rem, 1.8vw, 1.8rem);
+  }
+
+  .work h2 a {
+    text-decoration: none;
+    transition: color 0.25s;
+  }
+
+  .kind {
+    margin: 0;
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  .summary {
+    margin: 0.45rem 0 0.35rem;
+    max-width: 58ch;
+    line-height: 1.5;
+    hyphens: auto;
+    text-align: justify;
+  }
+
+  .made,
+  .note {
+    margin: 0;
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+  }
+
+  .made .label {
+    font-family: 'IM Fell English SC', serif;
+    letter-spacing: 0.06em;
+  }
+
+  .note {
+    font-style: italic;
+  }
+
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.2rem 0.9rem;
+    margin: 0.4rem 0 0;
+  }
+
+  .links a {
+    font-family: 'IM Fell English SC', serif;
+    letter-spacing: 0.06em;
+    color: var(--rubric);
+    text-decoration: none;
+  }
+
+  .links a:hover {
+    text-decoration: underline;
+  }
+
+  .host {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .work,
+    .work::before {
+      transition: none;
+    }
+  }
+</style>

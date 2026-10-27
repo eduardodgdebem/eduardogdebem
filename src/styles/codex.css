@@ -1090,7 +1090,13 @@ html:active-view-transition-type(back)::view-transition-new(recto) {
   }
 
   .running-nav {
-    gap: 0.8rem;
+    gap: 0.5rem;
+    font-size: 0.86em;
+    letter-spacing: 0.02em;
+  }
+
+  .running-nav a {
+    white-space: nowrap;
   }
 
   .lang {
