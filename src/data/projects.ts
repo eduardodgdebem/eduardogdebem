@@ -1,11 +1,15 @@
 import type { Lang } from '../i18n/strings';
 
-// The work shown in the Officina (/projects/, /pt/projetos/): each project is a
-// piece on a bench in the workshop, and an entry on the facing page. `work` is
-// the engraved object that stands for it (see officina-models.ts). Order is
-// the order of the benches, left to right; the last stands on the anvil.
+// The work shown in the Officina (/projects/, /pt/projetos/): each finished
+// project stands on the shelf of done work, its preview framed over the object
+// that stands for it (`work`, see officina-models.ts); one still being made
+// (no preview) lies on the anvil. Order is the order along the shelf.
 
 export type Work = 'forfex' | 'caput' | 'tabula' | 'ouroboros';
+
+/** What kind of thing it is: the facing page lists them in groups, in this order. */
+export const TYPES = ['site', 'language'] as const;
+export type Type = (typeof TYPES)[number];
 
 export interface Project {
   id: string;
@@ -17,8 +21,11 @@ export interface Project {
   host: string;
   /** The source, when it's public. */
   code?: string;
+  /** A screenshot of it (in public/), engraved on the plate and shown on the page. Retaken with `npm run previews`. */
+  preview?: string;
   year: number;
   work: Work;
+  type: Type;
   stack: string[];
   kind: Record<Lang, string>;
   summary: Record<Lang, string>;
@@ -28,12 +35,14 @@ export interface Project {
 export const PROJECTS: Project[] = [
   {
     id: 'brazilian-hair-studio',
+    preview: '/projects/brazilian-hair-studio.jpg',
     latin: 'Tonstrina',
     name: 'Brazilian Hair Studio',
     url: 'https://brazilian-hair-studio.com/',
     host: 'brazilian-hair-studio.com',
     year: 2026,
     work: 'forfex',
+    type: 'site',
     stack: ['Astro', 'Tailwind CSS', 'Cloudflare Workers'],
     kind: { en: 'A salon’s site', pt: 'Site de um salão' },
     summary: {
@@ -43,12 +52,14 @@ export const PROJECTS: Project[] = [
   },
   {
     id: 'cabelos-e-formas',
+    preview: '/projects/cabelos-e-formas.jpg',
     latin: 'Ornatrix',
     name: 'Cabelos e Formas',
     url: 'https://cbf.jeffersonrdebem.workers.dev/',
     host: 'cbf.jeffersonrdebem.workers.dev',
     year: 2026,
     work: 'caput',
+    type: 'site',
     stack: ['Astro', 'Tailwind CSS', 'GSAP', 'Cloudflare Workers'],
     kind: { en: 'A chain of salons', pt: 'Uma rede de salões' },
     summary: {
@@ -59,12 +70,14 @@ export const PROJECTS: Project[] = [
   },
   {
     id: 'debem-consultoria',
+    preview: '/projects/debem-consultoria.jpg',
     latin: 'Consilium',
     name: 'De Bem Consultoria',
     url: 'https://debemconsultoria.com/',
     host: 'debemconsultoria.com',
     year: 2026,
     work: 'tabula',
+    type: 'site',
     stack: ['Astro', 'Tailwind CSS', 'GSAP', 'Cloudflare'],
     kind: { en: 'A consultancy’s site', pt: 'Site de uma consultoria' },
     summary: {
@@ -81,6 +94,7 @@ export const PROJECTS: Project[] = [
     code: 'https://github.com/eduardodgdebem/ode',
     year: 2026,
     work: 'ouroboros',
+    type: 'language',
     stack: ['Ode', 'LLVM', 'C'],
     kind: { en: 'A programming language', pt: 'Uma linguagem de programação' },
     summary: {

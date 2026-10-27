@@ -191,3 +191,74 @@ export function faber() {
   const arm = [box(0.09, 0.45, 0.09, 0, -0.22, 0), box(0.035, 0.035, 0.32, 0, -0.45, 0.15), box(0.1, 0.16, 0.1, 0, -0.45, 0.3)];
   return { parts, arm, shoulder: new THREE.Vector3(0.27, 1.02, 0.02) };
 }
+
+/* ─── The shelf of finished work, and what fills a smithy ─── */
+
+export const SHELF = { bay: 1.5, d: 0.55, h: 2.65, shelves: [0.72, 1.56] };
+
+/** Open shelving against the back wall, `bays` wide: uprights, boards, a cornice. Front at z = SHELF.d. */
+export function pluteus(bays: number) {
+  const { bay, d, h, shelves } = SHELF;
+  const w = bays * bay;
+  const parts: THREE.BufferGeometry[] = [];
+  for (let i = 0; i <= bays; i++) parts.push(box(0.08, h, d, -w / 2 + i * bay, h / 2, d / 2));
+  for (const y of [...shelves, 0.08]) parts.push(box(w + 0.08, 0.06, d, 0, y, d / 2));
+  parts.push(box(w + 0.24, 0.1, d + 0.1, 0, h + 0.05, d / 2), box(w + 0.08, 0.05, 0.05, 0, h - 0.2, d - 0.03));
+  return parts;
+}
+
+/** A picture frame, w × h, its face at z = 0; the picture itself is set in by officina.ts. */
+export function tabella(w: number, h: number) {
+  const t = 0.07;
+  return [box(w, t, 0.05, 0, h / 2 - t / 2, 0), box(w, t, 0.05, 0, -h / 2 + t / 2, 0), box(t, h, 0.05, -w / 2 + t / 2, 0, 0), box(t, h, 0.05, w / 2 - t / 2, 0, 0), box(w - 0.1, h - 0.1, 0.02, 0, 0, -0.03)];
+}
+
+/** A furnace: a brick dome on a square base, a flue on top, its mouth glowing (at `mouth`). */
+export function fornax() {
+  const parts = [box(1.7, 0.5, 1.7, 0, 0.25, 0)];
+  const dome = new THREE.SphereGeometry(0.8, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2).scale(1, 1.05, 1).translate(0, 0.5, 0);
+  parts.push(dome, cyl(0.16, 0.2, 0.9, 0, 1.25, -0.1, 12));
+  // The mouth's arch, stepped out from the dome.
+  const arch = new THREE.TorusGeometry(0.3, 0.06, 6, 16, Math.PI).translate(0, 0.62, 0.78);
+  parts.push(arch, box(0.08, 0.14, 0.12, -0.3, 0.57, 0.78), box(0.08, 0.14, 0.12, 0.3, 0.57, 0.78));
+  return { parts, mouth: new THREE.Vector3(0, 0.62, 0.8) };
+}
+
+/** A barrel. */
+export function dolium(h = 0.8) {
+  const r = h * 0.36;
+  const parts = [lathe([[0, 0], [r * 0.85, 0], [r, h * 0.5], [r * 0.85, h], [0, h]], 18)];
+  for (const y of [0.12, 0.5, 0.88]) parts.push(new THREE.TorusGeometry(y === 0.5 ? r * 1.0 : r * 0.92, 0.012, 4, 24).rotateX(Math.PI / 2).translate(0, h * y, 0));
+  return parts;
+}
+
+/** A crate, with its slats. */
+export function cista(w = 0.7, h = 0.5, d = 0.55) {
+  const parts = [box(w, h, d, 0, h / 2, 0)];
+  for (const y of [0.15, 0.5, 0.85]) parts.push(box(w + 0.02, 0.05, d + 0.02, 0, h * y, 0));
+  return parts;
+}
+
+/** Firewood stacked against a wall. */
+export function strues(w = 1.2, rows = 4) {
+  const parts: THREE.BufferGeometry[] = [];
+  for (let r = 0; r < rows; r++) {
+    const n = Math.round(w / 0.17) - (r % 2);
+    for (let i = 0; i < n; i++) parts.push(cyl(0.075, 0.075, 0.55, 0, 0, 0, 7).rotateX(Math.PI / 2).translate(-w / 2 + 0.085 + i * 0.17 + (r % 2) * 0.085, 0.075 + r * 0.14, 0));
+  }
+  return parts;
+}
+
+/** A sack of charcoal, slumped. */
+export function saccus() {
+  return [lathe([[0, 0], [0.24, 0], [0.27, 0.2], [0.2, 0.42], [0.08, 0.52], [0.05, 0.6], [0, 0.6]], 12).scale(1, 1, 0.8)];
+}
+
+/** A grindstone in its trough, the wheel on its own (to turn), its axle at `axle`. */
+export function cos() {
+  const frame = [box(0.9, 0.35, 0.45, 0, 0.18, 0)];
+  for (const s of [-1, 1]) frame.push(box(0.06, 0.55, 0.06, s * 0.2, 0.35, 0));
+  frame.push(box(0.05, 0.05, 0.3, 0.3, 0.62, 0.0), box(0.04, 0.2, 0.04, 0.3, 0.52, 0.15)); // the crank
+  const wheel = [new THREE.CylinderGeometry(0.32, 0.32, 0.1, 24).rotateZ(Math.PI / 2)];
+  return { frame, wheel, axle: new THREE.Vector3(0, 0.62, 0) };
+}

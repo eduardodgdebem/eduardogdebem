@@ -3,7 +3,7 @@
 // page, what's on its benches listed on the right.
 import Codex from '../layouts/Codex.astro';
 import Officina from '../components/Officina.astro';
-import { PROJECTS } from '../data/projects';
+import { PROJECTS, TYPES } from '../data/projects';
 import { SITE_TITLE } from '../consts';
 import { tr, type Lang } from '../i18n/strings';
 import { PATHS } from '../i18n/paths';
@@ -15,6 +15,9 @@ interface Props {
 const { lang } = Astro.props;
 const s = tr(lang);
 const NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+// Grouped by what they are, each keeping its index (its piece in the workshop).
+const LATIN = { site: 'Paginae', language: 'Linguae' } as const;
+const groups = TYPES.map((type) => ({ type, items: PROJECTS.map((p, i) => ({ p, i })).filter(({ p }) => p.type === type) })).filter((g) => g.items.length);
 const META = {
   en: {
     title: `Projects — ${SITE_TITLE}`,
@@ -39,28 +42,43 @@ const META = {
       <p class="intro" data-i18n="officina.intro">{s('officina.intro')}</p>
     </header>
 
-    <ol class="works">
-      {PROJECTS.map((p, i) => (
-        <li class="work" data-work={i}>
-          <p class="cap">
-            <span class="num">{NUMERALS[i]}.</span> {p.latin} <span class="year">· {p.year}</span>
-          </p>
-          <h2>
-            <a href={p.url} target="_blank" rel="noopener noreferrer">{p.name}</a>
-          </h2>
-          <p class="kind">{p.kind[lang]}</p>
-          <p class="summary">{p.summary[lang]}</p>
-          <p class="made">
-            <span class="label">{s('officina.made')}</span> {p.stack.join(' · ')}
-          </p>
-          {p.note && <p class="note">{p.note[lang]}</p>}
-          <p class="links">
-            <a href={p.url} target="_blank" rel="noopener noreferrer">{p.code === p.url ? s('officina.code') : s('officina.site')} <span aria-hidden="true">↗</span></a>
-            <span class="host">{p.host}</span>
-          </p>
-        </li>
-      ))}
-    </ol>
+    {groups.map(({ type, items }) => (
+      <section class="group">
+        <h2 class="group-head">
+          <span class="group-latin">{LATIN[type]}</span>
+          <span class="group-name" data-i18n={`officina.type.${type}`}>{s(`officina.type.${type}`)}</span>
+        </h2>
+        <ol class="works">
+          {items.map(({ p, i }) => (
+            <li class="work" data-work={i}>
+              {p.preview && (
+                <a class="shot" href={p.url} target="_blank" rel="noopener noreferrer" tabindex="-1" aria-hidden="true">
+                  <img src={p.preview} alt="" width="1280" height="800" loading="lazy" decoding="async" />
+                </a>
+              )}
+              <div class="text">
+                <p class="cap">
+                  <span class="num">{NUMERALS[i]}.</span> {p.latin} <span class="year">· {p.year}</span>
+                </p>
+                <h3>
+                  <a href={p.url} target="_blank" rel="noopener noreferrer">{p.name}</a>
+                </h3>
+                <p class="kind">{p.kind[lang]}</p>
+                <p class="summary">{p.summary[lang]}</p>
+                <p class="made">
+                  <span class="label">{s('officina.made')}</span> {p.stack.join(' · ')}
+                </p>
+                {p.note && <p class="note">{p.note[lang]}</p>}
+                <p class="links">
+                  <a href={p.url} target="_blank" rel="noopener noreferrer">{p.code === p.url ? s('officina.code') : s('officina.site')} <span aria-hidden="true">↗</span></a>
+                  <span class="host">{p.host}</span>
+                </p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+    ))}
     <p class="fleuron" aria-hidden="true">❦</p>
   </Fragment>
 </Codex>
@@ -83,6 +101,74 @@ const META = {
     list-style: none;
     margin: 0;
     padding: 0;
+  }
+
+  /* A group: its Latin name in rubric small caps, then what it is in italic. */
+  .group + .group {
+    margin-top: 1.4rem;
+  }
+
+  .group-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    margin: 1rem 0 0;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--ink);
+    font-size: 1rem;
+  }
+
+  .group-latin {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 1.15rem;
+    letter-spacing: 0.12em;
+    color: var(--rubric);
+  }
+
+  .group-name {
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  /* A site's picture beside its entry, toned into the paper like a print. */
+  .work:has(.shot) {
+    display: grid;
+    grid-template-columns: minmax(7rem, 32%) 1fr;
+    gap: 0 1.1rem;
+    align-items: start;
+  }
+
+  .shot {
+    display: block;
+    margin-top: 1.15rem;
+    border: 1px solid var(--ink);
+    outline: 1px solid var(--ink);
+    outline-offset: 3px;
+    background: var(--paper);
+    overflow: hidden;
+  }
+
+  .shot img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+    object-position: top;
+    filter: grayscale(1) sepia(0.55) contrast(1.05) brightness(1.02);
+    mix-blend-mode: multiply;
+    transition: filter 0.4s;
+  }
+
+  .work.is-lit .shot img,
+  .work:hover .shot img {
+    filter: grayscale(0.15) sepia(0.2);
+  }
+
+  @media (max-width: 520px) {
+    .work:has(.shot) {
+      grid-template-columns: 1fr;
+    }
   }
 
   .work {
@@ -117,8 +203,8 @@ const META = {
     transform: translateX(0.4ch);
   }
 
-  .work.is-lit h2 a,
-  .work:focus-within h2 a {
+  .work.is-lit h3 a,
+  .work:focus-within h3 a {
     color: var(--rubric);
   }
 
@@ -132,7 +218,7 @@ const META = {
       transform: translateX(0.4ch);
     }
 
-    .work:hover h2 a {
+    .work:hover h3 a {
       color: var(--rubric);
     }
   }
@@ -149,12 +235,12 @@ const META = {
     color: var(--ink-soft);
   }
 
-  .work h2 {
+  .work h3 {
     margin: 0.1rem 0 0;
     font-size: clamp(1.45rem, 1.8vw, 1.8rem);
   }
 
-  .work h2 a {
+  .work h3 a {
     text-decoration: none;
     transition: color 0.25s;
   }

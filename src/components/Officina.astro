@@ -13,7 +13,7 @@ interface Props {
 
 const { lang = 'en' } = Astro.props;
 const s = tr(lang);
-const pieces = PROJECTS.map((p) => ({ latin: p.latin, work: p.work, name: p.name, kind: p.kind[lang], url: p.url }));
+const pieces = PROJECTS.map((p) => ({ latin: p.latin, work: p.work, preview: p.preview, name: p.name, kind: p.kind[lang], url: p.url }));
 ---
 
 <figure class="plate">
@@ -41,7 +41,7 @@ const pieces = PROJECTS.map((p) => ({ latin: p.latin, work: p.work, name: p.name
   import { lang, t } from '../scripts/codex/lang';
   import type { Work } from '../data/projects';
 
-  type Piece = { latin: string; work: Work; name: string; kind: string; url: string };
+  type Piece = { latin: string; work: Work; preview?: string; name: string; kind: string; url: string };
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const street = lang() === 'pt' ? '/pt/' : '/';
   const touch = matchMedia('(hover: none)').matches;
@@ -73,7 +73,7 @@ const pieces = PROJECTS.map((p) => ({ latin: p.latin, work: p.work, name: p.name
   });
 
   const officina = createOfficina(canvas, {
-    pieces: pieces.map(({ latin, work }) => ({ latin, work })),
+    pieces: pieces.map(({ latin, work, preview }) => ({ latin, work, preview })),
     name: 'Officina',
     reducedMotion: reduced,
     onContextLost: () => document.documentElement.classList.add('no-webgl'),

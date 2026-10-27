@@ -3,7 +3,7 @@ import { createBanner, redrawOnSpread } from './banner';
 import { gsap } from 'gsap';
 import { laurea, matrona, togatus } from './forum-models';
 import { paries, pilaster } from './library-models';
-import { ANVIL_TOP, BENCH, caminus, faber, incus, instrumenta, opus, scamnum } from './officina-models';
+import { ANVIL_TOP, BENCH, SHELF, caminus, cista, cos, dolium, faber, fornax, incus, instrumenta, opus, pluteus, saccus, scamnum, strues, tabella } from './officina-models';
 import { createInk, createPasses, fine, inscriptionTexture, merge, plateZoom } from './passes';
 import { createWalker } from './walker';
 import { createZoom } from './zoom';
@@ -17,9 +17,11 @@ import type { Work } from '../../data/projects';
 // click) opens it. The fire burns, and the smith keeps at his anvil.
 
 export interface Piece {
-  /** Lettered on the front of its bench. */
+  /** Lettered on the shelf's edge under it. */
   latin: string;
   work: Work;
+  /** A screenshot of the site, engraved in a frame over the piece (finished work only). */
+  preview?: string;
 }
 
 /** What a label is pinned over: a work (its index), the door out, or the smith. */
@@ -58,14 +60,15 @@ interface Options {
 /* ── The room ── */
 
 const BACK = -5.5; // the back wall's face
-const HALF = 8.5; // half the room's width
+const HALF = 6.6; // half the room's width: a close, crowded shop
 const FRONT = 2.6; // the floor's front edge
 const SPEED = 3.0;
 const REACH = 1.0; // how near a work he must stand
 const LINE_FREQ = 14;
-const BENCH_Z = BACK + 1.25;
-const FORGE_X = 5.4;
-const ANVIL = new THREE.Vector3(3.7, 0, -2.7);
+const FORGE_X = 1.9;
+const ANVIL = new THREE.Vector3(1.8, 0, -2.5);
+const FURNACE = new THREE.Vector3(4.85, 0, BACK + 1.0);
+const GRIND = new THREE.Vector3(-1.4, 0, -0.6);
 
 /* ── The view: as in the library ── */
 
@@ -75,6 +78,61 @@ const VIEW_Y = 2.2;
 const VIEW_Z = -2.0;
 const FIT_H = 9.8;
 const FIT_W = 9;
+
+/**
+ * A screenshot redrawn as a line engraving, for the frames on the shelf: ink
+ * (black, its coverage in alpha) where the picture is dark, in diagonal hatching
+ * that thickens with the shade, crossed in the darkest parts, with the edges
+ * drawn in. The shader inks it like lettering (uText), so it is cut in with the
+ * rest of the plate.
+ */
+async function engrave(src: string): Promise<THREE.CanvasTexture | null> {
+  const img = new Image();
+  img.decoding = 'async';
+  img.src = src;
+  try {
+    await img.decode();
+  } catch {
+    return null;
+  }
+  const W = 640;
+  const H = 400;
+  const canvas = document.createElement('canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+  ctx.drawImage(img, 0, 0, W, H);
+  const data = ctx.getImageData(0, 0, W, H);
+  const px = data.data;
+  const lum = new Float32Array(W * H);
+  for (let i = 0; i < W * H; i++) lum[i] = (0.299 * px[i * 4] + 0.587 * px[i * 4 + 1] + 0.114 * px[i * 4 + 2]) / 255;
+  const SPACE = 4.2;
+  const line = (c: number, width: number) => {
+    const f = Math.abs((((c % SPACE) + SPACE) % SPACE) - SPACE / 2) / (SPACE / 2); // 0 on a line's centre, 1 between
+    return 1 - Math.min(1, Math.max(0, (f - (width - 0.15)) / 0.3));
+  };
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const i = y * W + x;
+      // How dark, eased so the paper keeps its light parts.
+      const d = Math.min(0.92, Math.pow(1 - lum[i], 1.25) * 1.05);
+      let ink = d > 0.06 ? line(x + y, d * 0.95) : 0;
+      if (d > 0.55) ink = Math.max(ink, line(x - y, (d - 0.55) * 1.6));
+      // Edges: where the shade changes sharply.
+      if (x > 0 && y > 0 && x < W - 1 && y < H - 1) {
+        const gx = lum[i + 1] - lum[i - 1];
+        const gy = lum[i + W] - lum[i - W];
+        if (Math.hypot(gx, gy) > 0.22) ink = 1;
+      }
+      px[i * 4] = px[i * 4 + 1] = px[i * 4 + 2] = 0;
+      px[i * 4 + 3] = Math.round(Math.min(1, ink) * 235);
+    }
+  }
+  ctx.putImageData(data, 0, 0);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.anisotropy = 4;
+  return tex;
+}
 
 export function createOfficina(canvas: HTMLCanvasElement, { pieces, name, reducedMotion, onContextLost, onFocus, onOpen, onExit, onTag }: Options): Officina | null {
   let renderer: THREE.WebGLRenderer;
@@ -126,7 +184,7 @@ export function createOfficina(canvas: HTMLCanvasElement, { pieces, name, reduce
     return m;
   };
 
-  /* ── Floor, walls, the forge ── */
+  /* ── Floor, walls, the forge and the furnace ── */
 
   const floorMat = material();
   floorMat.uniforms.uPale = { value: 0.6 };
@@ -143,47 +201,100 @@ export function createOfficina(canvas: HTMLCanvasElement, { pieces, name, reduce
   }
 
   const doorX = -HALF + 0.95;
-  const benchX = pieces.slice(0, -1).map((_, i, all) => -4.6 + i * (all.length > 1 ? 8.6 / Math.max(3, all.length) : 0));
-  build(paries(HALF * 2, 5.4, doorX, benchX), 0, BACK, 0, wall);
-  for (const x of [-HALF + 2.2, 0, HALF - 0.6]) build(pilaster(x, 3.92), 0, BACK, 0, wall);
+  // Finished work on the shelf; what's still being made, on the anvil.
+  const done = pieces.flatMap((p, i) => (p.preview ? [i] : []));
+  const bays = Math.max(1, done.length);
+  const shelfX = doorX + 1.45 + (bays * SHELF.bay) / 2;
+  const bayX = (k: number) => shelfX - (bays * SHELF.bay) / 2 + SHELF.bay * (k + 0.5);
+  build(paries(HALF * 2, 5.4, doorX, [FORGE_X + 1.4]), 0, BACK, 0, wall);
+  for (const x of [doorX + 1.0, HALF - 0.5]) build(pilaster(x, 3.92), 0, BACK, 0, wall);
   inscribe('EXITVS', 1.0, 0.13, new THREE.Vector3(doorX, 2.62, BACK + 0.11));
-  inscribe('OFFICINA', 2.6, 0.1, new THREE.Vector3(-1.4, 3.92, BACK + 0.2));
+  inscribe('OPERA PERFECTA', 2.4, 0.1, new THREE.Vector3(shelfX, 2.84, BACK + 0.04));
   proxy(new THREE.Vector3(1.4, 2.6, 0.6), new THREE.Vector3(doorX, 1.3, BACK + 0.2), { exitus: true });
   for (const s of [-1, 1]) build([new THREE.BoxGeometry(0.3, 1.1, FRONT - BACK - 0.5).translate(s * (HALF + 0.15), 0.55, (FRONT + BACK - 0.5) / 2)], 0, 0, 0, wall);
 
+  build(pluteus(bays), shelfX, BACK);
   const forge = caminus();
   build(forge.parts, FORGE_X, BACK);
   const fire = forge.fire.clone().add(new THREE.Vector3(FORGE_X, 0, BACK));
-  build(instrumenta(), -0.1, BACK + 0.06, 0, wood, 2.55);
   build(incus(), ANVIL.x, ANVIL.z);
-  // A trough for quenching, by the anvil.
-  build([new THREE.BoxGeometry(0.9, 0.45, 0.5).translate(0, 0.225, 0)], ANVIL.x + 1.4, ANVIL.z + 0.2);
+  build([new THREE.BoxGeometry(0.9, 0.45, 0.5).translate(0, 0.225, 0)], ANVIL.x + 1.25, ANVIL.z + 0.25); // the quenching trough
+  const furnace = fornax();
+  build(furnace.parts, FURNACE.x, FURNACE.z);
+  const mouth = furnace.mouth.clone().add(FURNACE);
+  build(instrumenta(), FURNACE.x - 0.1, BACK + 0.06, 0, wood, 2.95);
+  // The clutter of a working shop: firewood and charcoal by the furnace,
+  // barrels and crates in the corners, a grindstone in the middle of it all.
+  build(strues(1.4, 5), HALF - 0.45, -2.2, Math.PI / 2);
+  for (const [x, z, t] of [[3.55, BACK + 0.55, 0.3], [3.15, BACK + 0.85, -0.4], [3.5, BACK + 1.2, 1.2]]) build(saccus(), x, z, t);
+  for (const [x, z, h] of [[HALF - 0.5, -0.5, 0.85], [HALF - 1.05, -0.1, 0.7], [HALF - 0.45, 0.35, 0.8]]) build(dolium(h), x, z);
+  for (const [x, z, y, t] of [[-HALF + 0.55, 1.2, 0, 0.1], [-HALF + 0.6, 1.25, 0.5, -0.2], [-HALF + 1.25, 1.55, 0, 0.4]]) build(cista(), x, z, t, wood, y);
+  // A workbench out on the floor, tools left on it, and a stool.
+  const BENCH_AT = new THREE.Vector3(2.9, 0, 0.7);
+  build(
+    [
+      ...scamnum(),
+      ...cista(0.36, 0.14, 0.24).map((g) => g.translate(-0.5, BENCH.h, 0.05)),
+      new THREE.BoxGeometry(0.035, 0.035, 0.36).translate(0.25, BENCH.h + 0.02, 0.1).rotateY(0.3),
+      new THREE.BoxGeometry(0.12, 0.07, 0.07).translate(0.32, BENCH.h + 0.035, -0.05),
+    ],
+    BENCH_AT.x,
+    BENCH_AT.z,
+    -0.08,
+  );
+  build([new THREE.CylinderGeometry(0.19, 0.17, 0.05, 14).translate(0, 0.46, 0), ...[0, 1, 2].map((k) => new THREE.CylinderGeometry(0.02, 0.025, 0.46, 5).translate(Math.cos(k * 2.1) * 0.13, 0.23, Math.sin(k * 2.1) * 0.13))], BENCH_AT.x - 0.4, BENCH_AT.z + 0.75);
+  build(dolium(0.38), BENCH_AT.x + 1.25, BENCH_AT.z + 0.35); // a bucket of water
+  const grind = cos();
+  build(grind.frame, GRIND.x, GRIND.z);
+  const wheel = build(grind.wheel, GRIND.x, GRIND.z, 0, wood, grind.axle.y);
+  // The bottom of each bay: jars and boxes, odds and ends.
+  for (let k = 0; k < bays; k++) {
+    build([...dolium(0.42).map((g) => g.translate(-0.35, 0.11, 0)), ...cista(0.42, 0.3, 0.35).map((g) => g.translate(0.25, 0.11, 0))], bayX(k), BACK + SHELF.d / 2);
+  }
 
-  /* ── The works ── */
+  /* ── The works: framed and shelved, or on the anvil ── */
 
-  type Placed = { group: THREE.Group; glow: { value: number }; lift: { value: number }; stand: THREE.Vector3; base: number; spin: number };
+  type Placed = { group: THREE.Group; glow: { value: number }; lift: { value: number }; stand: THREE.Vector3; base: number; spin: number; label: THREE.Vector3 };
   const placed: Placed[] = pieces.map((piece, i) => {
-    const onAnvil = i === pieces.length - 1 && piece.work === 'ouroboros';
+    const k = done.indexOf(i);
     const glow = { value: 0 };
     const group = new THREE.Group();
     group.add(new THREE.Mesh(merge(opus(piece.work)), material(glow)));
-    const x = onAnvil ? ANVIL.x - 0.1 : benchX[i];
-    const z = onAnvil ? ANVIL.z : BENCH_Z;
-    const base = onAnvil ? ANVIL_TOP : BENCH.h;
-    group.position.set(x, base, z);
-    // Bigger than life, so each reads across the room.
-    group.scale.setScalar(onAnvil ? 2.3 : 1.55);
     scene.add(group);
-    if (!onAnvil) {
-      build(scamnum(), x, z);
-      inscribe(piece.latin.toUpperCase(), 0.9, 0.08, new THREE.Vector3(x, BENCH.h - 0.05, z + BENCH.d / 2 + 0.006), glow);
+    if (k < 0) {
+      // On the anvil: still being forged.
+      group.position.set(ANVIL.x - 0.1, ANVIL_TOP, ANVIL.z);
+      group.scale.setScalar(2.3);
+      proxy(new THREE.Vector3(1.0, 2.0, 1.0), new THREE.Vector3(ANVIL.x, 1.0, ANVIL.z), { work: i });
+      return { group, glow, lift: { value: 0 }, stand: new THREE.Vector3(ANVIL.x, 0, ANVIL.z + 0.95), base: ANVIL_TOP, spin: 0, label: new THREE.Vector3(ANVIL.x, 2.25, ANVIL.z) };
     }
-    proxy(new THREE.Vector3(onAnvil ? 1.0 : BENCH.w, 2.0, 1.0), new THREE.Vector3(x, 1.0, z), { work: i });
-    const stand = new THREE.Vector3(x, 0, z + (onAnvil ? 0.95 : BENCH.d / 2 + 0.55));
-    return { group, glow, lift: { value: 0 }, stand, base, spin: 0 };
+    const x = bayX(k);
+    const shelfTop = SHELF.shelves[0] + 0.03;
+    group.position.set(x, shelfTop, BACK + 0.3);
+    group.scale.setScalar(1.25);
+    // Its picture over it, on the top shelf, leaning back against the wall.
+    const fw = 1.22;
+    const fh = 0.78;
+    const frame = new THREE.Group();
+    frame.add(new THREE.Mesh(merge(tabella(fw, fh)), material(glow)));
+    const picture = material(glow);
+    picture.uniforms.uPale.value = 1; // the engraving is the picture's own lines, not the plane's shading
+    frame.add(new THREE.Mesh(new THREE.PlaneGeometry(fw - 0.12, fh - 0.12).translate(0, 0, 0.012), picture));
+    frame.position.set(x, SHELF.shelves[1] + 0.03 + fh / 2, BACK + 0.24);
+    frame.rotation.x = -0.12;
+    scene.add(frame);
+    if (piece.preview) engrave(piece.preview).then((tex) => {
+      if (!tex) return;
+      textures.push(tex);
+      picture.uniforms.uText.value = tex;
+      picture.uniforms.uHasText.value = 1;
+    });
+    inscribe(piece.latin.toUpperCase(), 0.8, 0.06, new THREE.Vector3(x, SHELF.shelves[0] - 0.02, BACK + SHELF.d + 0.006), glow);
+    proxy(new THREE.Vector3(SHELF.bay - 0.1, 2.0, 0.9), new THREE.Vector3(x, 1.25, BACK + 0.45), { work: i });
+    return { group, glow, lift: { value: 0 }, stand: new THREE.Vector3(x, 0, BACK + SHELF.d + 0.7), base: shelfTop, spin: 0, label: new THREE.Vector3(x, 2.55, BACK + 0.3) };
   });
 
-  /* ── The smith at the anvil; an apprentice; someone looking at the work ── */
+  /* ── The smith at the anvil; a grinder at his wheel; an apprentice; a visitor at the shelf ── */
 
   const smith = faber();
   const smithAt = new THREE.Vector3(ANVIL.x + 0.45, 0, ANVIL.z - 0.6);
@@ -195,15 +306,20 @@ export function createOfficina(canvas: HTMLCanvasElement, { pieces, name, reduce
   const strikeAt = new THREE.Vector3(ANVIL.x + 0.25, ANVIL_TOP, ANVIL.z);
 
   const figures = { civis: merge(togatus('walker')), matrona: merge(matrona()) };
+  // The grinder, leaning to his crank, a blade to the wheel.
+  const grinder = new THREE.Mesh(figures.civis, wood);
+  grinder.position.set(GRIND.x + 0.62, 0, GRIND.z - 0.1);
+  grinder.rotation.y = -Math.PI / 2;
+  scene.add(grinder);
   const apprentice = new THREE.Mesh(figures.civis, wood);
   apprentice.add(new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.9).translate(0, 1.0, 0.1), wood)); // a bar of iron on his shoulder
-  apprentice.position.set(-2, 0, 1.4);
+  apprentice.position.set(-2, 0, 1.45);
   scene.add(apprentice);
   let apprenticeDir = 1;
   const visitor = new THREE.Mesh(figures.matrona, wood);
-  if (benchX.length > 1) {
-    visitor.position.set(benchX[1] + 0.75, 0, BENCH_Z + 1.05);
-    visitor.rotation.y = Math.PI * 0.85;
+  if (bays > 1) {
+    visitor.position.set(bayX(1) + 0.65, 0, BACK + SHELF.d + 1.0);
+    visitor.rotation.y = Math.PI * 0.88;
     scene.add(visitor);
   }
 
@@ -212,12 +328,18 @@ export function createOfficina(canvas: HTMLCanvasElement, { pieces, name, reduce
   const citizen = new THREE.Mesh(figures.civis, material());
   citizen.add(new THREE.Mesh(merge(laurea()), material({ value: 1 })));
   scene.add(citizen);
+  const around = (x: number, z: number, r: number) => ({ x0: x - r, x1: x + r, z0: z - r, z1: z + r });
   const obstacles = [
-    ...benchX.map((x) => ({ x0: x - BENCH.w / 2 - 0.2, x1: x + BENCH.w / 2 + 0.2, z0: BACK, z1: BENCH_Z + BENCH.d / 2 + 0.25 })),
+    { x0: shelfX - (bays * SHELF.bay) / 2 - 0.1, x1: shelfX + (bays * SHELF.bay) / 2 + 0.1, z0: BACK, z1: BACK + SHELF.d + 0.25 },
     { x0: ANVIL.x - 0.6, x1: ANVIL.x + 0.7, z0: ANVIL.z - 1.1, z1: ANVIL.z + 0.55 },
-    { x0: ANVIL.x + 0.9, x1: ANVIL.x + 1.9, z0: ANVIL.z - 0.1, z1: ANVIL.z + 0.55 },
-    { x0: FORGE_X - 1.9, x1: FORGE_X + 1.1, z0: BACK, z1: BACK + 1.4 },
-    { x0: visitor.position.x - 0.35, x1: visitor.position.x + 0.35, z0: visitor.position.z - 0.35, z1: visitor.position.z + 0.35 },
+    { x0: ANVIL.x + 0.75, x1: ANVIL.x + 1.75, z0: ANVIL.z, z1: ANVIL.z + 0.55 },
+    { x0: FORGE_X - 1.75, x1: FORGE_X + 1.0, z0: BACK, z1: BACK + 1.25 },
+    { x0: FURNACE.x - 1.6, x1: HALF, z0: BACK, z1: FURNACE.z + 0.95 },
+    { x0: HALF - 1.4, x1: HALF, z0: -3.0, z1: 0.7 },
+    { x0: -HALF, x1: -HALF + 1.6, z0: 0.9, z1: FRONT },
+    { x0: GRIND.x - 0.5, x1: GRIND.x + 0.95, z0: GRIND.z - 0.35, z1: GRIND.z + 0.35 },
+    around(visitor.position.x, visitor.position.z, 0.35),
+    { x0: BENCH_AT.x - BENCH.w / 2 - 0.15, x1: BENCH_AT.x + BENCH.w / 2 + 0.15, z0: BENCH_AT.z - BENCH.d / 2 - 0.15, z1: BENCH_AT.z + BENCH.d / 2 + 0.15 },
   ];
   const clampToRoom = (p: THREE.Vector3) => {
     p.x = THREE.MathUtils.clamp(p.x, -HALF + 0.5, HALF - 0.5);
@@ -426,7 +548,7 @@ export function createOfficina(canvas: HTMLCanvasElement, { pieces, name, reduce
   const target = new THREE.Vector3();
   const lean = new THREE.Vector3();
   const follow = (dt: number) => {
-    const goal = listed !== null && !busy ? placed[listed].group.position.x : citizen.position.x;
+    const goal = listed !== null && !busy ? placed[listed].stand.x : citizen.position.x;
     const limit = Math.max(0, HALF + 0.6 - halfW);
     const x = THREE.MathUtils.clamp(goal, -limit, limit);
     const k = reducedMotion ? 1 : 1 - Math.exp(-dt * 3);
@@ -466,6 +588,19 @@ export function createOfficina(canvas: HTMLCanvasElement, { pieces, name, reduce
     scene.add(fine(line));
     return { line, dx: (k - 3) * 0.17, phase: k * 1.9 };
   });
+  // The furnace's mouth, fuller and lower than the forge's flames.
+  const furnaceFlames = Array.from({ length: 6 }, (_, k) => {
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(Array.from({ length: 6 }, () => new THREE.Vector3())), flameMat);
+    scene.add(fine(line));
+    return { line, dx: (k - 2.5) * 0.09, phase: k * 2.3 + 1 };
+  });
+  // Sparks off the grindstone, a steady spray toward the front.
+  const GRITS = 10;
+  const gritGeo = new THREE.BufferGeometry();
+  gritGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(GRITS * 6), 3));
+  scene.add(fine(new THREE.LineSegments(gritGeo, flameMat)));
+  const grits = Array.from({ length: GRITS }, (_, i) => ({ p: new THREE.Vector3(), v: new THREE.Vector3(), age: i * 0.05 }));
+  const gritFrom = new THREE.Vector3(GRIND.x + 0.28, grind.axle.y + 0.18, GRIND.z + 0.05);
   const SPARKS = 14;
   const sparkGeo = new THREE.BufferGeometry();
   sparkGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(SPARKS * 6), 3));
@@ -510,10 +645,38 @@ export function createOfficina(canvas: HTMLCanvasElement, { pieces, name, reduce
       sp.setXYZ(i * 2 + 1, tail.x, gone ? -10 : tail.y, tail.z);
     });
     sp.needsUpdate = true;
+    for (const f of furnaceFlames) {
+      const p = f.line.geometry.attributes.position as THREE.BufferAttribute;
+      const tall = 0.22 + 0.08 * Math.sin(t * 7 + f.phase * 2);
+      for (let i = 0; i < 6; i++) {
+        const u = i / 5;
+        p.setXYZ(i, mouth.x + f.dx * (1 - u * 0.5) + Math.sin(t * 9 + u * 6 + f.phase) * 0.04 * u, mouth.y - 0.25 + u * tall, mouth.z + 0.02);
+      }
+      p.needsUpdate = true;
+    }
+    wheel.rotation.x -= dt * 9;
+    grinder.rotation.z = Math.sin(t * 9) * 0.03;
+    const gp = gritGeo.attributes.position as THREE.BufferAttribute;
+    grits.forEach((g, i) => {
+      g.age += dt;
+      if (g.age > 0.45) {
+        g.age = 0;
+        g.p.copy(gritFrom);
+        g.v.set(0.4 + Math.random() * 0.8, 0.6 + Math.random() * 1.2, 0.8 + Math.random() * 1.0);
+      }
+      g.v.y -= 9 * dt;
+      g.p.addScaledVector(g.v, dt);
+      const tail = g.p.clone().addScaledVector(g.v, -0.03);
+      const off = g.p.y < 0 ? -10 : 0;
+      gp.setXYZ(i * 2, g.p.x, g.p.y + off, g.p.z);
+      gp.setXYZ(i * 2 + 1, tail.x, tail.y + off, tail.z);
+    });
+    gp.needsUpdate = true;
     apprentice.position.x += apprenticeDir * 0.7 * dt;
-    if (Math.abs(apprentice.position.x + 1) > 4.5) {
+    // To and fro along the front, short of the bench.
+    if (apprentice.position.x > 1.4 || apprentice.position.x < -4.0) {
       apprenticeDir = -apprenticeDir;
-      apprentice.position.x = -1 + Math.sign(apprentice.position.x + 1) * 4.5;
+      apprentice.position.x = THREE.MathUtils.clamp(apprentice.position.x, -4.0, 1.4);
     }
     apprentice.rotation.y = apprenticeDir > 0 ? Math.PI / 2 : -Math.PI / 2;
     apprentice.position.y = Math.abs(Math.sin(t * 5)) * 0.04;
@@ -541,7 +704,7 @@ export function createOfficina(canvas: HTMLCanvasElement, { pieces, name, reduce
       pinned = '';
       return;
     }
-    if (typeof subject === 'number') anchor.copy(placed[subject].group.position).setY(placed[subject].base + 1.3);
+    if (typeof subject === 'number') anchor.copy(placed[subject].label);
     else if (subject === 'exitus') anchor.set(doorX, 2.8, BACK + 0.2);
     else anchor.set(smithAt.x, 1.9, smithAt.z);
     anchor.project(camera);
@@ -579,7 +742,7 @@ export function createOfficina(canvas: HTMLCanvasElement, { pieces, name, reduce
     for (const p of placed) {
       p.spin += dt * p.lift.value;
       p.group.rotation.y = reducedMotion ? 0 : Math.sin(p.spin * 1.3) * 0.6 * p.lift.value;
-      p.group.position.y = p.base + p.lift.value * 0.12;
+      p.group.position.y = p.base + p.lift.value * 0.06;
     }
     if (!reducedMotion) drawLife(dt, clock);
     render();
