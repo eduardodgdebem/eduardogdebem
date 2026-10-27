@@ -1,63 +1,80 @@
-# Astro Starter Kit: Blog
+# Codex Eduardi
+
+The personal site of Eduardo de Bem, full stack developer in Florianópolis: [eduardogdebem.com](https://eduardogdebem.com).
+
+The whole site is an open book. Every page is a two-page spread, and going from one page to another turns the leaf. The left page of most spreads holds an engraved 3D plate, drawn in real time to look like a copper-plate engraving, where a small citizen walks a Roman city:
+
+| Page | Address | The plate |
+| :--- | :--- | :--- |
+| Index | `/` | The Via Sacra: a street to walk, with a building for each section |
+| Of the author | `/about/` | A plaza with the author's statue and a monument for each interest |
+| Field notes | `/blog/` | The library: every post is a scroll on the shelves |
+| Workshop | `/projects/` | The forge: finished projects on a shelf, one still on the anvil |
+| Ludus | `/ludus/` | A battle game in the Colosseum, Romans against Gauls |
+
+Each page is also in Portuguese, under `/pt/`. Field notes posts are in English only. On a phone held upright the book becomes a scroll.
+
+## Stack
+
+- [Astro](https://astro.build) 6, static pages, on Cloudflare Workers
+- [Three.js](https://threejs.org) for the plates, with a custom engraving shader
+- [GSAP](https://gsap.com) for the animation
+- Tailwind CSS 4, plus a hand-written book stylesheet (`src/styles/codex.css`)
+- Markdown and MDX for the field notes
+
+## Getting started
+
+Requires Node.js 22.12 or later.
 
 ```sh
-npm create astro@latest -- --template blog
+npm install
+npm run dev
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+The dev server runs at [localhost:4321](http://localhost:4321).
 
-Features:
+## Commands
 
-- ✅ Minimal styling (make it your own!)
-- ✅ 100/100 Lighthouse performance
-- ✅ SEO-friendly with canonical URLs and Open Graph data
-- ✅ Sitemap support
-- ✅ RSS Feed support
-- ✅ Markdown & MDX support
+| Command | What it does |
+| :--- | :--- |
+| `npm run dev` | Starts the dev server |
+| `npm run build` | Builds the site to `dist/` |
+| `npm run preview` | Builds, then serves the build with Wrangler |
+| `npm run deploy` | Builds, then deploys to Cloudflare |
+| `npm run previews` | Retakes the screenshots of the projects' sites, in `public/projects/` |
+| `npm run cv` | Exports the CV to `public/eduardo-de-bem-cv.pdf` from the sibling `cv` project |
 
-## 🚀 Project Structure
+Page turns only show their real behaviour on a production build. Check them with `npm run build`, then `npx serve dist/client`, not only in the dev server.
 
-Inside of your Astro project, you'll see the following folders and files:
+## Writing a field note
 
-```text
-├── public/
-├── src/
-│   ├── assets/
-│   ├── components/
-│   ├── content/
-│   ├── layouts/
-│   └── pages/
-├── astro.config.mjs
-├── README.md
-├── package.json
-└── tsconfig.json
+Add a `.md` or `.mdx` file to `src/content/blog/`. Its file name becomes its address: `my-note.md` is served at `/blog/my-note/`.
+
+```yaml
+---
+title: My note
+description: One line about it, for the listing and search results.
+pubDate: 2026-10-27
+tags: [dev]
+---
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+Optional fields: `updatedDate`, `heroImage`, and `noindex: true` to keep a draft out of search results. A new tag gets its own subject page at `/blog/tag/<tag>/` automatically. The new note appears as a scroll in the library and as a chapter of the book.
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+## Adding a project
 
-The `src/content/` directory contains "collections" of related Markdown and MDX documents. Use `getCollection()` to retrieve posts from `src/content/blog/`, and type-check your frontmatter using an optional schema. See [Astro's Content Collections docs](https://docs.astro.build/en/guides/content-collections/) to learn more.
+Add it to `PROJECTS` in `src/data/projects.ts`, with its link, its type, its summary in both languages and the object that stands for it in the workshop. Once its site is live, add it to `scripts/previews.mjs` and run `npm run previews` to take its screenshot.
 
-Any static assets, like images, can be placed in the `public/` directory.
+## Text and languages
 
-## 🧞 Commands
+Every piece of text on the pages lives in `src/i18n/strings.ts`, under the same key in English and Portuguese. Page addresses in both languages are in `src/i18n/paths.ts`.
 
-All commands are run from the root of the project, from a terminal:
+## Deploying
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+The site deploys to Cloudflare Workers. A merge into `main` deploys it, and every pull request gets a preview build. `main` is protected: it can't be force-pushed or deleted, so changes go through a branch and a pull request.
 
-## 👀 Want to learn more?
+The only server route, `/api/now-playing.json`, reads what the author is listening to from Jellyfin. It is switched off on the page for now (`SHOW_NOW_PLAYING` in `src/consts.ts`). It needs three secrets: `JELLYFIN_URL`, `JELLYFIN_API_KEY` and `JELLYFIN_USER_ID`. Locally they go in `.dev.vars` (see `.dev.vars.example`); in production, run `npx wrangler secret put <NAME>`.
 
-Check out [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+## More
 
-## Credit
-
-This theme is based off of the lovely [Bear Blog](https://github.com/HermanMartinus/bearblog/).
+`CLAUDE.md` describes how each part of the site is built, in detail, with the pitfalls found along the way.
