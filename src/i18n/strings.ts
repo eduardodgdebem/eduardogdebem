@@ -56,7 +56,7 @@ const EN = {
   'cogitator.by': 'after Rodin',
   'officina.title': 'The workshop',
   'officina.intro': 'Things I have made for people, and one for myself. Walk up to a piece in the workshop, or pick one here.',
-  'officina.note': 'the forge; finished work on the shelf, the rest still on the anvil.',
+  'officina.note': 'the forge: finished work on the shelf, the rest on the anvil.',
   'officina.hint':
     '<kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to walk · Walk up to a piece to see what it is · <kbd>Enter</kbd> to open it · Click a piece to open it',
   'officina.touch': 'Tap the floor to walk there, or a piece to open it.',
@@ -250,7 +250,7 @@ const PT: Record<StringKey, string> = {
   'cogitator.by': 'segundo Rodin',
   'officina.title': 'A oficina',
   'officina.intro': 'Coisas que fiz para outras pessoas, e uma para mim. Chegue perto de uma peça na oficina, ou escolha uma aqui.',
-  'officina.note': 'a forja; o trabalho pronto na prateleira, o resto ainda na bigorna.',
+  'officina.note': 'a forja: o pronto na prateleira, o resto na bigorna.',
   'officina.hint':
     '<kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> ou <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> para andar · Chegue perto de uma peça para ver o que é · <kbd>Enter</kbd> para abri-la · Clique numa peça para abri-la',
   'officina.touch': 'Toque no chão para andar até lá, ou numa peça para abri-la.',

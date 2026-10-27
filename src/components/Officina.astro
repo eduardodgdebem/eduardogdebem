@@ -72,12 +72,28 @@ const pieces = PROJECTS.map((p) => ({ latin: p.latin, work: p.work, preview: p.p
     else if (tagged === 'exitus') leave();
   });
 
+  // A piece in focus in the workshop lights its entry: its fold opens, and on
+  // the spread (where the page scrolls on its own) it's brought into view. Not
+  // when the entry itself is what the pointer's on.
+  const spread = matchMedia('(min-aspect-ratio: 1/1)');
+  let fromList = false;
+  const light = (i: number | null) => {
+    for (const el of entries) {
+      const on = Number(el.dataset.work) === i;
+      el.classList.toggle('is-lit', on);
+      if (!on || fromList) continue;
+      const fold = el.closest('details');
+      if (fold && !fold.open) fold.open = true;
+      if (spread.matches) setTimeout(() => el.scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' }), fold?.open ? 60 : 300);
+    }
+  };
+
   const officina = createOfficina(canvas, {
     pieces: pieces.map(({ latin, work, preview }) => ({ latin, work, preview })),
     name: 'Officina',
     reducedMotion: reduced,
     onContextLost: () => document.documentElement.classList.add('no-webgl'),
-    onFocus: (i) => entries.forEach((el) => el.classList.toggle('is-lit', Number(el.dataset.work) === i)),
+    onFocus: light,
     onOpen: open,
     onExit: leave,
     onTag: (subject, x, y) => showTag(subject, x, y),
@@ -116,9 +132,16 @@ const pieces = PROJECTS.map((p) => ({ latin: p.latin, work: p.work, preview: p.p
   // The list on the facing page picks its piece out (a mouse's hover, or the keyboard's focus).
   for (const el of entries) {
     const i = Number(el.dataset.work);
-    el.addEventListener('pointerenter', (e) => e.pointerType === 'mouse' && officina?.highlight(i));
+    el.addEventListener('pointerenter', (e) => {
+      if (e.pointerType !== 'mouse') return;
+      fromList = true;
+      officina?.highlight(i);
+    });
     el.addEventListener('focusin', () => el.matches(':focus-within') && officina?.highlight(i));
-    el.addEventListener('pointerleave', () => officina?.highlight(null));
+    el.addEventListener('pointerleave', () => {
+      officina?.highlight(null);
+      fromList = false;
+    });
     el.addEventListener('focusout', () => officina?.highlight(null));
   }
 
