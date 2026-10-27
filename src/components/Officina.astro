@@ -1,0 +1,164 @@
+---
+// The projects' plate: inside the Fabrica (src/scripts/codex/officina.ts). The
+// citizen walks the workshop; every project is a piece on a bench. Pieces are
+// linked to the list on the facing page by index: an element with
+// `data-work={i}` lights piece i.
+import { tr, type Lang } from '../i18n/strings';
+import { PROJECTS } from '../data/projects';
+import PlateTools from './PlateTools.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const s = tr(lang);
+const pieces = PROJECTS.map((p) => ({ latin: p.latin, work: p.work, preview: p.preview, name: p.name, kind: p.kind[lang], url: p.url }));
+---
+
+<figure class="plate">
+  <div class="plate-frame">
+    <canvas class="plate-canvas officina-canvas" data-officina data-pieces={JSON.stringify(pieces)} aria-hidden="true"></canvas>
+    <div class="plate-fallback" aria-hidden="true"><span>Officina</span></div>
+    <div class="place-tag" data-tag aria-hidden="true">
+      <span class="tag-latin" data-tag-latin></span>
+      <span class="tag-page" data-tag-page></span>
+      <span class="tag-by" data-tag-by></span>
+      <span class="tag-act" data-tag-act></span>
+    </div>
+    <PlateTools lang={lang} info="officina" />
+  </div>
+  <figcaption class="plate-caption">
+    <span class="tab">Tab. VII</span>
+    <span class="cap-latin">Officina</span>
+    <span class="cap-note" data-i18n="officina.note">{s('officina.note')}</span>
+  </figcaption>
+</figure>
+
+<script>
+  import { createOfficina, type Subject } from '../scripts/codex/officina';
+  import { bookOpened } from '../scripts/codex/opening';
+  import { lang, t } from '../scripts/codex/lang';
+  import type { Work } from '../data/projects';
+
+  type Piece = { latin: string; work: Work; preview?: string; name: string; kind: string; url: string };
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const street = lang() === 'pt' ? '/pt/' : '/';
+  const touch = matchMedia('(hover: none)').matches;
+  const canvas = document.querySelector<HTMLCanvasElement>('[data-officina]')!;
+  const pieces: Piece[] = JSON.parse(canvas.dataset.pieces!);
+  const tag = canvas.parentElement!.querySelector<HTMLElement>('[data-tag]')!;
+  const tagLatin = tag.querySelector<HTMLElement>('[data-tag-latin]')!;
+  const tagPage = tag.querySelector<HTMLElement>('[data-tag-page]')!;
+  const tagBy = tag.querySelector<HTMLElement>('[data-tag-by]')!;
+  const tagAct = tag.querySelector<HTMLElement>('[data-tag-act]')!;
+  const entries = [...document.querySelectorAll<HTMLElement>('[data-work]')];
+
+  await Promise.all([document.fonts.load('150px "IM Fell English SC"'), document.fonts.load('600 80px Cinzel')]).catch(() => undefined);
+
+  // A piece opens in a new tab, from the click or key itself (so it isn't
+  // blocked); the citizen walks over to it meanwhile.
+  const open = (i: number) => {
+    const url = pieces[i]?.url;
+    if (!url) return;
+    window.open(url, '_blank', 'noopener');
+    officina?.visit(i);
+  };
+  const leave = () => (officina ? officina.leave().then(() => location.assign(street)) : location.assign(street));
+
+  let tagged: Subject | null = null;
+  tag.addEventListener('click', () => {
+    if (typeof tagged === 'number') open(tagged);
+    else if (tagged === 'exitus') leave();
+  });
+
+  // A piece in focus in the workshop lights its entry: its fold opens, and on
+  // the spread (where the page scrolls on its own) it's brought into view. Not
+  // when the entry itself is what the pointer's on.
+  const spread = matchMedia('(min-aspect-ratio: 1/1)');
+  let fromList = false;
+  const light = (i: number | null) => {
+    for (const el of entries) {
+      const on = Number(el.dataset.work) === i;
+      el.classList.toggle('is-lit', on);
+      if (!on || fromList) continue;
+      const fold = el.closest('details');
+      if (fold && !fold.open) fold.open = true;
+      if (spread.matches) setTimeout(() => el.scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' }), fold?.open ? 60 : 300);
+    }
+  };
+
+  const officina = createOfficina(canvas, {
+    pieces: pieces.map(({ latin, work, preview }) => ({ latin, work, preview })),
+    name: 'Officina',
+    reducedMotion: reduced,
+    onContextLost: () => document.documentElement.classList.add('no-webgl'),
+    onFocus: light,
+    onOpen: open,
+    onExit: leave,
+    onTag: (subject, x, y) => showTag(subject, x, y),
+  });
+  if (!officina) document.documentElement.classList.add('no-webgl');
+  officina?.intro(bookOpened());
+
+  function showTag(subject: Subject | null, x: number, y: number) {
+    tag.classList.toggle('is-shown', subject !== null);
+    if (subject === null) return (tagged = null);
+    let latin: string, page: string, by: string, act: string;
+    if (typeof subject === 'number') {
+      const p = pieces[subject];
+      // Where the Latin is the name (Ode), the second line says what it is instead.
+      const same = p.latin === p.name;
+      [latin, page, by, act] = [p.latin, same ? p.kind : p.name, same ? '' : p.kind, touch ? t('officina.visit') : ''];
+      if (!touch) by = [by, t('officina.visit.key')].filter(Boolean).join(' · ');
+    } else if (subject === 'exitus') {
+      [latin, page, by, act] = ['Exitus', t('exitus.page'), touch ? '' : t('exitus.key'), touch ? t('exitus.act') : ''];
+    } else {
+      [latin, page, by, act] = ['Faber', t('faber.page'), t('faber.by'), ''];
+    }
+    tagLatin.textContent = latin;
+    tagPage.textContent = page;
+    tagBy.textContent = by;
+    tagged = subject;
+    tag.classList.toggle('is-actionable', !!act);
+    tagAct.textContent = act;
+    const w = tag.offsetWidth;
+    const frame = tag.parentElement!.clientWidth;
+    tag.style.left = `${Math.min(Math.max(x, w / 2 + 6), frame - w / 2 - 6)}px`;
+    tag.style.top = `${y}px`;
+    tag.classList.toggle('is-below', y < tag.offsetHeight + 70);
+  }
+
+  // The list on the facing page picks its piece out (a mouse's hover, or the keyboard's focus).
+  for (const el of entries) {
+    const i = Number(el.dataset.work);
+    el.addEventListener('pointerenter', (e) => {
+      if (e.pointerType !== 'mouse') return;
+      fromList = true;
+      officina?.highlight(i);
+    });
+    el.addEventListener('focusin', () => el.matches(':focus-within') && officina?.highlight(i));
+    el.addEventListener('pointerleave', () => {
+      officina?.highlight(null);
+      fromList = false;
+    });
+    el.addEventListener('focusout', () => officina?.highlight(null));
+  }
+
+  window.addEventListener('pageshow', (e) => e.persisted && officina?.reset());
+  window.addEventListener('pagehide', (e) => !e.persisted && officina?.dispose());
+</script>
+
+<style>
+  .officina-canvas,
+  .officina-canvas:active {
+    cursor: default;
+  }
+
+  .plate :global(.place-tag) {
+    max-width: min(18rem, 86%);
+    width: max-content;
+    white-space: normal;
+    text-align: center;
+  }
+</style>

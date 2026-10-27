@@ -22,6 +22,7 @@ const EN = {
   'home.index.author': 'Of the author, at length',
   'home.index.author.pg': 'about',
   'home.index.workshop': 'Workshop',
+  'home.index.workshop.pg': 'projects',
   'home.index.letters': 'Correspondence',
   'home.index.letters.pg': 'contact',
   'home.hint':
@@ -33,8 +34,8 @@ const EN = {
   'place.forum': 'walk the street, and go in at a door to turn the page.',
   'place.bibliotheca': 'the library, where the field notes are kept.',
   'place.bibliotheca.page': 'Field notes',
-  'place.fabrica': 'the forge: the workshop, on GitHub.',
-  'place.fabrica.page': 'Workshop · GitHub',
+  'place.fabrica': 'the forge: the workshop, where the work is made.',
+  'place.fabrica.page': 'Workshop · projects',
   'place.statua': 'the author, in stone and at length.',
   'place.statua.page': 'Of the author',
 
@@ -53,6 +54,21 @@ const EN = {
   'exitus.act': 'Tap here to leave ›',
   'cogitator.page': 'a thinker, some eighteen centuries early',
   'cogitator.by': 'after Rodin',
+  'officina.title': 'The workshop',
+  'officina.intro': 'Things I have made for people, and one for myself. Walk up to a piece in the workshop, or pick one here.',
+  'officina.note': 'the forge: finished work on the shelf, the rest on the anvil.',
+  'officina.hint':
+    '<kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to walk · Walk up to a piece to see what it is · <kbd>Enter</kbd> to open it · Click a piece to open it',
+  'officina.touch': 'Tap the floor to walk there, or a piece to open it.',
+  'officina.visit': 'Tap here to open it ›',
+  'officina.visit.key': 'press Enter to open it',
+  'officina.site': 'Visit the site',
+  'officina.code': 'Read the code',
+  'officina.made': 'Made with',
+  'officina.type.site': 'Sites',
+  'officina.type.language': 'Languages',
+  'faber.page': '“Every man is the smith of his own fortune.”',
+  'faber.by': '— Appius Claudius Caecus',
 
   'about.all': 'All contact details ↓',
   'about.p1':
@@ -200,6 +216,7 @@ const PT: Record<StringKey, string> = {
   'home.index.author': 'Do autor, por extenso',
   'home.index.author.pg': 'sobre',
   'home.index.workshop': 'Oficina',
+  'home.index.workshop.pg': 'projetos',
   'home.index.letters': 'Correspondência',
   'home.index.letters.pg': 'contato',
   'home.hint':
@@ -211,8 +228,8 @@ const PT: Record<StringKey, string> = {
   'place.forum': 'ande pela rua e entre por uma porta para virar a página.',
   'place.bibliotheca': 'a biblioteca, onde ficam as notas de campo.',
   'place.bibliotheca.page': 'Notas de campo',
-  'place.fabrica': 'a forja: a oficina, no GitHub.',
-  'place.fabrica.page': 'Oficina · GitHub',
+  'place.fabrica': 'a forja: a oficina, onde o trabalho é feito.',
+  'place.fabrica.page': 'Oficina · projetos',
   'place.statua': 'o autor, em pedra e por extenso.',
   'place.statua.page': 'Do autor',
 
@@ -231,6 +248,21 @@ const PT: Record<StringKey, string> = {
   'exitus.act': 'Toque aqui para sair ›',
   'cogitator.page': 'um pensador, uns dezoito séculos adiantado',
   'cogitator.by': 'segundo Rodin',
+  'officina.title': 'A oficina',
+  'officina.intro': 'Coisas que fiz para outras pessoas, e uma para mim. Chegue perto de uma peça na oficina, ou escolha uma aqui.',
+  'officina.note': 'a forja: o pronto na prateleira, o resto na bigorna.',
+  'officina.hint':
+    '<kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> ou <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> para andar · Chegue perto de uma peça para ver o que é · <kbd>Enter</kbd> para abri-la · Clique numa peça para abri-la',
+  'officina.touch': 'Toque no chão para andar até lá, ou numa peça para abri-la.',
+  'officina.visit': 'Toque aqui para abrir ›',
+  'officina.visit.key': 'aperte Enter para abrir',
+  'officina.site': 'Visitar o site',
+  'officina.code': 'Ler o código',
+  'officina.made': 'Feito com',
+  'officina.type.site': 'Sites',
+  'officina.type.language': 'Linguagens',
+  'faber.page': '“Cada um é o ferreiro da própria sorte.”',
+  'faber.by': '— Ápio Cláudio Cego',
 
   'about.all': 'Todos os contatos ↓',
   'about.p1':

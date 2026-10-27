@@ -685,6 +685,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
       sessionStorage.setItem('forum-at', place);
       // In at the library's front door, not back at the last roll read.
       if (place === 'bibliotheca') sessionStorage.removeItem('library-at');
+      if (place === 'fabrica') sessionStorage.removeItem('officina-at');
     } catch {}
     indexed = place;
     refocus();
