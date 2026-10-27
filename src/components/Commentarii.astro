@@ -51,7 +51,7 @@ const description = activeTag
 const thin = !!activeTag && posts.length < 3;
 ---
 
-<Codex lang={lang} alternates={activeTag ? undefined : PATHS.notes} title={title} description={description} folio={activeTag ? 7 : 5} noindex={thin}>
+<Codex lang={lang} alternates={activeTag ? undefined : PATHS.notes} title={title} description={description} at="notes" noindex={thin}>
   <Fragment slot="verso">
     {activeTag ? <Plate plate={plateForTags([activeTag])} banner={subjectBanner(activeTag)} /> : <Library rolls={rolls} banner="Commentarii" lang={lang} />}
   </Fragment>
