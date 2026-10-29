@@ -31,7 +31,7 @@ interface Options {
 
 // Nocturne: light lines on a night plate, and one accent.
 export const PAPER = 0x10171b;
-export const INK = 0xd6d3c9;
+export const INK = 0xe2dfd6;
 export const RUBRIC = 0x34d27b;
 export const BLUE = 0x7f9cc4;
 
@@ -126,10 +126,11 @@ export const engraveFragment = /* glsl */ `
     float c2 = dot(vObj, normalize(vec3(1.0, -0.35, 0.6))) * uFreq * 0.9;
     float c3 = dot(vObj, normalize(vec3(-0.6, 0.4, 1.0))) * uFreq * 0.7;
 
-    // Fine lines: the darkest stay well short of solid, so a plate never blots.
-    float ink = lines(c1, clamp(dark * 0.34, 0.0, 0.3), c2);
-    ink = max(ink, lines(c2, clamp((dark - 0.55) * 0.42, 0.0, 0.22), c1));
-    ink = max(ink, lines(c3, clamp((dark - 0.85) * 0.6, 0.0, 0.16), c1));
+    // Fine lines, finer still in light on the night plate: a hairline cut
+    // reads, a broad one floods the plate.
+    float ink = lines(c1, clamp(dark * 0.16, 0.0, 0.13), c2);
+    ink = max(ink, lines(c2, clamp((dark - 0.55) * 0.22, 0.0, 0.1), c1));
+    ink = max(ink, lines(c3, clamp((dark - 0.85) * 0.3, 0.0, 0.07), c1));
 
     // Bare highlights stay paper.
     ink *= smoothstep(0.0, 0.12, dark);
@@ -144,9 +145,8 @@ export const engraveFragment = /* glsl */ `
       ink = max(ink * 0.6, letters);
       red = max(red, tx.r * letters);
     }
-    // Red ink in r, blue ink in g, the surface's light in b (the paper pass
-    // tints the form with it), coverage in a.
-    gl_FragColor = vec4(red, max(uBlue, vInstanceBlue), tone, ink * (1.0 - vInstanceFade));
+    // Red ink in r, blue ink in g, coverage in a.
+    gl_FragColor = vec4(red, max(uBlue, vInstanceBlue), 0.0, ink * (1.0 - vInstanceFade));
   }
 `;
 
@@ -231,11 +231,6 @@ export const compositeFragment = /* glsl */ `
     }
     edge *= step(0.002, uReveal);
     float covered = texture2D(tNormal, vUv).a;
-
-    // Under the lines, the form itself in slate tones, lighter where it's lit,
-    // so a building stands out of the sky even where it's in shade.
-    vec3 body = uPaper * (1.5 + 1.3 * inkSample.b);
-    col = mix(col, body, covered * clamp(uReveal * 1.5, 0.0, 1.0));
 
     float s = star(px + uStarShift) * (1.0 - covered) * 0.75;
     float coverage = clamp(max(max(ink, edge), s), 0.0, 1.0);
