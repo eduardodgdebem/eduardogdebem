@@ -90,7 +90,7 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0.09 0 0 0 -0.02'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* ── The masthead: wordmark centred, sections either side, social beneath ── */
+/* ── The masthead: the sections either side of the wordmark, and Contact ── */
 
 .masthead {
   position: fixed;
@@ -111,19 +111,19 @@
 .mast-nav {
   display: flex;
   align-items: center;
-  gap: clamp(14px, 2.2vw, 34px);
+  gap: clamp(22px, 3.4vw, 56px);
 }
 
 .mast-nav--left {
-  justify-content: space-evenly;
+  justify-content: flex-start;
 }
 
 .mast-nav--right {
-  justify-content: space-evenly;
+  justify-content: flex-end;
 }
 
-.mast-nav a,
-.lang a {
+.mast-nav a {
+  position: relative;
   font-family: var(--f-label);
   font-size: 0.74rem;
   font-weight: 400;
@@ -139,9 +139,15 @@
   color: var(--ink);
 }
 
-.mast-nav a[aria-current="page"] {
-  box-shadow: inset 0 -1px 0 var(--rubric);
-  padding-bottom: 3px;
+/* Where you are: a short accent tick under the name. */
+.mast-nav a[aria-current="page"]:not(.mast-cta)::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -7px;
+  width: 14px;
+  height: 1px;
+  background: var(--rubric);
 }
 
 /* The one call to action: a subtle filled block, not a colour. */
@@ -156,69 +162,43 @@
   background: var(--surface-3);
 }
 
-.mast-centre {
+/* The wordmark: the name in two short lines, nothing else. */
+.wordmark {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-}
-
-.wordmark {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
   font-family: var(--f-display);
   font-weight: 300;
-  font-size: 1.32rem;
-  line-height: 0.86;
+  font-size: 1.4rem;
+  line-height: 0.84;
   letter-spacing: 0.02em;
   text-transform: uppercase;
   text-decoration: none;
   color: var(--ink);
 }
 
-.wordmark-text {
-  display: flex;
-  flex-direction: column;
-}
-
-.wordmark svg {
+.codex .wordmark:hover {
   color: var(--rubric);
 }
 
-.mast-social {
-  display: flex;
-  gap: 14px;
-  margin: 0;
-  font-size: 13px;
-  line-height: 0;
-}
-
-.mast-social a {
-  color: var(--ink-faint);
-  transition: color 0.25s ease;
-}
-
-.mast-social a:hover {
-  color: var(--ink);
-}
-
+/* The language, quiet: in the text page's foot (and the phone's menu). */
 .lang {
+  display: inline-flex;
   margin: 0;
   gap: 0;
-  font-family: var(--f-label);
 }
 
 .lang a {
   padding: 0 0.3rem;
   border: 0;
   border-radius: 0;
+  text-decoration: none;
   color: var(--ink-faint);
 }
 
+.lang a:hover,
 .lang a[aria-current] {
   color: var(--ink);
-  border: 0;
 }
 
 /* ── The spread: no boards, no leaves; two flat columns under the masthead ── */
@@ -277,9 +257,33 @@
 
 .folio a {
   text-decoration: none;
+  transition: color 0.25s ease;
 }
 
-.folio span::before {
+.folio a:hover {
+  color: var(--ink);
+}
+
+.folio-links {
+  display: flex;
+  align-items: baseline;
+  gap: 1.4rem;
+  font-family: var(--f-label);
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+}
+
+.folio .lang {
+  margin-left: 0.4rem;
+  padding-left: 1.4rem;
+  border-left: 1px solid var(--rule);
+}
+
+.folio .lang a {
+  padding: 0 0.25rem;
+}
+
+.folio > span:last-child::before {
   content: "fol. ";
   color: var(--ink-faint);
 }
@@ -777,56 +781,50 @@ html.dawn .plate-caption {
     display: block;
   }
 
-  /* One bar: the wordmark, the language, the menu. */
+  /* One bar: the name on one line, and the menu. */
   .masthead {
-    grid-template-columns: 1fr auto auto;
-    gap: 18px;
-    padding: 0 6px 0 16px;
+    grid-template-columns: 1fr auto;
+    padding: 0 4px 0 16px;
   }
 
-  .mast-centre {
-    grid-column: 1;
-    grid-row: 1;
-    align-items: flex-start;
-  }
-
-  .mast-centre .mast-social,
-  .mast-nav--left,
-  .mast-nav--right > a {
+  .mast-nav {
     display: none;
   }
 
-  .mast-nav--right {
-    grid-column: 2;
-    grid-row: 1;
-  }
-
   .wordmark {
-    font-size: 1.05rem;
-  }
-
-  .lang a {
-    font-size: 0.66rem;
+    grid-column: 1;
+    flex-direction: row;
+    gap: 0.28em;
+    font-size: 1.25rem;
+    justify-self: start;
   }
 
   .mast-menu {
-    grid-column: 3;
-    grid-row: 1;
+    grid-column: 2;
     display: flex;
     align-items: center;
-    gap: 10px;
-    height: 40px;
+    gap: 12px;
+    height: 44px;
     padding: 0 12px;
     font-family: var(--f-label);
     font-size: 0.68rem;
-    font-weight: 500;
-    letter-spacing: 0.22em;
+    font-weight: 400;
+    letter-spacing: 0.24em;
     text-transform: uppercase;
-    color: var(--ink);
-    background: var(--surface-2);
+    color: var(--ink-soft);
+    background: none;
     border: 0;
     border-radius: 0;
     cursor: pointer;
+  }
+
+  .mast-menu[aria-expanded="true"] {
+    color: var(--ink);
+  }
+
+  /* The page's foot keeps only the folio: the links are in the menu. */
+  .folio-links {
+    display: none;
   }
 
   .mast-menu-bars {
@@ -925,18 +923,35 @@ html.dawn .plate-caption {
 
   .sheet-foot {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-top: 24px;
-  }
-
-  .sheet-foot .mast-social {
+    flex-direction: column;
+    align-items: flex-start;
     gap: 22px;
-    font-size: 18px;
+    padding-top: 28px;
   }
 
-  .sheet-foot .mast-social a {
+  .sheet-links {
+    display: flex;
+    align-items: baseline;
+    gap: 1.4rem;
+    margin: 0;
+  }
+
+  .sheet-links a {
+    font-family: var(--f-label);
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    text-decoration: none;
     color: var(--ink-soft);
+  }
+
+  .sheet-links .lang {
+    padding-left: 1.4rem;
+    border-left: 1px solid var(--rule);
+  }
+
+  .sheet-links .lang a[aria-current] {
+    color: var(--ink);
   }
 
   html.menu-open .book {
@@ -944,6 +959,7 @@ html.dawn .plate-caption {
   }
 
   .sheet-foot .mast-cta {
+    padding: 0.85rem 1.2rem;
     font-family: var(--f-label);
     font-size: 0.74rem;
     font-weight: 500;

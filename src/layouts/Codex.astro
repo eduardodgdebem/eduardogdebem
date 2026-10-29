@@ -12,7 +12,6 @@ import Corner from '../components/Corner.astro';
 import { STRINGS, type Lang } from '../i18n/strings';
 import { PATHS } from '../i18n/paths';
 import { SECTIONS, book } from '../lib/book';
-import { ICONS } from '../components/icons';
 
 interface Props {
   title: string;
@@ -145,30 +144,16 @@ const mastRight = rest.slice(2);
           <a href={n.href} aria-current={n.current ? 'page' : undefined}>{n.label}</a>
         ))}
       </nav>
-      <div class="mast-centre">
-        <a href={PATHS.home[lang]} class="wordmark" aria-current={section === 'home' ? 'page' : undefined}>
-          <Logo size={18} />
-          <span class="wordmark-text"><span>Eduardo</span><span>de Bem</span></span>
-        </a>
-        <p class="mast-social">
-          <a href="https://github.com/eduardodgdebem" target="_blank" rel="noopener noreferrer" aria-label="GitHub" set:html={ICONS.github} />
-          <a href="https://linkedin.com/in/eduardogdebem" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" set:html={ICONS.linkedin} />
-          <a href="mailto:eduardogdebem@gmail.com" aria-label="Email" set:html={ICONS.mail} />
-        </p>
-      </div>
+      <a href={PATHS.home[lang]} class="wordmark" aria-current={section === 'home' ? 'page' : undefined}>
+        <span>Eduardo</span> <span>de Bem</span>
+      </a>
       <nav class="mast-nav mast-nav--right" aria-label="More sections">
         {mastRight.map((n) => (
           <a href={n.href} aria-current={n.current ? 'page' : undefined}>{n.label}</a>
         ))}
-        {alternates && (
-          <span class="lang" role="group" aria-label={DICT['lang.toggle']}>
-            <a href={alternates.en} hreflang="en" lang="en" data-lang-link aria-current={lang === 'en' ? 'page' : undefined}>EN</a>
-            <a href={alternates.pt} hreflang="pt-BR" lang="pt-BR" data-lang-link aria-current={lang === 'pt' ? 'page' : undefined}>PT</a>
-          </span>
-        )}
         <a class="mast-cta" href={`${PATHS.about[lang]}#correspondence`} data-i18n="mast.contact">{DICT['mast.contact']}</a>
       </nav>
-      {/* On a phone: one bar (the wordmark, the toggle, a menu button), and the sections on a sheet. */}
+      {/* On a phone: the wordmark and a menu button; the sections are on a sheet. */}
       <button type="button" class="mast-menu" aria-expanded="false" aria-controls="mast-sheet" data-open={DICT['mast.menu']} data-close={DICT['mast.close']}>
         <span class="mast-menu-label">{DICT['mast.menu']}</span>
         <span class="mast-menu-bars" aria-hidden="true"><i></i><i></i></span>
@@ -186,10 +171,15 @@ const mastRight = rest.slice(2);
       </nav>
       <div class="sheet-foot">
         <a class="mast-cta" href={`${PATHS.about[lang]}#correspondence`}>{DICT['mast.contact']}</a>
-        <p class="mast-social">
-          <a href="https://github.com/eduardodgdebem" target="_blank" rel="noopener noreferrer" aria-label="GitHub" set:html={ICONS.github} />
-          <a href="https://linkedin.com/in/eduardogdebem" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" set:html={ICONS.linkedin} />
-          <a href="mailto:eduardogdebem@gmail.com" aria-label="Email" set:html={ICONS.mail} />
+        <p class="sheet-links">
+          <a href="https://github.com/eduardodgdebem" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a href="https://linkedin.com/in/eduardogdebem" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+          {alternates && (
+          <span class="lang" role="group" aria-label={DICT['lang.toggle']}>
+            <a href={alternates.en} hreflang="en" lang="en" data-lang-link aria-current={lang === 'en' ? 'page' : undefined}>EN</a>
+            <a href={alternates.pt} hreflang="pt-BR" lang="pt-BR" data-lang-link aria-current={lang === 'pt' ? 'page' : undefined}>PT</a>
+          </span>
+        )}
         </p>
       </div>
     </div>
@@ -234,7 +224,17 @@ const mastRight = rest.slice(2);
           <slot name="recto" />
         </div>
         <footer class="folio">
-          <a href="/rss.xml">rss</a>
+          <span class="folio-links">
+            <a href="https://github.com/eduardodgdebem" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <a href="https://linkedin.com/in/eduardogdebem" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            <a href="/rss.xml">RSS</a>
+            {alternates && (
+            <span class="lang" role="group" aria-label={DICT['lang.toggle']}>
+              <a href={alternates.en} hreflang="en" lang="en" data-lang-link aria-current={lang === 'en' ? 'page' : undefined}>EN</a>
+              <a href={alternates.pt} hreflang="pt-BR" lang="pt-BR" data-lang-link aria-current={lang === 'pt' ? 'page' : undefined}>PT</a>
+            </span>
+        )}
+          </span>
           <span>{roman(plateLeft ? folio + 1 : folio)}</span>
         </footer>
         <Corner dir="forward" to={next} />
