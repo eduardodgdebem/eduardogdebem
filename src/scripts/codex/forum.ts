@@ -48,12 +48,20 @@ export interface Forum {
   reset(): void;
   /** Blank the plate now and engrave it once `after` resolves. */
   intro(after?: Promise<void>): void;
+  /**
+   * Walk the street (the citizen, the keys, the labels), or only look at it:
+   * a still engraving whose view drifts slowly along the street.
+   */
+  explore(on: boolean): void;
+  readonly exploring: boolean;
   dispose(): void;
 }
 
 interface Options {
   /** Lettered on the banderole. */
   name: string;
+  /** Start walking the street (otherwise it's only looked at until explore(true)). */
+  explore?: boolean;
   reducedMotion: boolean;
   onContextLost?: () => void;
   /** The place in focus changed: under the pointer, or the door the citizen stands at. */
@@ -101,7 +109,7 @@ const FIT_W = 11;
 const LINE_FREQ = 13;
 
 
-export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, onContextLost, onFocus, onEnter, onTag }: Options): Forum | null {
+export function createForum(canvas: HTMLCanvasElement, { name, explore: exploreAtStart = true, reducedMotion, onContextLost, onFocus, onEnter, onTag }: Options): Forum | null {
   let renderer: THREE.WebGLRenderer;
   try {
     renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false });
@@ -575,6 +583,8 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     return p;
   };
   let atDoor: Place | null = null; // the citizen's
+  let exploring = exploreAtStart;
+  let clock = 0;
   const walker = createWalker(citizen, {
     speed: SPEED,
     clamp: clampToStreet,
@@ -631,6 +641,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     // leave it leaning wherever it last touched).
     if (inside && e.pointerType === 'mouse') tiltTarget.set(x, y);
     else tiltTarget.set(0, 0);
+    if (!exploring) return;
     if (e.pointerType !== 'mouse' || entering) return walker.aim(null);
     const hit = inside ? pick(e) : null;
     pointed = (hit?.object.userData.place as Place) ?? null;
@@ -643,7 +654,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     downAt = { x: e.clientX, y: e.clientY };
   };
   const onUp = (e: PointerEvent) => {
-    if (!downAt || entering || zoom.gesturing) return;
+    if (!downAt || entering || zoom.gesturing || !exploring) return;
     const moved = Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y);
     downAt = null;
     if (moved > 8) return;
@@ -703,6 +714,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     indexed = null;
     pointed = null;
     outside();
+    citizen.visible = exploring;
     walker.face(citizen.rotation.y);
     view.x = citizen.position.x;
     refocus();
@@ -717,7 +729,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
 
   const step = (dt: number) => {
     walker.step(dt);
-    if (entering) return;
+    if (entering || !exploring) return;
     nearOrator = Math.hypot(citizen.position.x - ORATOR.x, citizen.position.z - ORATOR.z) < EARSHOT;
     nearFons = Math.hypot(citizen.position.x - FONS.x, citizen.position.z - FONS.z) < FONS_REACH;
     if (coinPending && nearFons) throwCoin();
@@ -739,7 +751,9 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   const tiltTarget = new THREE.Vector2();
   const lean = new THREE.Vector3();
   const follow = (dt: number) => {
-    const goal = indexed && !entering ? AT[indexed] : citizen.position.x;
+    // Only looked at: the view drifts slowly up and down the street on its own.
+    const drift = Math.sin(clock * 0.04) * 11 + 2;
+    const goal = indexed && !entering ? AT[indexed] : exploring ? citizen.position.x : drift;
     // As far as the slab goes: past the eastern arch stands the Colosseum.
     const limit = SLAB - halfW;
     const x = THREE.MathUtils.clamp(goal, -limit, limit);
@@ -768,7 +782,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   let pinned = '';
   const pinTag = () => {
     if (!onTag) return;
-    const subject = focused ?? (nearOrator && !entering ? 'orator' : null);
+    const subject = exploring ? (focused ?? (nearOrator && !entering ? 'orator' : null)) : null;
     if (!subject) {
       if (pinned) onTag(null, 0, 0);
       pinned = '';
@@ -795,7 +809,23 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   let running = false;
   let raf = 0;
   const timer = new THREE.Timer();
-  let clock = 0;
+
+  /* ── Walking the street, or only looking at it ── */
+
+  const explore = (on: boolean) => {
+    exploring = on;
+    citizen.visible = on;
+    walker.pause(!on);
+    if (!on) {
+      walker.halt();
+      walker.aim(null);
+      pointed = null;
+      atDoor = null;
+      canvas.style.cursor = '';
+    }
+    refocus();
+    if (!running) render();
+  };
 
   const render = () => {
     camera.updateMatrixWorld(true);
@@ -856,6 +886,7 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
   document.addEventListener('visibilitychange', onVisibility);
   canvas.addEventListener('webglcontextlost', onLost);
 
+  explore(exploring);
   drawSmoke(0);
   drawLife(0);
   drawBirds(0);
@@ -869,6 +900,10 @@ export function createForum(canvas: HTMLCanvasElement, { name, reducedMotion, on
     walk,
     reset,
     intro,
+    explore,
+    get exploring() {
+      return exploring;
+    },
     dispose() {
       stop();
       fountain.dispose();

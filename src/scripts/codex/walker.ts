@@ -21,6 +21,8 @@ export interface Walker {
   halt(): void;
   /** Turn to face a heading at once (after being placed). */
   face(heading: number): void;
+  /** Deaf to the keys (the scene is only being looked at), or listening again. */
+  pause(on: boolean): void;
   dispose(): void;
 }
 
@@ -65,7 +67,9 @@ export function createWalker(citizen: THREE.Object3D, { speed, clamp, reducedMot
     return marker;
   };
 
+  let paused = false;
   const onKeyDown = (e: KeyboardEvent) => {
+    if (paused) return;
     if (e.metaKey || e.ctrlKey || e.altKey || typing(e.target)) return;
     if (KEYMAP[e.code]) {
       if (path) return;
@@ -180,6 +184,10 @@ export function createWalker(citizen: THREE.Object3D, { speed, clamp, reducedMot
       keys.clear();
       stroll = null;
       velocity.set(0, 0, 0);
+    },
+    pause(on) {
+      paused = on;
+      if (on) keys.clear();
     },
     face(value) {
       heading.value = value;

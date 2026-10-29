@@ -66,6 +66,8 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
           <span class="tag-act" data-tag-act></span>
         </div>
         <PlateTools lang={lang} info="home" />
+        <!-- At rest the forum is only looked at; this spreads it and lets the reader walk it. -->
+        <button type="button" class="plate-enter" data-enter><span data-i18n="home.enter">{s('home.enter')}</span><Fragment set:html={ICONS.arrow} /></button>
       </div>
       <figcaption class="plate-caption" data-places={JSON.stringify(PLACES)}>
         <span class="tab">Tab. I</span>
@@ -191,8 +193,11 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
     cap.note.textContent = atDoor ? `${note} ${t(touch ? 'home.door.touch' : 'home.door.key')}` : note;
   };
 
+  const frame = canvas.closest<HTMLElement>('.plate-frame')!;
   const forum = createForum(canvas, {
     name: 'Forum',
+    // Looked at until the reader asks to walk it (or arrives with it spread).
+    explore: frame.classList.contains('is-full'),
     reducedMotion: reduced,
     onContextLost: () => root.classList.add('no-webgl'),
     onFocus: (place, atDoor) => {
@@ -204,6 +209,16 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
   });
   if (!forum) root.classList.add('no-webgl');
   forum?.intro(bookOpened());
+
+  /* ── Looking, or walking: the forum is explored spread over the screen ── */
+
+  const setExploring = (on: boolean) => {
+    forum?.explore(on);
+    root.classList.toggle('forum-exploring', on);
+  };
+  setExploring(frame.classList.contains('is-full'));
+  frame.querySelector('[data-enter]')!.addEventListener('click', () => frame.dispatchEvent(new CustomEvent('plate:set-spread', { detail: true })));
+  frame.addEventListener('plate:spread', (e) => setExploring((e as CustomEvent<boolean>).detail));
 
   function showTag(subject: Place | 'orator' | null, x: number, y: number) {
     tag.classList.toggle('is-shown', !!subject);
@@ -252,8 +267,9 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
     a.addEventListener('click', (e) => {
       if (!forum || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       if (going) return e.preventDefault();
-      // Nobody to watch him walk there (scrolled away, on a phone): just turn the page.
-      if (!inView(canvas)) return;
+      // Nobody to watch him walk there (only looking at the forum, scrolled
+      // away, on a phone): just turn the page.
+      if (!forum.exploring || !inView(canvas)) return;
       // Off-site (the workshop): the new tab must open from the click itself,
       // so the citizen walks over while it does, then comes back.
       if (a.target === '_blank') {
@@ -340,10 +356,71 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
     cursor: default;
   }
 
+  /* ── Verso: the forum at rest (an engraving, and a way in), or explored ── */
+
+  .plate-enter {
+    position: absolute;
+    z-index: 3;
+    left: 18px;
+    bottom: 18px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.8rem 1.1rem;
+    font-family: var(--f-label);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: rgb(5 11 8 / 0.82);
+    border: 1px solid var(--line);
+    border-radius: 0;
+    cursor: pointer;
+    transition:
+      background-color 0.3s ease,
+      border-color 0.3s ease;
+  }
+
+  .plate-enter :global(svg) {
+    font-size: 14px;
+    color: var(--rubric);
+    transition: translate 0.3s ease;
+  }
+
+  .plate-enter:hover {
+    background: var(--surface-2);
+    border-color: var(--rubric);
+  }
+
+  .plate-enter:hover :global(svg) {
+    translate: 3px 0;
+  }
+
+  /* At rest: only the engraving, its banderole and the way in. */
+  :global(html:not(.forum-exploring)) .plate--bare :is(.plate-caption, .plate-coords),
+  :global(html:not(.forum-exploring)) .plate--bare :global(.plate-tools),
+  :global(html:not(.forum-exploring)) .plate--bare :global(.place-tag) {
+    display: none;
+  }
+
+  :global(html.forum-exploring) .plate-enter {
+    display: none;
+  }
+
   /* ── Verso: rays and coordinates over the forum ── */
 
   .plate--bare {
     position: relative;
+  }
+
+  /* Spread, the frame is laid over the whole book: the figure lets go of it, and the rays wait. */
+  :global(:is(html.plate-is-full, html.plate-spread)) .plate--bare {
+    position: static;
+  }
+
+  :global(:is(html.plate-is-full, html.plate-spread)) .rays {
+    display: none;
   }
 
   .rays {

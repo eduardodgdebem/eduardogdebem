@@ -553,7 +553,7 @@ a.subject:hover,
 }
 
 /* The hero's plate has no frame at all: the engraving lies on the page (its
-   paper is the page's own colour), and its tools come up under the pointer. */
+   paper is the page's own colour). Its tools are only there while it's explored (Home.astro). */
 .plate--bare .plate-frame {
   border-color: transparent;
 }
@@ -562,17 +562,6 @@ a.subject:hover,
   display: none;
 }
 
-@media (hover: hover) {
-  .plate--bare .plate-tools {
-    opacity: 0;
-    transition: opacity 0.35s ease;
-  }
-
-  .plate--bare:hover .plate-tools,
-  .plate--bare:focus-within .plate-tools {
-    opacity: 1;
-  }
-}
 
 /* ── A plate's tools: flat cells, no shadow ── */
 
@@ -1049,6 +1038,11 @@ html.dawn .plate-caption {
 
   .roller {
     display: none !important;
+  }
+
+  /* Spread on a phone, the plate takes the screen under the bar, inside the frame. */
+  :is(.plate-frame.is-full, html.plate-spread .plate-frame:has(.plate-tools)) {
+    inset: calc(var(--edge) + var(--mast)) var(--edge) var(--edge);
   }
 
   .verso .corner--portrait {
