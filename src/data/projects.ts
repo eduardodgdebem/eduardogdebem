@@ -30,6 +30,8 @@ export interface Project {
   kind: Record<Lang, string>;
   summary: Record<Lang, string>;
   note?: Record<Lang, string>;
+  /** A few real lines of its source, set over an engraving on the facing page. */
+  snippet?: { file: string; code: string };
 }
 
 export const PROJECTS: Project[] = [
@@ -97,6 +99,17 @@ export const PROJECTS: Project[] = [
     work: 'urbs',
     type: 'app',
     stack: ['Ode', 'WebAssembly', 'WebGL2'],
+    snippet: {
+      file: 'src/timer.ode',
+      code: `export enum Phase {
+  Idle,
+  Focus,
+  ShortBreak,
+  LongBreak,
+}
+
+let MINUTE: f64 = 60000.0;`,
+    },
     kind: { en: 'A focus timer', pt: 'Um timer de foco' },
     summary: {
       en: 'A focus timer that builds a city while you work: the longer the session, the bigger the building, and giving up leaves a ruin. Written in Ode, compiled to WebAssembly, drawn with WebGL2; it installs and runs offline.',
@@ -114,6 +127,16 @@ export const PROJECTS: Project[] = [
     work: 'ouroboros',
     type: 'language',
     stack: ['Ode', 'LLVM', 'C'],
+    snippet: {
+      file: 'README.md',
+      code: `struct Counter {
+  hits: i32,
+
+  fn bump(self: *Counter): void {
+    self.hits = self.hits + 1;
+  }
+}`,
+    },
     kind: { en: 'A programming language', pt: 'Uma linguagem de programação' },
     summary: {
       en: 'A small, statically typed language that compiles to native code through LLVM. Its compiler is written in Ode and compiles itself: the snake with its tail in its mouth.',

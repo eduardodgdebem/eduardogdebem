@@ -30,7 +30,7 @@ interface Options {
 }
 
 // Nocturne: light lines on a night plate, and one accent.
-export const PAPER = 0x10171b;
+export const PAPER = 0x08110d;
 export const INK = 0xe2dfd6;
 export const RUBRIC = 0x34d27b;
 export const BLUE = 0x7f9cc4;

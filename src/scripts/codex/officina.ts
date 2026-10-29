@@ -114,17 +114,20 @@ async function engrave(src: string): Promise<THREE.CanvasTexture | null> {
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
       const i = y * W + x;
-      // How dark, eased so the paper keeps its light parts.
-      const d = Math.min(0.92, Math.pow(1 - lum[i], 1.25) * 1.05);
-      let ink = d > 0.06 ? line(x + y, d * 0.95) : 0;
-      if (d > 0.55) ink = Math.max(ink, line(x - y, (d - 0.55) * 1.6));
+      // How light: on the night plate the lines are cut where the picture is
+      // light, so its darks stay dark.
+      // Kept to fine lines, so a white page doesn't fill the frame.
+      const d = Math.min(0.5, Math.pow(lum[i], 1.6) * 0.6);
+      let ink = d > 0.06 ? line(x + y, d * 0.8) : 0;
       // Edges: where the shade changes sharply.
       if (x > 0 && y > 0 && x < W - 1 && y < H - 1) {
         const gx = lum[i + 1] - lum[i - 1];
         const gy = lum[i + W] - lum[i - W];
         if (Math.hypot(gx, gy) > 0.22) ink = 1;
       }
-      px[i * 4] = px[i * 4 + 1] = px[i * 4 + 2] = 0;
+      // In the accent (the red channel is read as the accent ink).
+      px[i * 4] = 255;
+      px[i * 4 + 1] = px[i * 4 + 2] = 0;
       px[i * 4 + 3] = Math.round(Math.min(1, ink) * 235);
     }
   }

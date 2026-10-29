@@ -46,17 +46,17 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
 >
   <!-- Verso: the forum, engraved, under its banderole -->
   <Fragment slot="verso">
-    <figure class="plate">
+    <figure class="plate plate--bare">
+      <!-- Ray lines and registration round the forum, running past it onto the page: an engraving read as a diagram. -->
+      <svg class="rays" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <g class="rays-burst"><path d={RAYS} pathLength="1" /></g>
+        <circle class="rays-ring" cx="720" cy="170" r="46" pathLength="1" />
+        <circle class="rays-ring" cx="720" cy="170" r="118" pathLength="1" />
+        <path class="rays-axis" d="M0,170H1000M720,0V1000" pathLength="1" />
+      </svg>
       <div class="plate-frame">
         <canvas id="engraving" class="plate-canvas" aria-hidden="true"></canvas>
         <div class="plate-fallback" aria-hidden="true"><span>Forum</span></div>
-        <!-- Ray lines and registration over the forum: an engraving read as a diagram. -->
-        <svg class="rays" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <g class="rays-burst"><path d={RAYS} pathLength="1" /></g>
-          <circle class="rays-ring" cx="720" cy="170" r="46" pathLength="1" />
-          <circle class="rays-ring" cx="720" cy="170" r="118" pathLength="1" />
-          <path class="rays-axis" d="M0,170H1000M720,0V1000" pathLength="1" />
-        </svg>
         <p class="plate-coords" aria-hidden="true"><span>41°53′32″N</span><span>12°29′07″E</span></p>
         <!-- The label over a building in the forum: what it is, and where it leads. -->
         <div class="place-tag" data-tag aria-hidden="true">
@@ -89,7 +89,8 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
       </p>
     </header>
 
-    <nav class="contents" aria-label="Contents">
+    <!-- The index, kept for the forum (its buildings go in through these links) but not shown: the masthead has the sections. -->
+    <nav class="contents" aria-label="Contents" hidden>
       <p class="rubric">Index</p>
       <ol>
         <li class="chapter">
@@ -317,7 +318,7 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
   if (!reduced && !turned) {
     // The hero rises in, line by line, and the rays are drawn out from the
     // forum's sky, slowly.
-    gsap.from('.hero > *, .contents', { autoAlpha: 0, y: 12, duration: 1.1, stagger: 0.09, ease: 'power3.out', delay: 0.15 });
+    gsap.from('.hero > *', { autoAlpha: 0, y: 12, duration: 1.1, stagger: 0.09, ease: 'power3.out', delay: 0.15 });
     gsap.fromTo('.rays path, .rays circle', { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 2.6, stagger: 0.25, ease: 'power2.inOut', delay: 0.6 });
     gsap.from('.plate-caption, .plate-coords', { autoAlpha: 0, duration: 1.4, delay: 1.6 });
   }
@@ -342,12 +343,16 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
 
   /* ── Verso: rays and coordinates over the forum ── */
 
+  .plate--bare {
+    position: relative;
+  }
+
   .rays {
     position: absolute;
-    inset: 0;
+    inset: -7% -9%;
     z-index: 1;
-    width: 100%;
-    height: 100%;
+    width: 118%;
+    height: 114%;
     pointer-events: none;
     fill: none;
     stroke: var(--ink);
@@ -433,13 +438,13 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
 
   /* One huge, light, condensed sentence. */
   .headline {
-    max-width: 9.5em;
+    max-width: 8em;
     margin: 0;
     font-family: var(--f-display);
     font-weight: 200;
-    font-size: clamp(3rem, min(7vw, 10.5vh), 8.2rem);
-    line-height: 0.9;
-    letter-spacing: -0.015em;
+    font-size: clamp(3.4rem, min(8.4vw, 13.5vh), 10rem);
+    line-height: 0.86;
+    letter-spacing: -0.01em;
     text-wrap: balance;
   }
 
@@ -488,7 +493,7 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
   .btn:hover,
   .btn.is-lit {
     color: var(--ink);
-    background: #26323a;
+    background: var(--surface-3);
   }
 
   /* ── The index ── */

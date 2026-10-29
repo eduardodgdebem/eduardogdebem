@@ -8,20 +8,22 @@
    whole screen. */
 
 .codex {
-  --night: #080b0d;
-  --paper: #0d1215;
-  --plate: #10171b;
-  --surface: #151d22;
-  --surface-2: #1c262c;
-  --ink: #e4e1d8;
-  --ink-soft: #8d969b;
-  --ink-faint: #5a646a;
+  /* The night is tinted toward the accent, so the page reads as one ink. */
+  --night: #050b08;
+  --paper: #08110d;
+  --plate: var(--paper);
+  --surface: #0f1c16;
+  --surface-2: #16271f;
+  --surface-3: #1e3329;
+  --ink: #e2e7e0;
+  --ink-soft: #88978e;
+  --ink-faint: #53635a;
   --rubric: #34d27b;
   --on-accent: #04130a;
-  --rule: #232d33;
-  --line: #2f3a41;
+  --rule: #18271f;
+  --line: #243a2e;
 
-  --f-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --f-display: "Saira Extra Condensed", "Barlow Condensed", "Arial Narrow", sans-serif;
   --f-label: "Barlow Condensed", "Arial Narrow", sans-serif;
   --f-body: "Barlow", "Helvetica Neue", Arial, sans-serif;
   --f-mono: "JetBrains Mono", ui-monospace, monospace;
@@ -78,7 +80,7 @@
   inset: var(--edge);
   z-index: 40;
   background: none;
-  border: 1px solid var(--rubric);
+  border: 3px solid var(--rubric);
   outline: none;
   opacity: 1;
 }
@@ -112,8 +114,12 @@
   gap: clamp(14px, 2.2vw, 34px);
 }
 
+.mast-nav--left {
+  justify-content: space-evenly;
+}
+
 .mast-nav--right {
-  justify-content: flex-end;
+  justify-content: space-evenly;
 }
 
 .mast-nav a,
@@ -147,7 +153,7 @@
 }
 
 .codex .mast-cta:hover {
-  background: #26323a;
+  background: var(--surface-3);
 }
 
 .mast-centre {
@@ -160,14 +166,20 @@
 .wordmark {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  font-family: var(--f-label);
-  font-weight: 500;
-  font-size: 0.95rem;
-  letter-spacing: 0.34em;
+  gap: 0.55rem;
+  font-family: var(--f-display);
+  font-weight: 300;
+  font-size: 1.32rem;
+  line-height: 0.86;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   text-decoration: none;
   color: var(--ink);
+}
+
+.wordmark-text {
+  display: flex;
+  flex-direction: column;
 }
 
 .wordmark svg {
@@ -512,6 +524,28 @@ a.subject:hover,
   font-weight: 300;
 }
 
+/* The hero's plate has no frame at all: the engraving lies on the page (its
+   paper is the page's own colour), and its tools come up under the pointer. */
+.plate--bare .plate-frame {
+  border-color: transparent;
+}
+
+.plate--bare .plate-frame::after {
+  display: none;
+}
+
+@media (hover: hover) {
+  .plate--bare .plate-tools {
+    opacity: 0;
+    transition: opacity 0.35s ease;
+  }
+
+  .plate--bare:hover .plate-tools,
+  .plate--bare:focus-within .plate-tools {
+    opacity: 1;
+  }
+}
+
 /* ── A plate's tools: flat cells, no shadow ── */
 
 .plate-tools {
@@ -643,7 +677,8 @@ a.subject:hover,
 }
 
 .codex-prose img {
-  filter: grayscale(1) contrast(1.05) brightness(0.92);
+  /* A duotone in the accent, as the projects' pictures are. */
+  filter: grayscale(1) sepia(1) hue-rotate(85deg) saturate(2.6) contrast(1.15) brightness(0.85);
   mix-blend-mode: normal;
 }
 
@@ -767,8 +802,7 @@ html.dawn .plate-caption {
   }
 
   .wordmark {
-    font-size: 0.78rem;
-    letter-spacing: 0.26em;
+    font-size: 1.05rem;
   }
 
   .lang a {
