@@ -16,7 +16,7 @@ export interface Art {
 }
 
 export const ART = {
-  hercules: { name: 'The Great Hercules', where: 'Hendrik Goltzius, 1589', w: 1000, h: 1316, credit: 'National Gallery of Art, CC0', source: 'https://commons.wikimedia.org/wiki/File:Hendrik_Goltzius,_The_Great_Hercules,_1589,_NGA_70311.jpg' },
+  caesar: { name: 'Julius Caesar', where: 'The Tusculum portrait · Turin', w: 1400, h: 1746, credit: 'Photo: Marie-Lan Taÿ Pamart, public domain', source: 'https://commons.wikimedia.org/wiki/File:Head_of_Julius_Caesar_from_Tusculum_MAntTorino_2089_n02.jpg' },
   moses: { name: 'Moses', where: 'Michelangelo · San Pietro in Vincoli, Rome', w: 900, h: 1254, credit: 'Photo: Perituss, CC0', source: 'https://commons.wikimedia.org/wiki/File:Moses_Michelangelo_2014_02.jpg' },
   melencolia: { name: 'Melencolia I', where: 'Albrecht Dürer, 1514', w: 1000, h: 1322, credit: 'The Met, CC0', source: 'https://commons.wikimedia.org/wiki/File:Melencolia_I_MET_DP815743.jpg' },
   carceri: { name: 'Carceri VII, The Drawbridge', where: 'Giovanni Battista Piranesi, 1761', w: 1000, h: 1350, credit: 'CC0', source: 'https://commons.wikimedia.org/wiki/File:Piranesi-Carceri-07Zugbr%C3%BCcke.jpg' },
@@ -30,13 +30,3 @@ export const ART = {
 } satisfies Record<string, Art>;
 
 export type ArtId = keyof typeof ART;
-
-/** The picture on the right while each section is read. */
-export const RAIL: Record<string, ArtId> = {
-  overview: 'hercules',
-  work: 'moses',
-  projects: 'melencolia',
-  stack: 'carceri',
-  about: 'gladiator-head',
-  contact: 'venus',
-};

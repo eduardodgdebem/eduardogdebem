@@ -7,7 +7,7 @@ export type T = Record<Lang, string>;
 
 export const PATHS: Record<Lang, string> = { en: '/', pt: '/pt/' };
 
-/** The page's sections, in order: the sidebar's index and the art on the right follow them. */
+/** The page's sections, in order: the nav follows them. */
 export const SECTIONS = ['overview', 'work', 'projects', 'stack', 'about', 'contact'] as const;
 export type Section = (typeof SECTIONS)[number];
 
@@ -43,13 +43,6 @@ export const UI = {
   },
   ctaContact: { en: 'Get in touch', pt: 'Fale comigo' },
   ctaCv: { en: 'Download CV', pt: 'Baixar currículo' },
-  available: { en: 'Open to new work', pt: 'Aberto a novos projetos' },
-  railTitle: { en: 'Let’s Build Something', pt: 'Vamos Construir Algo' },
-  railText: {
-    en: 'For a role, a project, or a question, email is the quickest way to reach me. I answer within a day or two.',
-    pt: 'Para uma vaga, um projeto ou uma pergunta, e-mail é o jeito mais rápido de falar comigo. Respondo em um ou dois dias.',
-  },
-  railCta: { en: 'Write to me', pt: 'Escreva para mim' },
   workTitle: { en: 'Where I’ve Worked', pt: 'Onde Trabalhei' },
   projectsTitle: { en: 'Things I’ve Made', pt: 'Coisas que Fiz' },
   projectsLede: {
@@ -73,6 +66,9 @@ export const UI = {
   openApp: { en: 'Open the app', pt: 'Abrir o app' },
   readCode: { en: 'Read the code', pt: 'Ler o código' },
   menu: { en: 'Menu', pt: 'Menu' },
+  scroll: { en: 'Scroll', pt: 'Role' },
+  motto: { en: 'Built to last, as the Romans built.', pt: 'Feito para durar, como construíam os romanos.' },
+  stackNote: { en: 'and whatever a project needs next', pt: 'e o que o próximo projeto precisar' },
   close: { en: 'Close', pt: 'Fechar' },
   explore: { en: 'Explore', pt: 'Explorar' },
   elsewhere: { en: 'Elsewhere', pt: 'Em outros lugares' },

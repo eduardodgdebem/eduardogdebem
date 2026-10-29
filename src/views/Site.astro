@@ -1,14 +1,15 @@
 ---
-// The one page, in English (/) or Portuguese (/pt/). Three columns on a wide
-// screen: the index on the left, the sections in the middle, and on the right
-// a call to write and the picture for the section being read, which changes as
-// the page scrolls (src/scripts/site.ts). On a phone, one column and a menu.
+// The one page, in English (/) or Portuguese (/pt/). A bar across the top,
+// then sections each set its own way: a full-screen hero with Caesar, an
+// index of jobs whose pictures follow the pointer, a grid of projects, a
+// painting with a motto, the stack on the accent, about, and a contact page
+// of one huge address. Behaviour is in src/scripts/site.ts.
 import Shell from '../layouts/Shell.astro';
 import Art from '../components/Art.astro';
 import Logo from '../components/Logo.astro';
 import { ICONS } from '../components/icons';
 import { ABOUT, CONTACT, META, NAV, NOTES, PATHS, SECTIONS, STACK, UI, WORK, t, type Lang } from '../data/site';
-import { ART, RAIL, type ArtId } from '../data/art';
+import { ART, type ArtId } from '../data/art';
 import { PROJECTS, TYPES } from '../data/projects';
 import { CV_PDF } from '../consts';
 import { PERSON, WEBSITE } from '../seo';
@@ -21,10 +22,14 @@ const { lang } = Astro.props;
 const s = t(lang);
 const other: Lang = lang === 'en' ? 'pt' : 'en';
 const pad = (n: number) => String(n).padStart(2, '0');
+const sections = SECTIONS.filter((id) => id !== 'overview');
+const num = (id: (typeof SECTIONS)[number]) => pad(sections.indexOf(id as (typeof sections)[number]) + 1);
 const projects = TYPES.flatMap((type) => PROJECTS.filter((p) => p.type === type));
 const TYPE_NAME = { site: { en: 'Site', pt: 'Site' }, app: { en: 'App', pt: 'App' }, language: { en: 'Language', pt: 'Linguagem' } };
 const linkLabel = (p: (typeof PROJECTS)[number]) => (p.code === p.url ? s(UI.readCode) : p.type === 'app' ? s(UI.openApp) : s(UI.visit));
+const ticker = STACK.flatMap((g) => g.items);
 const credited = Object.entries(ART) as [ArtId, (typeof ART)[ArtId]][];
+const [user, host] = CONTACT.email.split('@');
 ---
 
 <Shell
@@ -36,139 +41,178 @@ const credited = Object.entries(ART) as [ArtId, (typeof ART)[ArtId]][];
 >
   <div class="frame" aria-hidden="true"></div>
 
-  <div class="layout">
-    <!-- The index: who, a way to write, the sections, elsewhere. -->
-    <aside class="side">
-      <div class="side-art" aria-hidden="true"><Art id="gladiator-head" /></div>
-      <div class="side-top">
-        <a class="brand" href={PATHS[lang]}>
-          <span class="brand-mark"><Logo size={30} /></span>
-          <span class="brand-name"><span>Eduardo</span><span>de Bem</span></span>
-        </a>
-        <button type="button" class="menu-button" aria-expanded="false" aria-controls="side-nav" data-menu data-open={s(UI.menu)} data-close={s(UI.close)}>
-          <span data-menu-label>{s(UI.menu)}</span><span class="menu-bars" aria-hidden="true"><i></i><i></i></span>
-        </button>
-      </div>
-      <div class="side-nav" id="side-nav">
-        <a class="block-button" href="#contact">
-          <span>{s(UI.ctaContact)}</span><Fragment set:html={ICONS.mail} />
-        </a>
-        <p class="chip">{s(UI.explore)}</p>
-        <nav aria-label={s(UI.explore)}>
-          <ol class="index">
-            {SECTIONS.map((id) => (
-              <li>
-                <a href={`#${id}`} data-nav={id}>
-                  <Fragment set:html={ICONS[id]} />
-                  <span class="index-label">{s(NAV[id])}</span>
-                  <span class="leader" aria-hidden="true"></span>
-                </a>
-              </li>
-            ))}
-          </ol>
-        </nav>
-        <p class="chip">{s(UI.elsewhere)}</p>
-        <ul class="index">
-          <li><a href={CONTACT.github} target="_blank" rel="noopener noreferrer"><Fragment set:html={ICONS.github} /><span class="index-label">GitHub</span><span class="leader" aria-hidden="true"></span></a></li>
-          <li><a href={CONTACT.linkedin} target="_blank" rel="noopener noreferrer"><Fragment set:html={ICONS.linkedin} /><span class="index-label">LinkedIn</span><span class="leader" aria-hidden="true"></span></a></li>
-          <li><a href={CV_PDF} download><Fragment set:html={ICONS.cv} /><span class="index-label">{s(UI.ctaCv)}</span><span class="leader" aria-hidden="true"></span></a></li>
-        </ul>
-        <p class="side-foot">
-          <Fragment set:html={ICONS.globe} />
+  <!-- The bar across the top -->
+  <header class="bar" data-bar>
+    <a class="brand" href={PATHS[lang]}>
+      <span class="brand-mark"><Logo size={18} /></span>
+      <span class="brand-name">Eduardo de Bem</span>
+    </a>
+    <nav class="bar-nav" id="bar-nav" aria-label="Sections">
+      <ol>
+        {sections.map((id) => (
+          <li><a href={`#${id}`} data-nav={id}><span class="bar-num">{num(id)}</span>{s(NAV[id])}</a></li>
+        ))}
+      </ol>
+      <p class="bar-extra">
+        <a href={CONTACT.github} target="_blank" rel="noopener noreferrer" aria-label="GitHub" set:html={ICONS.github} />
+        <a href={CONTACT.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" set:html={ICONS.linkedin} />
+        <span class="bar-lang">
           <a href={PATHS.en} hreflang="en" lang="en" aria-current={lang === 'en' ? 'page' : undefined}>EN</a>
           <a href={PATHS.pt} hreflang="pt-BR" lang="pt-BR" aria-current={lang === 'pt' ? 'page' : undefined}>PT</a>
+        </span>
+      </p>
+    </nav>
+    <a class="button button--accent bar-cta" href="#contact">{s(UI.ctaContact)}</a>
+    <button type="button" class="menu-button" aria-expanded="false" aria-controls="bar-nav" data-menu data-open={s(UI.menu)} data-close={s(UI.close)}>
+      <span data-menu-label>{s(UI.menu)}</span><span class="menu-bars" aria-hidden="true"><i></i><i></i></span>
+    </button>
+  </header>
+
+  <main>
+    <!-- Hero: Caesar, and one huge line -->
+    <section class="hero" id="overview" data-section="overview">
+      <div class="hero-art" aria-hidden="true">
+        <svg class="rays" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice">
+          {Array.from({ length: 48 }, (_, i) => {
+            const a = (i / 48) * Math.PI * 2;
+            const r = i % 2 ? 640 : 900;
+            return <path d={`M${500 + Math.cos(a) * 250},${430 + Math.sin(a) * 250}L${500 + Math.cos(a) * r},${430 + Math.sin(a) * r}`} />;
+          })}
+          <circle cx="500" cy="430" r="250" />
+          <circle cx="500" cy="430" r="330" class="rays-dash" />
+        </svg>
+        <Art id="caesar" class="caesar" />
+      </div>
+      <p class="hero-meta hero-meta--tl"><span>{s(UI.role)}</span><span class="dim">{s(UI.place)}</span></p>
+      <p class="hero-meta hero-meta--tr"><span>27°35′S</span><span>48°33′W</span></p>
+      <h1 class="hero-title">
+        <span class="sr-only">Eduardo de Bem: </span>
+        {s(UI.headline).split(' ').map((w, i) => <span class="word" style={`--i:${i}`}><span>{w}</span></span>)}
+      </h1>
+      <div class="hero-foot">
+        <p class="lede">{s(UI.lede)}</p>
+        <p class="actions">
+          <a class="button button--accent" href="#contact">{s(UI.ctaContact)}<Fragment set:html={ICONS.arrow} /></a>
+          <a class="button button--line" href={CV_PDF} download>{s(UI.ctaCv)}<Fragment set:html={ICONS.download} /></a>
         </p>
       </div>
-    </aside>
+      <p class="hero-caption" aria-hidden="true">FIG. 00 — {ART.caesar.name} · {ART.caesar.where}</p>
+      <div class="ticker" aria-hidden="true">
+        <div class="ticker-track">
+          {[0, 1].map(() => <span class="ticker-run">{ticker.map((x) => <span>{x}<i>✦</i></span>)}</span>)}
+        </div>
+      </div>
+    </section>
 
-    <main class="main">
-      <!-- Overview -->
-      <section class="section hero" id="overview" data-section="overview">
-        <p class="kicker reveal">// {s(NAV.overview)}</p>
-        <h1 class="display reveal"><span class="sr-only">Eduardo de Bem: </span>{s(UI.headline)}</h1>
-        <p class="lede reveal">{s(UI.lede)}</p>
-        <p class="actions reveal">
-          <a class="button button--accent" href="#contact">{s(UI.ctaContact)}</a>
-          <a class="button button--line" href={CV_PDF} download>{s(UI.ctaCv)}</a>
-        </p>
-        <p class="status reveal"><span class="pulse" aria-hidden="true"></span>{s(UI.available)} <span class="dim">· {s(CONTACT.based)}</span></p>
-        <Art id="hercules" class="narrow-only hero-art reveal" />
-      </section>
-
-      <!-- Work -->
-      <section class="section" id="work" data-section="work">
-        <p class="kicker reveal">// {s(NAV.work)}</p>
-        <h2 class="display-2 reveal">{s(UI.workTitle)}</h2>
+    <!-- Work: an index of jobs; a picture follows the pointer over each -->
+    <section class="section work" id="work" data-section="work">
+      <div class="head-art" aria-hidden="true"><Art id="moses" /></div>
+      <header class="head reveal">
+        <p class="head-num">{num('work')}</p>
+        <h2 class="head-title">{s(UI.workTitle)}</h2>
+        <p class="head-kicker">// {s(NAV.work)}</p>
+      </header>
+      <ol class="jobs">
         {WORK.map((job, i) => (
-          <article class="item reveal">
-            <p class="num">#{i + 1} <span class="dim">· {s(job.when)}</span></p>
-            <h3 class="item-title">{s(job.title)}</h3>
-            <p class="item-org">{job.org}</p>
-            <p class="item-text">{s(job.summary)}</p>
-            <p class="tags">{job.stack.map((x) => <span>{x}</span>)}</p>
-            <div class="screen">
-              <p class="screen-bar" aria-hidden="true"><span>FIG. {pad(i + 1)}</span><span>{ART[job.art as ArtId].name}</span><span class="dim">{job.art}.png</span></p>
-              <Art id={job.art as ArtId} class:list={['screen-art', { 'screen-art--whole': ART[job.art as ArtId].h > ART[job.art as ArtId].w * 1.2 }]} />
+          <li class="job reveal" data-hover-art={job.art}>
+            <p class="job-num">{pad(i + 1)}</p>
+            <div class="job-main">
+              <h3 class="job-title">{s(job.title)}</h3>
+              <p class="job-text">{s(job.summary)}</p>
+              <p class="tags">{job.stack.map((x) => <span>{x}</span>)}</p>
             </div>
-          </article>
+            <p class="job-org">{job.org}</p>
+            <p class="job-when">{s(job.when)}</p>
+            <Art id={job.art as ArtId} class="job-art" />
+          </li>
         ))}
-      </section>
+      </ol>
+      <div class="follow" aria-hidden="true" data-follow>
+        {[...new Set(WORK.map((j) => j.art))].map((id) => (
+          <div class="follow-layer" data-follow-art={id}>
+            <p class="follow-bar"><span>FIG.</span><span>{ART[id as ArtId].name}</span></p>
+            <Art id={id as ArtId} />
+          </div>
+        ))}
+      </div>
+    </section>
 
-      <!-- Projects -->
-      <section class="section" id="projects" data-section="projects">
-        <p class="kicker reveal">// {s(NAV.projects)}</p>
-        <h2 class="display-2 reveal">{s(UI.projectsTitle)}</h2>
-        <p class="section-lede reveal">{s(UI.projectsLede)}</p>
+    <!-- Projects: a grid of windows -->
+    <section class="section projects" id="projects" data-section="projects">
+      <div class="head-art" aria-hidden="true"><Art id="melencolia" /></div>
+      <header class="head reveal">
+        <p class="head-num">{num('projects')}</p>
+        <h2 class="head-title">{s(UI.projectsTitle)}</h2>
+        <p class="head-kicker">// {s(NAV.projects)}</p>
+        <p class="head-lede">{s(UI.projectsLede)}</p>
+      </header>
+      <div class="cards">
         {projects.map((p, i) => (
-          <article class="item reveal" id={p.id}>
-            <p class="num">#{i + 1} <span class="dim">· {p.latin} · {s(TYPE_NAME[p.type])}</span></p>
-            <h3 class="item-title"><a href={p.url} target="_blank" rel="noopener noreferrer">{p.name}</a></h3>
-            <p class="item-org">{s(p.kind)} · {p.host}</p>
-            <p class="item-text">{s(p.summary)}</p>
-            <p class="tags">{p.stack.map((x) => <span>{x}</span>)}</p>
-            <p class="links">
-              {p.code && p.code !== p.url && <a href={p.code} target="_blank" rel="noopener noreferrer">{s(UI.readCode)}<Fragment set:html={ICONS.external} /></a>}
-              <a href={p.url} target="_blank" rel="noopener noreferrer">{linkLabel(p)}<Fragment set:html={ICONS.external} /></a>
-            </p>
-            {p.note && <p class="note">{s(p.note)}</p>}
-            {p.preview && (
-              <a class="screen screen--shot" href={p.url} target="_blank" rel="noopener noreferrer" tabindex="-1" aria-hidden="true">
-                <p class="screen-bar"><span>{p.host}</span><span class="dim">1280 × 800</span></p>
+          <article class:list={['card reveal', { 'card--wide': i === 0 }]} id={p.id}>
+            <a class="window" href={p.url} target="_blank" rel="noopener noreferrer" tabindex="-1" aria-hidden="true">
+              <p class="window-bar"><span class="dots"><i></i><i></i><i></i></span><span>{p.preview ? p.host : p.snippet?.file}</span></p>
+              {p.preview ? (
                 <span class="shot"><img src={p.preview} alt="" width="1280" height="800" loading="lazy" decoding="async" /></span>
-              </a>
-            )}
-            {p.snippet && (
-              <figure class="code">
-                <figcaption class="screen-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span>{p.snippet.file}</span></figcaption>
-                <pre><code>{p.snippet.code}</code></pre>
-              </figure>
-            )}
+              ) : (
+                <pre class="window-code"><code>{p.snippet?.code}</code></pre>
+              )}
+            </a>
+            <div class="card-body">
+              <p class="card-num">{pad(i + 1)} <span class="dim">· {p.latin} · {s(TYPE_NAME[p.type])}</span></p>
+              <h3 class="card-title"><a href={p.url} target="_blank" rel="noopener noreferrer">{p.name}<Fragment set:html={ICONS.external} /></a></h3>
+              <p class="card-text">{s(p.summary)}</p>
+              <p class="tags">{p.stack.map((x) => <span>{x}</span>)}</p>
+              <p class="links">
+                {p.code && p.code !== p.url && <a href={p.code} target="_blank" rel="noopener noreferrer">{s(UI.readCode)}</a>}
+                <a href={p.url} target="_blank" rel="noopener noreferrer">{linkLabel(p)}</a>
+              </p>
+              {p.note && <p class="note">{s(p.note)}</p>}
+            </div>
           </article>
         ))}
-      </section>
+      </div>
+    </section>
 
-      <Art id="thames" class="band reveal" caption />
+    <!-- A painting across the screen, and a motto over it -->
+    <section class="interlude" aria-label="Ars longa">
+      <Art id="thames" class="interlude-art" />
+      <div class="interlude-text">
+        <p class="interlude-latin reveal">Ars longa,<br /><em>vita brevis.</em></p>
+        <p class="interlude-note reveal">{s(UI.motto)}</p>
+      </div>
+      <p class="interlude-caption">{ART.thames.name} · {ART.thames.where}</p>
+    </section>
 
-      <!-- Stack -->
-      <section class="section" id="stack" data-section="stack">
-        <p class="kicker reveal">// {s(NAV.stack)}</p>
-        <h2 class="display-2 reveal">{s(UI.stackTitle)}</h2>
-        <p class="section-lede reveal">{s(UI.stackLede)}</p>
-        <dl class="stack reveal">
-          {STACK.map((g) => (
-            <div>
-              <dt>{s(g.group)}</dt>
-              <dd>{g.items.map((x) => <span>{x}</span>)}</dd>
-            </div>
-          ))}
-        </dl>
-      </section>
+    <!-- Stack: on the accent -->
+    <section class="section stack-section" id="stack" data-section="stack">
+      <div class="stack-art" aria-hidden="true"><Art id="carceri" /></div>
+      <header class="head reveal">
+        <p class="head-num">{num('stack')}</p>
+        <h2 class="head-title">{s(UI.stackTitle)}</h2>
+        <p class="head-kicker">// {s(NAV.stack)}</p>
+        <p class="head-lede">{s(UI.stackLede)}</p>
+      </header>
+      <div class="stack-groups">
+        {STACK.map((g) => (
+          <div class="stack-group reveal">
+            <p class="stack-head">{s(g.group)}</p>
+            <ul>{g.items.map((x) => <li>{x}</li>)}</ul>
+          </div>
+        ))}
+      </div>
+      <p class="stack-note reveal">+ {s(UI.stackNote)}</p>
+    </section>
 
-      <!-- About -->
-      <section class="section" id="about" data-section="about">
-        <p class="kicker reveal">// {s(NAV.about)}</p>
-        <h2 class="display-2 reveal">{s(UI.aboutTitle)}</h2>
-        {ABOUT[lang].map((para) => <p class="item-text reveal">{para}</p>)}
+    <!-- About -->
+    <section class="section about" id="about" data-section="about">
+      <div class="about-art reveal"><Art id="gladiator-head" caption /></div>
+      <div class="about-text">
+        <header class="head head--tight reveal">
+          <p class="head-num">{num('about')}</p>
+          <h2 class="head-title">{s(UI.aboutTitle)}</h2>
+          <p class="head-kicker">// {s(NAV.about)}</p>
+        </header>
+        {ABOUT[lang].map((para) => <p class="about-para reveal">{para}</p>)}
         <dl class="notes reveal">
           {NOTES.map((n) => (
             <div>
@@ -177,56 +221,44 @@ const credited = Object.entries(ART) as [ArtId, (typeof ART)[ArtId]][];
             </div>
           ))}
         </dl>
-      </section>
-
-      <!-- Contact -->
-      <section class="section contact" id="contact" data-section="contact">
-        <p class="kicker reveal">// {s(NAV.contact)}</p>
-        <h2 class="display-2 reveal">{s(UI.contactTitle)}</h2>
-        <p class="section-lede reveal">{s(UI.contactLede)}</p>
-        <div class="mail reveal">
-          <p class="mail-bar"><span>mailto</span><span class="dim">{s(CONTACT.based)}</span></p>
-          <p class="mail-line">
-            <span class="mail-prompt" aria-hidden="true">→</span>
-            <a href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a>
-            <button type="button" class="mail-copy" data-copy={CONTACT.email} data-copied={s(UI.copied)} aria-label={s(UI.copy)}><Fragment set:html={ICONS.copy} /><span data-copy-label>{s(UI.copy)}</span></button>
-          </p>
-        </div>
-        <p class="actions reveal">
-          <a class="button button--line" href={CONTACT.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a>
-          <a class="button button--line" href={CONTACT.github} target="_blank" rel="noopener noreferrer">GitHub</a>
-          <a class="button button--line" href={CV_PDF} download>{s(UI.ctaCv)}</a>
-        </p>
-        <Art id="venus" class="narrow-only hero-art reveal" />
-      </section>
-
-      <footer class="foot">
-        <p class="chip">{s(UI.credits)}</p>
-        <ul class="credits">
-          {credited.map(([id, a]) => (
-            <li>{a.source ? <a href={a.source} target="_blank" rel="noopener noreferrer">{a.name}</a> : a.name}<span class="dim">, {a.where}. {a.credit}.</span></li>
-          ))}
-        </ul>
-        <p class="foot-line"><span>© {new Date().getFullYear()} Eduardo de Bem</span><a href={PATHS[other]} hreflang={other === 'pt' ? 'pt-BR' : 'en'}>{other === 'pt' ? 'Em português' : 'In English'}</a></p>
-      </footer>
-    </main>
-
-    <!-- On the right: a call to write, and the section's picture. -->
-    <aside class="rail" aria-label={s(UI.contactTitle)}>
-      <p class="kicker">// {s(NAV.contact)}</p>
-      <p class="rail-title">{s(UI.railTitle)}</p>
-      <p class="rail-text">{s(UI.railText)}</p>
-      <a class="button button--light" href="#contact">{s(UI.railCta)}</a>
-      <div class="rail-art" aria-hidden="true">
-        {SECTIONS.map((id) => (
-          <div class="rail-layer" data-rail={id}>
-            <Art id={RAIL[id]} />
-            <p class="rail-caption"><span>{ART[RAIL[id]].name}</span><span>{ART[RAIL[id]].where}</span></p>
-          </div>
-        ))}
       </div>
-    </aside>
-  </div>
+    </section>
+
+    <!-- Contact: one huge address -->
+    <section class="section contact" id="contact" data-section="contact">
+      <div class="contact-art" aria-hidden="true"><Art id="venus" /></div>
+      <header class="head reveal">
+        <p class="head-num">{num('contact')}</p>
+        <h2 class="head-title">{s(UI.contactTitle)}</h2>
+        <p class="head-kicker">// {s(NAV.contact)}</p>
+        <p class="head-lede">{s(UI.contactLede)}</p>
+      </header>
+      <a class="address reveal" href={`mailto:${CONTACT.email}`}><span>{user}</span><span class="address-at">@{host}</span></a>
+      <p class="contact-actions reveal">
+        <button type="button" class="button button--accent" data-copy={CONTACT.email} data-copied={s(UI.copied)}><Fragment set:html={ICONS.copy} /><span data-copy-label>{s(UI.copy)}</span></button>
+        <a class="button button--line" href={CONTACT.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a>
+        <a class="button button--line" href={CONTACT.github} target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a class="button button--line" href={CV_PDF} download>{s(UI.ctaCv)}</a>
+      </p>
+      <p class="contact-based reveal">{s(CONTACT.based)}</p>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="foot-credits">
+      <p class="chip">{s(UI.credits)}</p>
+      <ul class="credits">
+        {credited.map(([, a]) => (
+          <li>{a.source ? <a href={a.source} target="_blank" rel="noopener noreferrer">{a.name}</a> : a.name}<span class="dim">, {a.where}. {a.credit}.</span></li>
+        ))}
+      </ul>
+    </div>
+    <p class="foot-line">
+      <span>© {new Date().getFullYear()} Eduardo de Bem</span>
+      <a href={PATHS[other]} hreflang={other === 'pt' ? 'pt-BR' : 'en'}>{other === 'pt' ? 'Em português' : 'In English'}</a>
+    </p>
+    <p class="foot-name" aria-hidden="true">Eduardo de Bem</p>
+  </footer>
 </Shell>
 
 <script>

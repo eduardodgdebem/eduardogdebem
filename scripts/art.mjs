@@ -19,6 +19,8 @@ const OUT = 'public/art';
  * mode: 'dither' (Bayer) or 'halftone'.
  */
 const ART = {
+  // The Tusculum portrait of Julius Caesar, 46-44 BC. Museo di Antichità, Turin. Photo: Marie-Lan Taÿ Pamart, public domain.
+  caesar: { crop: [0.03, 0.03, 0.94, 0.78], width: 1400, dot: 3, gamma: 2.0, gain: 1.2, fade: 0.45, floor: 0.2 },
   // The Borghese Gladiator, by Agasias of Ephesus, c. 100 BC. Louvre. Photo CC BY 2.0 (see CREDITS in src/data/art.ts).
   gladiator: { crop: [0, 0, 1, 1], width: 1100, dot: 2, gamma: 1.15, gain: 1.1, fade: 0.15 },
   // The Venus de Milo, c. 150-125 BC. Louvre. Photo: Wilfredor, CC0.
@@ -36,8 +38,6 @@ const ART = {
   melencolia: { crop: [0.06, 0.05, 0.88, 0.9], width: 1000, dot: 2, gamma: 1.6, gain: 1.0 },
   // Giovanni Battista Piranesi, Carceri VII, The Drawbridge, 1761. CC0.
   carceri: { crop: [0.04, 0.04, 0.92, 0.92], width: 1000, dot: 2, gamma: 1.3, gain: 1.0 },
-  // Hendrik Goltzius, The Great Hercules, 1589. National Gallery of Art, CC0.
-  hercules: { crop: [0.06, 0.02, 0.88, 0.84], width: 1000, dot: 2, gamma: 1.5, gain: 1.0 },
   // Paintings, as wide bands of round dots.
   // Charles-Théodore Frère, Caravan at Sunset (19th c.), public domain.
   caravane: { crop: [0, 0.1, 1, 0.8], width: 1800, dot: 6, mode: 'halftone', gamma: 2.1, gain: 0.9 },
