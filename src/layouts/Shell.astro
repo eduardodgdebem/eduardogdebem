@@ -1,0 +1,28 @@
+---
+// Every page: the head, the accent frame round the screen and the grain over it.
+import '../styles/site.css';
+import BaseHead from '../components/BaseHead.astro';
+import type { Lang } from '../data/site';
+
+interface Props {
+  title: string;
+  description: string;
+  lang: Lang;
+  alternates?: Record<Lang, string>;
+  schema?: Record<string, unknown>;
+  noindex?: boolean;
+  canonical?: boolean;
+}
+
+const { title, description, lang, alternates, schema, noindex, canonical } = Astro.props;
+---
+
+<!doctype html>
+<html lang={lang === 'pt' ? 'pt-BR' : 'en'}>
+  <head>
+    <BaseHead title={title} description={description} lang={lang} alternates={alternates} schema={schema} noindex={noindex} canonical={canonical} />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

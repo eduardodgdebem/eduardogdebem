@@ -1,0 +1,234 @@
+---
+// The one page, in English (/) or Portuguese (/pt/). Three columns on a wide
+// screen: the index on the left, the sections in the middle, and on the right
+// a call to write and the picture for the section being read, which changes as
+// the page scrolls (src/scripts/site.ts). On a phone, one column and a menu.
+import Shell from '../layouts/Shell.astro';
+import Art from '../components/Art.astro';
+import Logo from '../components/Logo.astro';
+import { ICONS } from '../components/icons';
+import { ABOUT, CONTACT, META, NAV, NOTES, PATHS, SECTIONS, STACK, UI, WORK, t, type Lang } from '../data/site';
+import { ART, RAIL, type ArtId } from '../data/art';
+import { PROJECTS, TYPES } from '../data/projects';
+import { CV_PDF } from '../consts';
+import { PERSON, WEBSITE } from '../seo';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const s = t(lang);
+const other: Lang = lang === 'en' ? 'pt' : 'en';
+const pad = (n: number) => String(n).padStart(2, '0');
+const projects = TYPES.flatMap((type) => PROJECTS.filter((p) => p.type === type));
+const TYPE_NAME = { site: { en: 'Site', pt: 'Site' }, app: { en: 'App', pt: 'App' }, language: { en: 'Language', pt: 'Linguagem' } };
+const linkLabel = (p: (typeof PROJECTS)[number]) => (p.code === p.url ? s(UI.readCode) : p.type === 'app' ? s(UI.openApp) : s(UI.visit));
+const credited = Object.entries(ART) as [ArtId, (typeof ART)[ArtId]][];
+---
+
+<Shell
+  title={META[lang].title}
+  description={META[lang].description}
+  lang={lang}
+  alternates={PATHS}
+  schema={{ '@context': 'https://schema.org', '@graph': [WEBSITE, PERSON] }}
+>
+  <div class="frame" aria-hidden="true"></div>
+
+  <div class="layout">
+    <!-- The index: who, a way to write, the sections, elsewhere. -->
+    <aside class="side">
+      <div class="side-art" aria-hidden="true"><Art id="gladiator-head" /></div>
+      <div class="side-top">
+        <a class="brand" href={PATHS[lang]}>
+          <span class="brand-mark"><Logo size={30} /></span>
+          <span class="brand-name"><span>Eduardo</span><span>de Bem</span></span>
+        </a>
+        <button type="button" class="menu-button" aria-expanded="false" aria-controls="side-nav" data-menu data-open={s(UI.menu)} data-close={s(UI.close)}>
+          <span data-menu-label>{s(UI.menu)}</span><span class="menu-bars" aria-hidden="true"><i></i><i></i></span>
+        </button>
+      </div>
+      <div class="side-nav" id="side-nav">
+        <a class="block-button" href="#contact">
+          <span>{s(UI.ctaContact)}</span><Fragment set:html={ICONS.mail} />
+        </a>
+        <p class="chip">{s(UI.explore)}</p>
+        <nav aria-label={s(UI.explore)}>
+          <ol class="index">
+            {SECTIONS.map((id) => (
+              <li>
+                <a href={`#${id}`} data-nav={id}>
+                  <Fragment set:html={ICONS[id]} />
+                  <span class="index-label">{s(NAV[id])}</span>
+                  <span class="leader" aria-hidden="true"></span>
+                </a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+        <p class="chip">{s(UI.elsewhere)}</p>
+        <ul class="index">
+          <li><a href={CONTACT.github} target="_blank" rel="noopener noreferrer"><Fragment set:html={ICONS.github} /><span class="index-label">GitHub</span><span class="leader" aria-hidden="true"></span></a></li>
+          <li><a href={CONTACT.linkedin} target="_blank" rel="noopener noreferrer"><Fragment set:html={ICONS.linkedin} /><span class="index-label">LinkedIn</span><span class="leader" aria-hidden="true"></span></a></li>
+          <li><a href={CV_PDF} download><Fragment set:html={ICONS.cv} /><span class="index-label">{s(UI.ctaCv)}</span><span class="leader" aria-hidden="true"></span></a></li>
+        </ul>
+        <p class="side-foot">
+          <Fragment set:html={ICONS.globe} />
+          <a href={PATHS.en} hreflang="en" lang="en" aria-current={lang === 'en' ? 'page' : undefined}>EN</a>
+          <a href={PATHS.pt} hreflang="pt-BR" lang="pt-BR" aria-current={lang === 'pt' ? 'page' : undefined}>PT</a>
+        </p>
+      </div>
+    </aside>
+
+    <main class="main">
+      <!-- Overview -->
+      <section class="section hero" id="overview" data-section="overview">
+        <p class="kicker reveal">// {s(NAV.overview)}</p>
+        <h1 class="display reveal"><span class="sr-only">Eduardo de Bem: </span>{s(UI.headline)}</h1>
+        <p class="lede reveal">{s(UI.lede)}</p>
+        <p class="actions reveal">
+          <a class="button button--accent" href="#contact">{s(UI.ctaContact)}</a>
+          <a class="button button--line" href={CV_PDF} download>{s(UI.ctaCv)}</a>
+        </p>
+        <p class="status reveal"><span class="pulse" aria-hidden="true"></span>{s(UI.available)} <span class="dim">· {s(CONTACT.based)}</span></p>
+        <Art id="hercules" class="narrow-only hero-art reveal" />
+      </section>
+
+      <!-- Work -->
+      <section class="section" id="work" data-section="work">
+        <p class="kicker reveal">// {s(NAV.work)}</p>
+        <h2 class="display-2 reveal">{s(UI.workTitle)}</h2>
+        {WORK.map((job, i) => (
+          <article class="item reveal">
+            <p class="num">#{i + 1} <span class="dim">· {s(job.when)}</span></p>
+            <h3 class="item-title">{s(job.title)}</h3>
+            <p class="item-org">{job.org}</p>
+            <p class="item-text">{s(job.summary)}</p>
+            <p class="tags">{job.stack.map((x) => <span>{x}</span>)}</p>
+            <div class="screen">
+              <p class="screen-bar" aria-hidden="true"><span>FIG. {pad(i + 1)}</span><span>{ART[job.art as ArtId].name}</span><span class="dim">{job.art}.png</span></p>
+              <Art id={job.art as ArtId} class:list={['screen-art', { 'screen-art--whole': ART[job.art as ArtId].h > ART[job.art as ArtId].w * 1.2 }]} />
+            </div>
+          </article>
+        ))}
+      </section>
+
+      <!-- Projects -->
+      <section class="section" id="projects" data-section="projects">
+        <p class="kicker reveal">// {s(NAV.projects)}</p>
+        <h2 class="display-2 reveal">{s(UI.projectsTitle)}</h2>
+        <p class="section-lede reveal">{s(UI.projectsLede)}</p>
+        {projects.map((p, i) => (
+          <article class="item reveal" id={p.id}>
+            <p class="num">#{i + 1} <span class="dim">· {p.latin} · {s(TYPE_NAME[p.type])}</span></p>
+            <h3 class="item-title"><a href={p.url} target="_blank" rel="noopener noreferrer">{p.name}</a></h3>
+            <p class="item-org">{s(p.kind)} · {p.host}</p>
+            <p class="item-text">{s(p.summary)}</p>
+            <p class="tags">{p.stack.map((x) => <span>{x}</span>)}</p>
+            <p class="links">
+              {p.code && p.code !== p.url && <a href={p.code} target="_blank" rel="noopener noreferrer">{s(UI.readCode)}<Fragment set:html={ICONS.external} /></a>}
+              <a href={p.url} target="_blank" rel="noopener noreferrer">{linkLabel(p)}<Fragment set:html={ICONS.external} /></a>
+            </p>
+            {p.note && <p class="note">{s(p.note)}</p>}
+            {p.preview && (
+              <a class="screen screen--shot" href={p.url} target="_blank" rel="noopener noreferrer" tabindex="-1" aria-hidden="true">
+                <p class="screen-bar"><span>{p.host}</span><span class="dim">1280 × 800</span></p>
+                <span class="shot"><img src={p.preview} alt="" width="1280" height="800" loading="lazy" decoding="async" /></span>
+              </a>
+            )}
+            {p.snippet && (
+              <figure class="code">
+                <figcaption class="screen-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span>{p.snippet.file}</span></figcaption>
+                <pre><code>{p.snippet.code}</code></pre>
+              </figure>
+            )}
+          </article>
+        ))}
+      </section>
+
+      <Art id="thames" class="band reveal" caption />
+
+      <!-- Stack -->
+      <section class="section" id="stack" data-section="stack">
+        <p class="kicker reveal">// {s(NAV.stack)}</p>
+        <h2 class="display-2 reveal">{s(UI.stackTitle)}</h2>
+        <p class="section-lede reveal">{s(UI.stackLede)}</p>
+        <dl class="stack reveal">
+          {STACK.map((g) => (
+            <div>
+              <dt>{s(g.group)}</dt>
+              <dd>{g.items.map((x) => <span>{x}</span>)}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+
+      <!-- About -->
+      <section class="section" id="about" data-section="about">
+        <p class="kicker reveal">// {s(NAV.about)}</p>
+        <h2 class="display-2 reveal">{s(UI.aboutTitle)}</h2>
+        {ABOUT[lang].map((para) => <p class="item-text reveal">{para}</p>)}
+        <dl class="notes reveal">
+          {NOTES.map((n) => (
+            <div>
+              <dt>{s(n.head)}</dt>
+              <dd>{s(n.items)}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+
+      <!-- Contact -->
+      <section class="section contact" id="contact" data-section="contact">
+        <p class="kicker reveal">// {s(NAV.contact)}</p>
+        <h2 class="display-2 reveal">{s(UI.contactTitle)}</h2>
+        <p class="section-lede reveal">{s(UI.contactLede)}</p>
+        <div class="mail reveal">
+          <p class="mail-bar"><span>mailto</span><span class="dim">{s(CONTACT.based)}</span></p>
+          <p class="mail-line">
+            <span class="mail-prompt" aria-hidden="true">→</span>
+            <a href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a>
+            <button type="button" class="mail-copy" data-copy={CONTACT.email} data-copied={s(UI.copied)} aria-label={s(UI.copy)}><Fragment set:html={ICONS.copy} /><span data-copy-label>{s(UI.copy)}</span></button>
+          </p>
+        </div>
+        <p class="actions reveal">
+          <a class="button button--line" href={CONTACT.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a>
+          <a class="button button--line" href={CONTACT.github} target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="button button--line" href={CV_PDF} download>{s(UI.ctaCv)}</a>
+        </p>
+        <Art id="venus" class="narrow-only hero-art reveal" />
+      </section>
+
+      <footer class="foot">
+        <p class="chip">{s(UI.credits)}</p>
+        <ul class="credits">
+          {credited.map(([id, a]) => (
+            <li>{a.source ? <a href={a.source} target="_blank" rel="noopener noreferrer">{a.name}</a> : a.name}<span class="dim">, {a.where}. {a.credit}.</span></li>
+          ))}
+        </ul>
+        <p class="foot-line"><span>© {new Date().getFullYear()} Eduardo de Bem</span><a href={PATHS[other]} hreflang={other === 'pt' ? 'pt-BR' : 'en'}>{other === 'pt' ? 'Em português' : 'In English'}</a></p>
+      </footer>
+    </main>
+
+    <!-- On the right: a call to write, and the section's picture. -->
+    <aside class="rail" aria-label={s(UI.contactTitle)}>
+      <p class="kicker">// {s(NAV.contact)}</p>
+      <p class="rail-title">{s(UI.railTitle)}</p>
+      <p class="rail-text">{s(UI.railText)}</p>
+      <a class="button button--light" href="#contact">{s(UI.railCta)}</a>
+      <div class="rail-art" aria-hidden="true">
+        {SECTIONS.map((id) => (
+          <div class="rail-layer" data-rail={id}>
+            <Art id={RAIL[id]} />
+            <p class="rail-caption"><span>{ART[RAIL[id]].name}</span><span>{ART[RAIL[id]].where}</span></p>
+          </div>
+        ))}
+      </div>
+    </aside>
+  </div>
+</Shell>
+
+<script>
+  import '../scripts/site';
+</script>

@@ -1,45 +1,32 @@
 ---
-// A page that isn't in the book: a plate of the dividers (bearings lost), and the way back.
-import Plate from '../components/Plate.astro';
-import Codex from '../layouts/Codex.astro';
-import { SITE_TITLE } from '../consts';
-import { en } from '../i18n/strings';
+// Any address the site doesn't have: a statue, and the way back.
+import Shell from '../layouts/Shell.astro';
+import Art from '../components/Art.astro';
+import { UI } from '../data/site';
+
+export const prerender = true;
 ---
 
-<Codex title={`Page not found — ${SITE_TITLE}`} description="This page isn't in the book." folio={99} noindex canonical={false}>
-  <Fragment slot="verso">
-    <Plate plate="circinus" banner="Terra incognita" />
-  </Fragment>
-
-  <Fragment slot="recto">
-    <p class="rubric">Folium deest</p>
-    <h1 data-i18n="missing.title">{en('missing.title')}</h1>
-    <p class="missing" data-i18n="missing.text">{en('missing.text')}</p>
-    <nav class="contents" aria-label="The way back">
-      <ol>
-        <li class="chapter"><a href="/"><span class="num">I.</span><span class="label" data-i18n="missing.home">{en('missing.home')}</span><span class="leader"></span><span class="pg">index</span></a></li>
-        <li class="chapter"><a href="/blog/"><span class="num">II.</span><span class="label" data-i18n="missing.notes">{en('missing.notes')}</span><span class="leader"></span><span class="pg">commentarii</span></a></li>
-        <li class="chapter"><a href="/about/"><span class="num">III.</span><span class="label" data-i18n="missing.author">{en('missing.author')}</span><span class="leader"></span><span class="pg">de auctore</span></a></li>
-      </ol>
-    </nav>
-    <p class="fleuron" aria-hidden="true">❦</p>
-  </Fragment>
-</Codex>
+<Shell title="Not found — Eduardo de Bem" description={UI.notFoundText.en} lang="en" noindex canonical={false}>
+  <div class="frame" aria-hidden="true"></div>
+  <main class="lost">
+    <p class="kicker">// 404</p>
+    <h1 class="display">{UI.notFound.en}</h1>
+    <p class="lede">{UI.notFoundText.en}</p>
+    <p class="actions"><a class="button button--accent" href="/">{UI.back.en}</a></p>
+    <Art id="gladiator-head" class="lost-art" />
+  </main>
+</Shell>
 
 <style>
-  h1 {
-    font-size: clamp(2.2rem, 3.4vw, 3.4rem);
-    margin: 0 0 0.8rem;
+  .lost {
+    max-width: 44rem;
+    margin: 0 auto;
+    padding: 14vh 28px 10vh;
   }
 
-  .missing {
-    font-style: italic;
-    color: var(--ink-soft);
-    max-width: 46ch;
-    margin: 0 0 1.4rem;
-  }
-
-  .chapter > a {
-    font-size: 1.1rem;
+  .lost-art {
+    width: min(100%, 22rem);
+    margin-top: 3rem;
   }
 </style>

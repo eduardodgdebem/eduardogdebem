@@ -13,20 +13,15 @@
     "generate-types": "wrangler types",
     "deploy": "npm run build && wrangler deploy",
     "previews": "node scripts/previews.mjs",
-    "cv": "\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --headless --disable-gpu --no-pdf-header-footer --print-to-pdf=public/eduardo-de-bem-cv.pdf \"file://$(cd ../../../cv && pwd)/cv.html\""
+    "cv": "\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --headless --disable-gpu --no-pdf-header-footer --print-to-pdf=public/eduardo-de-bem-cv.pdf \"file://$(cd ../../../cv && pwd)/cv.html\"",
+    "art": "node scripts/art.mjs"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^13.5.5",
-    "@astrojs/mdx": "^5.0.4",
-    "@astrojs/rss": "^4.0.18",
     "@astrojs/sitemap": "^3.7.2",
-    "@tailwindcss/vite": "^4.2.4",
-    "@types/three": "^0.184.1",
     "astro": "^6.3.1",
     "gsap": "^3.15.0",
-    "sharp": "^0.34.3",
-    "tailwindcss": "^4.2.4",
-    "three": "^0.184.0"
+    "sharp": "^0.34.3"
   },
   "devDependencies": {
     "wrangler": "^4.95.0"

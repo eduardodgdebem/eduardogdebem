@@ -1,19 +1,15 @@
-import type { Lang } from '../i18n/strings';
+import type { Lang } from './site';
 
-// The work shown in the Officina (/projects/, /pt/projetos/): each finished
-// project stands on the shelf of done work, its preview framed over the object
-// that stands for it (`work`, see officina-models.ts); one still being made
-// (no preview) lies on the anvil. Order is the order along the shelf.
+// The projects on the page (the Projects section of src/views/Site.astro),
+// in this order within each type.
 
-export type Work = 'forfex' | 'caput' | 'tabula' | 'ouroboros' | 'urbs';
-
-/** What kind of thing it is: the facing page lists them in groups, in this order. */
+/** What kind of thing it is: the page lists them in groups, in this order. */
 export const TYPES = ['site', 'app', 'language'] as const;
 export type Type = (typeof TYPES)[number];
 
 export interface Project {
   id: string;
-  /** Latin name on the label and the bench. */
+  /** Latin name, set as its label. */
   latin: string;
   name: string;
   url: string;
@@ -21,16 +17,15 @@ export interface Project {
   host: string;
   /** The source, when it's public. */
   code?: string;
-  /** A screenshot of it (in public/), engraved on the plate and shown on the page. Retaken with `npm run previews`. */
+  /** A screenshot of it (in public/), shown as a duotone. Retaken with `npm run previews`. */
   preview?: string;
   year: number;
-  work: Work;
   type: Type;
   stack: string[];
   kind: Record<Lang, string>;
   summary: Record<Lang, string>;
   note?: Record<Lang, string>;
-  /** A few real lines of its source, set over an engraving on the facing page. */
+  /** A few real lines of its source, set in a window over an engraving. */
   snippet?: { file: string; code: string };
 }
 
@@ -43,7 +38,6 @@ export const PROJECTS: Project[] = [
     url: 'https://brazilian-hair-studio.com/',
     host: 'brazilian-hair-studio.com',
     year: 2026,
-    work: 'forfex',
     type: 'site',
     stack: ['Astro', 'Tailwind CSS', 'Cloudflare Workers'],
     kind: { en: 'A salon’s site', pt: 'Site de um salão' },
@@ -60,7 +54,6 @@ export const PROJECTS: Project[] = [
     url: 'https://cbf.jeffersonrdebem.workers.dev/',
     host: 'cbf.jeffersonrdebem.workers.dev',
     year: 2026,
-    work: 'caput',
     type: 'site',
     stack: ['Astro', 'Tailwind CSS', 'GSAP', 'Cloudflare Workers'],
     kind: { en: 'A chain of salons', pt: 'Uma rede de salões' },
@@ -78,7 +71,6 @@ export const PROJECTS: Project[] = [
     url: 'https://debemconsultoria.com/',
     host: 'debemconsultoria.com',
     year: 2026,
-    work: 'tabula',
     type: 'site',
     stack: ['Astro', 'Tailwind CSS', 'GSAP', 'Cloudflare'],
     kind: { en: 'A consultancy’s site', pt: 'Site de uma consultoria' },
@@ -96,7 +88,6 @@ export const PROJECTS: Project[] = [
     host: 'eduardodgdebem.github.io/ode-city',
     code: 'https://github.com/eduardodgdebem/ode-city',
     year: 2026,
-    work: 'urbs',
     type: 'app',
     stack: ['Ode', 'WebAssembly', 'WebGL2'],
     snippet: {
@@ -124,7 +115,6 @@ let MINUTE: f64 = 60000.0;`,
     host: 'github.com/eduardodgdebem/ode',
     code: 'https://github.com/eduardodgdebem/ode',
     year: 2026,
-    work: 'ouroboros',
     type: 'language',
     stack: ['Ode', 'LLVM', 'C'],
     snippet: {
@@ -142,6 +132,6 @@ let MINUTE: f64 = 60000.0;`,
       en: 'A small, statically typed language that compiles to native code through LLVM. Its compiler is written in Ode and compiles itself: the snake with its tail in its mouth.',
       pt: 'Uma linguagem pequena, de tipagem estática, que compila para código nativo via LLVM. O compilador é escrito em Ode e compila a si mesmo: a serpente com a cauda na boca.',
     },
-    note: { en: 'Field notes on how it was made, to come.', pt: 'Notas de campo sobre como foi feita, em breve.' },
+    note: { en: 'A write-up on how it was made is on its way.', pt: 'Um texto sobre como foi feita está a caminho.' },
   },
 ];

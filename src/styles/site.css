@@ -1,0 +1,1140 @@
+/* ─── The site: classical pictures printed in one green ink on the night ────
+   After Nous Research's Hermes and Portal: light condensed headlines over
+   small upper-case labels, mono text, flat sharp blocks, a frame of the
+   accent round the screen, and every picture dithered to a single ink. */
+
+:root {
+  /* The night, tinted toward the accent, so the page reads as one ink. */
+  --night: #040a07;
+  --night-2: #07110c;
+  --panel: #0b1912;
+  --panel-2: #10231a;
+  --line: #17301f;
+  --line-2: #24452f;
+  --ink: #e3ebe4;
+  --ink-soft: #94a89a;
+  --ink-faint: #5d7364;
+  --accent: #34d27b;
+  --on-accent: #03140a;
+  /* The pictures' ink. */
+  --art-ink: #8fe0b0;
+
+  --f-display: "Oswald", "Arial Narrow", sans-serif;
+  --f-text: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --frame: 4px;
+  --side: 300px;
+  --rail: clamp(340px, 30vw, 520px);
+
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 24px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--night);
+  color: var(--ink);
+  font-family: var(--f-text);
+  font-size: 14.5px;
+  font-weight: 400;
+  line-height: 1.75;
+  letter-spacing: 0.01em;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 3px;
+}
+
+p,
+h1,
+h2,
+h3,
+dl,
+dd,
+ol,
+ul,
+figure {
+  margin: 0;
+}
+
+ol,
+ul {
+  padding: 0;
+  list-style: none;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.dim {
+  color: var(--ink-faint);
+}
+
+/* ── The frame round the screen, and a grain over everything ── */
+
+.frame {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  border: var(--frame) solid var(--accent);
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 99;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0.08 0 0 0 -0.02'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── A picture: its one-ink PNG is a mask, painted in --art-ink ── */
+
+.art-ink {
+  width: 100%;
+  background: var(--art-ink);
+  -webkit-mask: var(--src) center / contain no-repeat;
+  mask: var(--src) center / contain no-repeat;
+}
+
+.art figcaption {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.6rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+}
+
+/* ── Type ── */
+
+.display,
+.display-2,
+.item-title,
+.rail-title,
+.brand-name {
+  font-family: var(--f-display);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.display {
+  max-width: 9em;
+  font-size: clamp(3.4rem, 6.4vw, 6.6rem);
+  line-height: 0.92;
+}
+
+.display-2 {
+  font-size: clamp(2.4rem, 3.8vw, 3.6rem);
+  line-height: 0.95;
+  margin-bottom: 1.4rem;
+}
+
+/* Labels: Oswald, upper case, tracked. */
+.kicker,
+.chip,
+.num,
+.index-label,
+.button,
+.block-button,
+.menu-button,
+.screen-bar,
+.mail-bar,
+.stack dt,
+.notes dt,
+.links a,
+.side-foot a {
+  font-family: var(--f-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.kicker {
+  margin-bottom: 1.6rem;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+}
+
+.chip {
+  display: inline-block;
+  padding: 0.05rem 0.4rem;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--on-accent);
+  background: var(--ink);
+}
+
+/* ── Buttons: flat, sharp, upper case ── */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.92rem;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.button--accent {
+  color: var(--on-accent);
+  background: var(--accent);
+}
+
+.button--accent:hover {
+  background: #5be096;
+}
+
+.button--line {
+  color: var(--ink);
+  border-color: var(--line-2);
+}
+
+.button--line:hover {
+  border-color: var(--ink-soft);
+}
+
+.button--light {
+  color: var(--on-accent);
+  background: var(--ink);
+}
+
+.button--light:hover {
+  background: #fff;
+}
+
+/* ── Three columns ── */
+
+.layout {
+  display: grid;
+  grid-template-columns: var(--side) minmax(0, 1fr) var(--rail);
+  min-height: 100vh;
+}
+
+/* ── The index on the left ── */
+
+.side {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: calc(var(--frame) + 22px) 22px 22px calc(var(--frame) + 20px);
+  border-right: 1px solid var(--line);
+  overflow: hidden;
+}
+
+/* A statue behind it, very faint. */
+.side-art {
+  position: absolute;
+  left: -30%;
+  right: -40%;
+  bottom: -6%;
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+.side-top,
+.side-nav {
+  position: relative;
+}
+
+.side-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-decoration: none;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  color: var(--on-accent);
+  background: var(--ink);
+}
+
+.brand-name {
+  display: flex;
+  flex-direction: column;
+  font-size: 1.7rem;
+  line-height: 0.95;
+}
+
+.side-nav {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  margin-top: 22px;
+}
+
+.block-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.95rem;
+  text-decoration: none;
+  color: var(--on-accent);
+  background: var(--ink);
+  transition: background-color 0.25s ease;
+}
+
+.block-button:hover {
+  background: var(--accent);
+}
+
+.block-button svg {
+  font-size: 16px;
+}
+
+.side .chip {
+  align-self: flex-start;
+  margin: 30px 0 12px;
+}
+
+.index li a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0.3rem 0;
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.index svg {
+  flex: none;
+  font-size: 15px;
+  color: var(--ink-soft);
+}
+
+.index-label {
+  font-size: 0.95rem;
+  transition: color 0.25s ease;
+}
+
+.leader {
+  flex: 1;
+  height: 1px;
+  background-image: linear-gradient(90deg, var(--line-2) 50%, transparent 50%);
+  background-size: 6px 1px;
+  transition: opacity 0.25s ease;
+}
+
+.index a:hover .index-label,
+.index a[aria-current] .index-label {
+  color: var(--accent);
+}
+
+.index a[aria-current] svg {
+  color: var(--accent);
+}
+
+/* The section being read: its leader drawn solid. */
+.index a[aria-current] .leader {
+  background: var(--accent);
+  opacity: 0.6;
+}
+
+.side-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 20px;
+  color: var(--ink-soft);
+}
+
+.side-foot a {
+  font-size: 0.9rem;
+  text-decoration: none;
+  color: var(--ink-faint);
+}
+
+.side-foot a[aria-current],
+.side-foot a:hover {
+  color: var(--ink);
+}
+
+.menu-button {
+  display: none;
+}
+
+/* ── The sections in the middle ── */
+
+.main {
+  min-width: 0;
+  padding: 0 clamp(28px, 4.4vw, 76px);
+}
+
+.section {
+  max-width: 44rem;
+  padding: clamp(60px, 9vh, 110px) 0 clamp(30px, 5vh, 60px);
+}
+
+.hero {
+  min-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-top: clamp(40px, 8vh, 90px);
+}
+
+.lede {
+  max-width: 38rem;
+  margin-top: 1.8rem;
+  color: var(--ink);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 2rem;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 2.4rem;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
+.pulse {
+  width: 7px;
+  height: 7px;
+  background: var(--accent);
+  animation: pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.section-lede {
+  max-width: 38rem;
+  margin: -0.4rem 0 1rem;
+  color: var(--ink-soft);
+}
+
+/* An item: a job, a project. */
+.item {
+  padding-top: 2.6rem;
+}
+
+.num {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.item-title {
+  margin-top: 0.2rem;
+  font-size: clamp(1.5rem, 2.2vw, 1.9rem);
+  line-height: 1.05;
+}
+
+.item-title a {
+  text-decoration: none;
+  transition: color 0.25s ease;
+}
+
+.item-title a:hover {
+  color: var(--accent);
+}
+
+.item-org {
+  margin-top: 0.2rem;
+  font-size: 0.8rem;
+  color: var(--accent);
+}
+
+.item-text {
+  max-width: 38rem;
+  margin-top: 0.7rem;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 0.9rem;
+}
+
+.tags span {
+  padding: 0 0.45rem;
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  border: 1px solid var(--line-2);
+}
+
+.links {
+  display: flex;
+  gap: 1.4rem;
+  margin-top: 0.9rem;
+}
+
+.links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.88rem;
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--line-2);
+  text-underline-offset: 4px;
+  transition: text-decoration-color 0.25s ease;
+}
+
+.links a:hover {
+  text-decoration-color: var(--accent);
+}
+
+.links svg {
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.note {
+  margin-top: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+}
+
+/* A picture in a window: a mono bar over it, a hairline round it. */
+.screen {
+  display: block;
+  margin-top: 1.4rem;
+  border: 1px solid var(--line);
+  background: var(--night-2);
+  overflow: hidden;
+  text-decoration: none;
+}
+
+.screen-bar {
+  display: flex;
+  gap: 1.2rem;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  border-bottom: 1px solid var(--line);
+  background: var(--night);
+}
+
+.screen-bar .dim:last-child {
+  margin-left: auto;
+}
+
+.screen-art {
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+.screen-art .art-ink {
+  height: 100%;
+  aspect-ratio: auto !important;
+  -webkit-mask-size: cover;
+  mask-size: cover;
+  -webkit-mask-position: center 30%;
+  mask-position: center 30%;
+}
+
+/* A standing statue is shown whole in its window, not cropped to its middle. */
+.screen-art--whole .art-ink {
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+/* A site's screenshot: a duotone in the accent under a halftone screen. */
+.shot {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--art-ink);
+}
+
+/* Inverted, so a white page is the night and its lines the ink, as the statues are. */
+.shot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  filter: grayscale(1) invert(1) contrast(1.25) brightness(0.95);
+  mix-blend-mode: multiply;
+}
+
+.shot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, transparent 0.7px, rgb(4 10 7 / 0.55) 1.3px) 0 0 / 3px 3px;
+  transition: opacity 0.4s ease;
+}
+
+.screen--shot:hover .shot::after {
+  opacity: 0.35;
+}
+
+/* Code: a few real lines, in a window. */
+.code {
+  margin-top: 1.4rem;
+  border: 1px solid var(--line);
+  background: var(--night-2);
+}
+
+.dots {
+  display: inline-flex;
+  gap: 5px;
+}
+
+.dots i {
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--ink-faint);
+}
+
+.code pre {
+  margin: 0;
+  padding: 1rem 1.1rem;
+  overflow-x: auto;
+  font-family: var(--f-text);
+  font-size: 0.82rem;
+  line-height: 1.65;
+  color: var(--accent);
+}
+
+/* A painting across the column, printed in round dots. */
+.band {
+  max-width: 44rem;
+  margin: clamp(40px, 6vh, 70px) 0 0;
+  overflow: hidden;
+}
+
+/* Stack, and the notes about me: label and value on a ruled line. */
+.stack,
+.notes {
+  margin-top: 1.6rem;
+  border-top: 1px solid var(--line);
+}
+
+.stack > div,
+.notes > div {
+  display: grid;
+  grid-template-columns: 11rem minmax(0, 1fr);
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.stack dt,
+.notes dt {
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+}
+
+.stack dd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1.2rem;
+}
+
+.notes {
+  margin-top: 2rem;
+}
+
+/* The address: the loudest block on the page, in the accent. */
+.mail {
+  margin-top: 0.6rem;
+  color: var(--on-accent);
+  background: var(--accent);
+}
+
+.mail-bar {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.75rem;
+  border-bottom: 1px solid rgb(3 20 10 / 0.18);
+}
+
+.mail-bar .dim {
+  color: rgb(3 20 10 / 0.6);
+}
+
+.mail-line {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.9rem 0.9rem 1rem;
+  font-size: clamp(0.9rem, 1.5vw, 1.15rem);
+}
+
+.mail-prompt {
+  opacity: 0.55;
+}
+
+.mail-line a {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-decoration: none;
+}
+
+.mail-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.5rem;
+  font: inherit;
+  font-size: 0.75rem;
+  color: inherit;
+  background: none;
+  border: 1px solid rgb(3 20 10 / 0.35);
+  cursor: pointer;
+}
+
+.mail-copy:hover,
+.mail-copy.is-done {
+  background: rgb(3 20 10 / 0.12);
+}
+
+.mail-copy svg {
+  font-size: 13px;
+}
+
+.contact {
+  padding-bottom: clamp(40px, 8vh, 90px);
+}
+
+.foot {
+  max-width: 44rem;
+  padding: 2rem 0 calc(var(--frame) + 2rem);
+  border-top: 1px solid var(--line);
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+}
+
+.credits {
+  display: grid;
+  gap: 0.15rem;
+  margin-top: 0.9rem;
+}
+
+.credits a {
+  text-decoration: underline;
+  text-decoration-color: var(--line-2);
+  text-underline-offset: 3px;
+}
+
+.foot-line {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1.6rem;
+}
+
+/* ── The rail on the right: a call to write, and the section's picture ── */
+
+.rail {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: calc(var(--frame) + 26px) calc(var(--frame) + 28px) 0 32px;
+  background: var(--night-2);
+  border-left: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.rail .kicker {
+  margin-bottom: 1.4rem;
+}
+
+.rail-title {
+  font-size: clamp(2.6rem, 4vw, 4.4rem);
+  line-height: 0.92;
+}
+
+.rail-text {
+  max-width: 24rem;
+  margin: 1.2rem 0 1.4rem;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+}
+
+.rail .button {
+  align-self: flex-start;
+}
+
+.rail-art {
+  position: relative;
+  flex: 1;
+  margin: 28px -8px 0;
+  min-height: 0;
+  translate: var(--lean-x, 0) var(--lean-y, 0);
+  transition: translate 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.rail-layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+
+.rail-layer .art {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.rail-layer .art-ink {
+  height: 100%;
+  aspect-ratio: auto !important;
+  -webkit-mask-position: center bottom;
+  mask-position: center bottom;
+  clip-path: inset(100% 0 0 0);
+}
+
+/* The section's picture is printed in, row by row from the top, as a slow scan. */
+.rail-layer.is-on {
+  opacity: 1;
+}
+
+.rail-layer.is-on .art-ink {
+  animation: print 1.6s steps(24, end) both;
+}
+
+@keyframes print {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.rail-caption {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 8px calc(var(--frame) + 14px);
+  font-size: 0.68rem;
+  color: var(--ink-faint);
+}
+
+/* ── Printed in as it comes into view ── */
+
+html.reveals .reveal {
+  opacity: 0;
+  translate: 0 14px;
+  transition:
+    opacity 0.9s ease,
+    translate 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+html.reveals .reveal.is-in {
+  opacity: 1;
+  translate: none;
+}
+
+/* A picture in a window is scanned in once it's there. */
+html.reveals .reveal .screen-art,
+html.reveals .band.reveal {
+  clip-path: inset(0 0 100% 0);
+}
+
+html.reveals .reveal.is-in .screen-art,
+html.reveals .band.reveal.is-in {
+  animation: print 1.4s steps(20, end) 0.2s both;
+}
+
+/* ── Pictures drift on scroll: each moves a little against its window ── */
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .screen-art,
+    .shot,
+    .band {
+      view-timeline: --picture block;
+    }
+
+    .screen-art .art-ink,
+    .shot img,
+    .band .art-ink {
+      scale: 1.12;
+      animation: drift linear both;
+      animation-timeline: --picture;
+    }
+  }
+}
+
+@keyframes drift {
+  from {
+    translate: 0 -5%;
+  }
+  to {
+    translate: 0 5%;
+  }
+}
+
+/* ── The headline lands on arrival ── */
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero .display {
+    animation: rise 1.2s cubic-bezier(0.2, 0.7, 0.2, 1) 0.15s both;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    translate: 0 0.25em;
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    opacity: 1;
+    translate: none;
+    clip-path: inset(0 0 -20% 0);
+  }
+}
+
+.narrow-only {
+  display: none;
+}
+
+/* ── Narrower: no rail ── */
+
+@media (max-width: 1180px) {
+  .layout {
+    grid-template-columns: var(--side) minmax(0, 1fr);
+  }
+
+  .rail {
+    display: none;
+  }
+
+  .narrow-only {
+    display: block;
+  }
+
+  .hero-art {
+    width: min(100%, 26rem);
+    margin-top: 3rem;
+  }
+}
+
+/* ── A phone: one column, a bar and a menu ── */
+
+@media (max-width: 820px) {
+  :root {
+    --frame: 3px;
+  }
+
+  body {
+    font-size: 14px;
+  }
+
+  .layout {
+    display: block;
+  }
+
+  .side {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    height: auto;
+    padding: calc(var(--frame) + 12px) calc(var(--frame) + 14px) 12px;
+    background: var(--night);
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    overflow: visible;
+  }
+
+  .side-art {
+    display: none;
+  }
+
+  .side-top {
+    align-items: center;
+  }
+
+  .brand-mark {
+    width: 40px;
+    height: 40px;
+  }
+
+  .brand-mark svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .brand-name {
+    font-size: 1.15rem;
+  }
+
+  .menu-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0.4rem 0.2rem 0.4rem 0.7rem;
+    font-size: 0.9rem;
+    color: var(--ink);
+    background: none;
+    border: 0;
+    cursor: pointer;
+  }
+
+  .menu-bars {
+    position: relative;
+    width: 18px;
+    height: 8px;
+  }
+
+  .menu-bars i {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: currentColor;
+    transition:
+      top 0.3s ease,
+      rotate 0.3s ease;
+  }
+
+  .menu-bars i:first-child {
+    top: 0;
+  }
+
+  .menu-bars i:last-child {
+    top: 7px;
+  }
+
+  .menu-open .menu-bars i {
+    top: 3.5px;
+  }
+
+  .menu-open .menu-bars i:first-child {
+    rotate: 35deg;
+  }
+
+  .menu-open .menu-bars i:last-child {
+    rotate: -35deg;
+  }
+
+  /* The index, as a sheet under the bar. */
+  .side-nav {
+    display: none;
+    position: fixed;
+    top: var(--bar, 68px);
+    left: var(--frame);
+    right: var(--frame);
+    bottom: var(--frame);
+    margin: 0;
+    padding: 18px 18px 22px;
+    background: var(--night);
+    overflow-y: auto;
+  }
+
+  .menu-open .side-nav {
+    display: flex;
+    animation: sheet 0.3s ease both;
+  }
+
+  .menu-open body {
+    overflow: hidden;
+  }
+
+  .side-nav .index-label {
+    font-size: 1.3rem;
+  }
+
+  @keyframes sheet {
+    from {
+      opacity: 0;
+    }
+  }
+
+  .main {
+    padding: 0 22px;
+  }
+
+  .hero {
+    min-height: auto;
+    padding-top: 56px;
+  }
+
+  .display {
+    font-size: clamp(3rem, 14vw, 4.4rem);
+  }
+
+  .stack > div,
+  .notes > div {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+  }
+
+  .mail-bar .dim {
+    display: none;
+  }
+}

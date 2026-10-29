@@ -1,0 +1,22 @@
+---
+// One of the pictures (src/data/art.ts): its one-ink PNG used as a mask, so
+// the page paints it in its own colour (--art-ink), at its own proportions.
+import { ART, type ArtId } from '../data/art';
+
+interface Props {
+  id: ArtId;
+  class?: string;
+  /** Shown with its caption (name · where) under it. */
+  caption?: boolean;
+}
+
+const { id, class: className, caption = false } = Astro.props;
+const a = ART[id];
+---
+
+<figure class:list={['art', className]} data-art={id}>
+  <div class="art-ink" role="img" aria-label={`${a.name}, ${a.where}`} style={`--src:url(/art/${id}.png);aspect-ratio:${a.w}/${a.h}`}></div>
+  {caption && (
+    <figcaption><span>{a.name}</span><span>{a.where}</span></figcaption>
+  )}
+</figure>
