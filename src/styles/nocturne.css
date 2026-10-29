@@ -272,18 +272,38 @@
   color: var(--ink-faint);
 }
 
-/* The columns are swapped, so the corners are placed against the book, not
-   their page: back at the far left, forward at the far right. */
+/* Every other leaf has its plate on the left (book--plate-left, set in
+   Codex.astro by the page's place in the book): the columns in their own
+   order, the wider one still the plate's. */
 @media (min-aspect-ratio: 1/1) {
-  .book > .verso {
+  .book--plate-left {
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+  }
+
+  .book--plate-left > .verso {
+    grid-column: 1;
+    border-right: 1px solid var(--rule);
+  }
+
+  .book--plate-left > .recto {
+    grid-column: 2;
+    border-right: 0;
+  }
+}
+
+/* With the plate on the right the columns are swapped, so the corners are
+   placed against the book, not their page: back at the far left, forward at
+   the far right. */
+@media (min-aspect-ratio: 1/1) {
+  .book:not(.book--plate-left) > .verso {
     position: static;
   }
 
-  .book > .recto .corner--forward {
+  .book:not(.book--plate-left) > .recto .corner--forward {
     display: none !important;
   }
 
-  .verso .corner--portrait:not([hidden]) {
+  .book:not(.book--plate-left) .verso .corner--portrait:not([hidden]) {
     display: block !important;
   }
 }

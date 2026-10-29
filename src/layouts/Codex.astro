@@ -61,6 +61,9 @@ const here = leaves.findIndex((l) => l.key === at);
 const folio = here >= 0 ? leaves[here].folio : loose;
 const prev = here > 0 ? leaves[here - 1] : undefined;
 const next = here >= 0 ? leaves[here + 1] : undefined;
+// Nocturne: the plate changes sides from one leaf to the next (right on the
+// home page, left on the next, and so on), as a book alternates its plates.
+const plateLeft = here > 0 && here % 2 === 1;
 // The running head: the sections in the same order. A chapter is in its notes.
 const section = at?.startsWith('post:') ? 'notes' : at;
 const nav = SECTIONS.map(({ page, name }) => ({ href: PATHS[page][lang], label: name, current: page === section }));
@@ -166,7 +169,7 @@ const mastRight = rest.slice(2);
         <a class="mast-cta" href={`${PATHS.about[lang]}#correspondence`} data-i18n="mast.contact">{DICT['mast.contact']}</a>
       </nav>
     </header>
-    <div class:list={['book', { 'book--fit': fit }]}>
+    <div class:list={['book', { 'book--fit': fit, 'book--plate-left': plateLeft }]}>
       <Binding />
       <section class="page verso">
         <header class="running">
@@ -177,7 +180,7 @@ const mastRight = rest.slice(2);
           <slot name="verso" />
         </div>
         <footer class="folio">
-          <span>{roman(folio + 1)}</span>
+          <span>{roman(plateLeft ? folio : folio + 1)}</span>
         </footer>
         <Corner dir="back" to={prev} />
         {/* On portrait the spread is one column: the top of the screen is this page's. */}
@@ -190,7 +193,7 @@ const mastRight = rest.slice(2);
         </div>
         <footer class="folio">
           <a href="/rss.xml">rss</a>
-          <span>{roman(folio)}</span>
+          <span>{roman(plateLeft ? folio + 1 : folio)}</span>
         </footer>
         <Corner dir="forward" to={next} />
       </main>
