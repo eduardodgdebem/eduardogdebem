@@ -168,7 +168,49 @@ const mastRight = rest.slice(2);
         )}
         <a class="mast-cta" href={`${PATHS.about[lang]}#correspondence`} data-i18n="mast.contact">{DICT['mast.contact']}</a>
       </nav>
+      {/* On a phone: one bar (the wordmark, the toggle, a menu button), and the sections on a sheet. */}
+      <button type="button" class="mast-menu" aria-expanded="false" aria-controls="mast-sheet" data-open={DICT['mast.menu']} data-close={DICT['mast.close']}>
+        <span class="mast-menu-label">{DICT['mast.menu']}</span>
+        <span class="mast-menu-bars" aria-hidden="true"><i></i><i></i></span>
+      </button>
     </header>
+    <div class="mast-sheet" id="mast-sheet" hidden>
+      <nav aria-label="Sections">
+        <ol>
+          {nav.map((n, i) => (
+            <li style={`--i:${i}`}>
+              <a href={n.href} aria-current={n.current ? 'page' : undefined}><span class="sheet-num">{String(i + 1).padStart(2, '0')}</span>{n.label}</a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+      <div class="sheet-foot">
+        <a class="mast-cta" href={`${PATHS.about[lang]}#correspondence`}>{DICT['mast.contact']}</a>
+        <p class="mast-social">
+          <a href="https://github.com/eduardodgdebem" target="_blank" rel="noopener noreferrer" aria-label="GitHub" set:html={ICONS.github} />
+          <a href="https://linkedin.com/in/eduardogdebem" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" set:html={ICONS.linkedin} />
+          <a href="mailto:eduardogdebem@gmail.com" aria-label="Email" set:html={ICONS.mail} />
+        </p>
+      </div>
+    </div>
+    <script is:inline>
+      // The phone's menu: the sheet of sections opens under the bar, and closes
+      // on Escape, on a second press, or on going anywhere.
+      (() => {
+        const button = document.querySelector('.mast-menu');
+        const sheet = document.getElementById('mast-sheet');
+        const set = (open) => {
+          button.setAttribute('aria-expanded', String(open));
+          button.querySelector('.mast-menu-label').textContent = open ? button.dataset.close : button.dataset.open;
+          sheet.hidden = !open;
+          document.documentElement.classList.toggle('menu-open', open);
+        };
+        button.addEventListener('click', () => set(sheet.hidden));
+        sheet.addEventListener('click', (e) => e.target.closest('a') && set(false));
+        addEventListener('keydown', (e) => e.key === 'Escape' && !sheet.hidden && (set(false), button.focus()));
+        addEventListener('pageshow', () => set(false));
+      })();
+    </script>
     <div class:list={['book', { 'book--fit': fit, 'book--plate-left': plateLeft }]}>
       <Binding />
       <section class="page verso">

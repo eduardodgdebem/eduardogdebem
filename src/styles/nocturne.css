@@ -688,6 +688,12 @@ html:active-view-transition-type(back)::view-transition-new(recto) {
   animation-delay: 0.1s;
 }
 
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+  }
+}
+
 @keyframes nocturne-out {
   to {
     opacity: 0;
@@ -712,70 +718,205 @@ html.dawn .masthead {
 
 @media (prefers-reduced-motion: reduce) {
   html.dawn .book,
-  html.dawn .masthead {
-    animation: none;
+  html.dawn .masthead,
+  .mast-sheet,
+  .mast-sheet li {
+    animation: none !important;
   }
 }
 
-/* ── Portrait: one column, text first ── */
+/* ── The phone's menu: hidden on the spread ── */
+
+.mast-menu,
+.mast-sheet {
+  display: none;
+}
+
+/* ── Portrait: one column ── */
 
 @media (max-aspect-ratio: 1/1) {
   .codex {
-    --mast: 92px;
+    --mast: 56px;
   }
 
   .codex::before {
     display: block;
   }
 
+  /* One bar: the wordmark, the language, the menu. */
   .masthead {
-    grid-template-columns: auto 1fr;
-    grid-template-rows: auto auto;
-    align-content: center;
-    gap: 10px;
-    padding: 0 12px;
+    grid-template-columns: 1fr auto auto;
+    gap: 18px;
+    padding: 0 6px 0 16px;
   }
 
   .mast-centre {
-    grid-row: 1;
-    grid-column: 1 / -1;
-    flex-direction: row;
-    justify-content: space-between;
-    width: 100%;
-  }
-
-  .mast-nav--left {
-    grid-row: 2;
     grid-column: 1;
+    grid-row: 1;
+    align-items: flex-start;
   }
 
-  .mast-nav--right {
-    grid-row: 2;
-    grid-column: 2;
-  }
-
-  .mast-nav {
-    gap: 12px;
-  }
-
-  .mast-nav--left::after {
-    content: "";
-    width: 0;
-  }
-
-  .mast-nav a,
-  .lang a {
-    font-size: 0.64rem;
-    letter-spacing: 0.14em;
-  }
-
-  .mast-cta {
+  .mast-centre .mast-social,
+  .mast-nav--left,
+  .mast-nav--right > a {
     display: none;
   }
 
+  .mast-nav--right {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
   .wordmark {
-    font-size: 0.8rem;
-    letter-spacing: 0.24em;
+    font-size: 0.78rem;
+    letter-spacing: 0.26em;
+  }
+
+  .lang a {
+    font-size: 0.66rem;
+  }
+
+  .mast-menu {
+    grid-column: 3;
+    grid-row: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 40px;
+    padding: 0 12px;
+    font-family: var(--f-label);
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: var(--surface-2);
+    border: 0;
+    border-radius: 0;
+    cursor: pointer;
+  }
+
+  .mast-menu-bars {
+    position: relative;
+    width: 16px;
+    height: 7px;
+  }
+
+  .mast-menu-bars i {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: currentColor;
+    transition:
+      transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1),
+      top 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .mast-menu-bars i:first-child {
+    top: 0;
+  }
+
+  .mast-menu-bars i:last-child {
+    top: 6px;
+  }
+
+  .mast-menu[aria-expanded="true"] .mast-menu-bars i {
+    top: 3px;
+  }
+
+  .mast-menu[aria-expanded="true"] .mast-menu-bars i:first-child {
+    transform: rotate(35deg);
+  }
+
+  .mast-menu[aria-expanded="true"] .mast-menu-bars i:last-child {
+    transform: rotate(-35deg);
+  }
+
+  /* The sheet: the sections set large and light, one under another. */
+  .mast-sheet:not([hidden]) {
+    position: fixed;
+    z-index: 34;
+    top: calc(var(--edge) + var(--mast));
+    left: var(--edge);
+    right: var(--edge);
+    bottom: var(--edge);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 28px 16px 20px;
+    background: var(--night);
+    animation: sheet-in 0.35s ease both;
+    overflow-y: auto;
+  }
+
+  .mast-sheet ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .mast-sheet li {
+    border-bottom: 1px solid var(--rule);
+    animation: nocturne-in 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) calc(0.04s + var(--i) * 0.05s) both;
+  }
+
+  .mast-sheet li a {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    padding: 12px 0 10px;
+    font-family: var(--f-display);
+    font-size: clamp(2.2rem, 11vw, 3.2rem);
+    font-weight: 200;
+    line-height: 1;
+    text-decoration: none;
+    color: var(--ink-soft);
+  }
+
+  .mast-sheet li a[aria-current="page"] {
+    color: var(--ink);
+  }
+
+  .sheet-num {
+    min-width: 2.4ch;
+    font-family: var(--f-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    color: var(--ink-faint);
+  }
+
+  .mast-sheet li a[aria-current="page"] .sheet-num {
+    color: var(--rubric);
+  }
+
+  .sheet-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 24px;
+  }
+
+  .sheet-foot .mast-social {
+    gap: 22px;
+    font-size: 18px;
+  }
+
+  .sheet-foot .mast-social a {
+    color: var(--ink-soft);
+  }
+
+  html.menu-open .book {
+    visibility: hidden;
+  }
+
+  .sheet-foot .mast-cta {
+    font-family: var(--f-label);
+    font-size: 0.74rem;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    text-decoration: none;
   }
 
   .book {
@@ -799,6 +940,17 @@ html.dawn .masthead {
     grid-column: 1;
     grid-row: 2;
     border-top: 1px solid var(--rule);
+  }
+
+  /* The leaves whose plate is on the left of the spread have it on top here. */
+  .book--plate-left > .verso {
+    grid-row: 1;
+    border-top: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .book--plate-left > .recto {
+    grid-row: 2;
   }
 
   .book .plate-frame {
