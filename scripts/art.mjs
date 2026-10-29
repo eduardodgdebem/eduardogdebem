@@ -21,28 +21,16 @@ const OUT = 'public/art';
 const ART = {
   // The Tusculum portrait of Julius Caesar, 46-44 BC. Museo di Antichità, Turin. Photo: Marie-Lan Taÿ Pamart, public domain.
   caesar: { crop: [0.03, 0.03, 0.94, 0.78], width: 1400, dot: 3, gamma: 2.0, gain: 1.2, fade: 0.45, floor: 0.2 },
-  // The Borghese Gladiator, by Agasias of Ephesus, c. 100 BC. Louvre. Photo CC BY 2.0 (see CREDITS in src/data/art.ts).
-  gladiator: { crop: [0, 0, 1, 1], width: 1100, dot: 2, gamma: 1.15, gain: 1.1, fade: 0.15 },
   // The Venus de Milo, c. 150-125 BC. Louvre. Photo: Wilfredor, CC0.
   venus: { crop: [0.18, 0.03, 0.64, 0.7], width: 900, dot: 2, gamma: 1.2, gain: 1.1, fade: 0.35 },
-  // Michelangelo, Moses, 1513-15. San Pietro in Vincoli, Rome. Photo: Perituss, CC0.
-  moses: { crop: [0.08, 0.04, 0.84, 0.78], width: 900, dot: 2, gamma: 1.45, gain: 1.1, fade: 0.6, floor: 0.12 },
   // Antonio Canova, Psyche Revived by Cupid's Kiss, 1787-93. Louvre. Photo: Joe deSousa, CC0.
   psyche: { crop: [0.18, 0.0, 0.6, 0.92], width: 1000, dot: 2, gamma: 1.7, gain: 1.05, fade: 0.55, floor: 0.2 },
   // The Borghese Gladiator's head. Louvre. Photo: public domain.
   'gladiator-head': { crop: [0.06, 0.04, 0.88, 0.78], width: 900, dot: 2, gamma: 1.5, gain: 1.05, fade: 0.6, floor: 0.15 },
-  // Laocoön and His Sons. Vatican Museums. Photo: Wilfredor, CC0.
-  laocoon: { crop: [0.06, 0.04, 0.88, 0.86], width: 1000, dot: 2, gamma: 1.3, gain: 1.1, fade: 0.4 },
   // Engravings, the right way round: the paper is the ink, the lines are the night.
   // Albrecht Dürer, Melencolia I, 1514. The Met, CC0.
   melencolia: { crop: [0.06, 0.05, 0.88, 0.9], width: 1000, dot: 2, gamma: 1.6, gain: 1.0 },
-  // Giovanni Battista Piranesi, Carceri VII, The Drawbridge, 1761. CC0.
-  carceri: { crop: [0.04, 0.04, 0.92, 0.92], width: 1000, dot: 2, gamma: 1.3, gain: 1.0 },
   // Paintings, as wide bands of round dots.
-  // Charles-Théodore Frère, Caravan at Sunset (19th c.), public domain.
-  caravane: { crop: [0, 0.1, 1, 0.8], width: 1800, dot: 6, mode: 'halftone', gamma: 2.1, gain: 0.9 },
-  // Gaspar van Wittel (1653-1736), a view in Italy, public domain.
-  wittel: { crop: [0, 0, 1, 1], width: 1800, dot: 6, mode: 'halftone', gamma: 2.1, gain: 0.9 },
   // Canaletto, The River Thames (detail), public domain.
   thames: { crop: [0, 0.2, 1, 0.6], width: 1800, dot: 6, mode: 'halftone', gamma: 2.1, gain: 0.9 },
 };

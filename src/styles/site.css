@@ -607,8 +607,8 @@ body::after {
   mask-image: linear-gradient(#000 55%, transparent);
 }
 
-/* ── Work: a deck of cards. Each is held under the bar, a little lower than
-   the last, until the next one slides over it. ── */
+/* ── Projects: a deck of cards. Each is held under the bar, a little lower
+   than the last, until the next one slides over it. ── */
 
 .deck {
   display: grid;
@@ -626,50 +626,19 @@ body::after {
   box-shadow: 0 -24px 40px -20px rgb(0 0 0 / 0.6);
 }
 
-.slide-art {
+.slide .window {
   display: flex;
   flex-direction: column;
+  border: 0;
   border-right: 1px solid var(--line);
-  background: var(--night);
   min-height: 0;
 }
 
-.slide-bar {
-  display: flex;
-  gap: 1.2rem;
-  padding: 0.4rem 0.9rem;
-  font-family: var(--f-display);
-  font-size: 0.74rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--ink-soft);
-  border-bottom: 1px solid var(--line);
-}
-
-.slide-bar .dim:last-child {
-  margin-left: auto;
-}
-
-.slide-pic {
+.slide .shot,
+.slide .window-code {
   flex: 1;
-  min-height: 260px;
-  overflow: hidden;
-}
-
-.slide-pic .art-ink {
-  height: 100%;
-  aspect-ratio: auto !important;
-  -webkit-mask-size: cover;
-  mask-size: cover;
-  -webkit-mask-position: center 35%;
-  mask-position: center 35%;
-}
-
-.slide-pic--whole .art-ink {
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  -webkit-mask-position: center bottom;
-  mask-position: center bottom;
+  aspect-ratio: auto;
+  min-height: 300px;
 }
 
 .slide-body {
@@ -714,6 +683,15 @@ body::after {
   text-transform: uppercase;
 }
 
+.slide-title a {
+  text-decoration: none;
+  transition: color 0.25s ease;
+}
+
+.slide-title a:hover {
+  color: var(--accent);
+}
+
 .slide-org {
   margin-top: 0.5rem;
   font-size: 0.82rem;
@@ -726,26 +704,12 @@ body::after {
   color: var(--ink-soft);
 }
 
-/* ── Projects: a grid of windows, on a panel ── */
+/* ── Projects: a deck on a panel ── */
 
 .projects {
   background: var(--night-2);
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
-}
-
-.cards {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(40px, 5vw, 72px) clamp(24px, 3vw, 48px);
-}
-
-.card--wide {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
-  gap: clamp(24px, 3vw, 48px);
-  align-items: end;
 }
 
 .window {
@@ -771,13 +735,14 @@ body::after {
   border-bottom: 1px solid var(--line);
 }
 
-/* A site's screenshot, in its own colours. */
+/* A site's screenshot, toned green (its own lights and darks, the accent's
+   hue) under a halftone screen; in its own colours under the pointer. */
 .shot {
   position: relative;
   display: block;
   aspect-ratio: 16 / 10;
   overflow: hidden;
-  background: var(--night);
+  background: #1f7a49;
 }
 
 .shot img {
@@ -786,11 +751,29 @@ body::after {
   height: 100%;
   object-fit: cover;
   object-position: top;
-  transition: scale 0.8s var(--ease);
+  filter: grayscale(1) contrast(1.1);
+  mix-blend-mode: luminosity;
+  transition:
+    scale 0.8s var(--ease),
+    filter 0.5s ease;
+}
+
+.shot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, transparent 0.8px, rgb(4 10 7 / 0.35) 1.4px) 0 0 / 3px 3px;
+  transition: opacity 0.5s ease;
 }
 
 .window:hover .shot img {
   scale: 1.04;
+  filter: none;
+  mix-blend-mode: normal;
+}
+
+.window:hover .shot::after {
+  opacity: 0;
 }
 
 .window-code {
@@ -803,54 +786,6 @@ body::after {
   font-size: 0.85rem;
   line-height: 1.7;
   color: var(--accent);
-}
-
-.card-body {
-  padding-top: 1.2rem;
-}
-
-.card-num {
-  font-family: var(--f-display);
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--ink-soft);
-}
-
-.card-title {
-  margin-top: 0.2rem;
-  font-family: var(--f-display);
-  font-weight: 300;
-  font-size: clamp(1.8rem, 2.8vw, 2.6rem);
-  line-height: 1;
-  letter-spacing: -0.02em;
-}
-
-.card--wide .card-title {
-  font-size: clamp(2.2rem, 4vw, 3.6rem);
-}
-
-.card-title a {
-  display: inline-flex;
-  align-items: flex-start;
-  gap: 0.4rem;
-  text-decoration: none;
-  transition: color 0.25s ease;
-}
-
-.card-title svg {
-  font-size: 0.45em;
-  color: var(--accent);
-}
-
-.card-title a:hover {
-  color: var(--accent);
-}
-
-.card-text {
-  max-width: 36rem;
-  margin-top: 0.7rem;
-  color: var(--ink-soft);
 }
 
 .links {
@@ -947,103 +882,6 @@ body::after {
   color: var(--ink-faint);
 }
 
-/* ── Stack: the section in the accent ── */
-
-.stack-section {
-  --art-ink: var(--on-accent);
-  color: var(--on-accent);
-  background: var(--accent);
-  overflow: hidden;
-}
-
-.stack-section .head-num,
-.stack-section .head-kicker,
-.stack-section .head-lede {
-  color: var(--on-accent);
-}
-
-.stack-section .head-lede {
-  opacity: 0.75;
-}
-
-.stack-section ::selection {
-  background: var(--on-accent);
-  color: var(--accent);
-}
-
-.stack-art {
-  position: absolute;
-  top: 0;
-  right: -6%;
-  bottom: 0;
-  width: min(46vw, 640px);
-  opacity: 0.16;
-  pointer-events: none;
-}
-
-.stack-art .art,
-.stack-art .art-ink {
-  height: 100%;
-}
-
-.stack-art .art-ink {
-  aspect-ratio: auto !important;
-}
-
-.stack-groups {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 2rem;
-  border-top: 1px solid rgb(3 20 10 / 0.25);
-}
-
-.stack-head {
-  padding: 1rem 0 1.2rem;
-  font-family: var(--f-display);
-  font-size: 0.86rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  opacity: 0.7;
-}
-
-.stack-group li {
-  display: flex;
-  align-items: center;
-  gap: 0.55em;
-  font-family: var(--f-display);
-  font-weight: 300;
-  font-size: clamp(1.4rem, 2.2vw, 2.1rem);
-  line-height: 1.2;
-  letter-spacing: -0.01em;
-}
-
-.stack-logo {
-  display: inline-grid;
-  place-items: center;
-  flex: none;
-  width: 1.5em;
-  height: 1.5em;
-  font-size: 0.75em;
-  border: 1px solid rgb(3 20 10 / 0.3);
-}
-
-.stack-logo svg {
-  width: 0.95em;
-  height: 0.95em;
-}
-
-.stack-group li:hover .stack-logo {
-  color: var(--accent);
-  background: var(--on-accent);
-}
-
-.stack-note {
-  position: relative;
-  margin-top: 3rem;
-  font-size: 0.85rem;
-}
-
 /* ── About: a statue beside the text ── */
 
 .about {
@@ -1087,6 +925,83 @@ body::after {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--ink-soft);
+}
+
+/* Inside about: where I've worked, and what with. */
+.sub {
+  margin: 3rem 0 1rem;
+  font-family: var(--f-display);
+  font-size: 0.86rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+}
+
+.jobs {
+  border-top: 1px solid var(--line);
+}
+
+.job {
+  display: grid;
+  grid-template-columns: 9rem minmax(0, 1fr);
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.job-when {
+  font-family: var(--f-display);
+  font-size: 0.86rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+}
+
+.job-title {
+  font-family: var(--f-display);
+  font-weight: 300;
+  font-size: 1.45rem;
+  line-height: 1.15;
+}
+
+.job-org {
+  color: var(--ink-faint);
+}
+
+.job-text {
+  max-width: 36rem;
+  margin-top: 0.3rem;
+  color: var(--ink-soft);
+}
+
+.logos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.logos li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.35rem 0.7rem 0.35rem 0.45rem;
+  font-size: 0.8rem;
+  border: 1px solid var(--line-2);
+  transition:
+    border-color 0.25s ease,
+    color 0.25s ease;
+}
+
+.logo {
+  display: inline-grid;
+  place-items: center;
+  font-size: 15px;
+  color: var(--art-ink);
+}
+
+.logos li:hover {
+  border-color: var(--accent);
 }
 
 /* ── Contact: one huge address ── */
@@ -1268,14 +1183,6 @@ body::after {
     translate: none;
   }
 
-  /* A project's window is scanned in once it's there. */
-  html.reveals .card.reveal .window {
-    clip-path: inset(0 0 100% 0);
-  }
-
-  html.reveals .card.reveal.is-in .window {
-    animation: print 1.2s steps(18, end) 0.15s both;
-  }
 }
 
 @keyframes print {
@@ -1324,10 +1231,6 @@ body::after {
 @media (max-width: 1100px) {
   .bar-extra {
     display: none;
-  }
-
-  .stack-groups {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1496,36 +1399,19 @@ body::after {
     box-shadow: none;
   }
 
-  .slide-art {
+  .slide .window {
     border-right: 0;
     border-bottom: 1px solid var(--line);
   }
 
-  .slide-pic {
+  .slide .shot,
+  .slide .window-code {
     flex: none;
     aspect-ratio: 16 / 10;
     min-height: 0;
   }
 
-  .slide-bar .dim:last-child {
-    display: none;
-  }
-
-  .cards,
-  .card--wide {
-    grid-template-columns: 1fr;
-  }
-
-  .stack-groups {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-
-  .stack-art {
-    width: 90vw;
-  }
-
-  .about {
+    .about {
     grid-template-columns: 1fr;
   }
 
@@ -1534,7 +1420,8 @@ body::after {
     width: min(100%, 22rem);
   }
 
-  .notes > div {
+  .notes > div,
+  .job {
     grid-template-columns: 1fr;
     gap: 0.1rem;
   }

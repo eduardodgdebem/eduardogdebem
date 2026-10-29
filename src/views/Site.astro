@@ -1,9 +1,9 @@
 ---
 // The one page, in English (/) or Portuguese (/pt/). A bar across the top,
-// then sections each set its own way: a full-screen hero with Caesar, an
-// deck of job cards that stack as the page scrolls, a grid of projects, a
-// painting with a motto, the stack on the accent, about, and a contact page
-// of one huge address. Behaviour is in src/scripts/site.ts.
+// then sections each set its own way: a full-screen hero with Caesar, a deck
+// of project cards that stack as the page scrolls, a painting with a motto,
+// about (with the jobs and the stack), and a contact page of one huge
+// address. Behaviour is in src/scripts/site.ts.
 import Shell from '../layouts/Shell.astro';
 import Art from '../components/Art.astro';
 import Logo from '../components/Logo.astro';
@@ -29,7 +29,9 @@ const projects = TYPES.flatMap((type) => PROJECTS.filter((p) => p.type === type)
 const TYPE_NAME = { site: { en: 'Site', pt: 'Site' }, app: { en: 'App', pt: 'App' }, language: { en: 'Language', pt: 'Linguagem' } };
 const linkLabel = (p: (typeof PROJECTS)[number]) => (p.code === p.url ? s(UI.readCode) : p.type === 'app' ? s(UI.openApp) : s(UI.visit));
 const ticker = STACK.flatMap((g) => g.items);
-const credited = Object.entries(ART) as [ArtId, (typeof ART)[ArtId]][];
+// Only the pictures on the page are credited.
+const SHOWN: ArtId[] = ['caesar', 'melencolia', 'thames', 'gladiator-head', 'venus'];
+const credited = SHOWN.map((id) => [id, ART[id]] as const);
 const [user, host] = CONTACT.email.split('@');
 ---
 
@@ -105,35 +107,7 @@ const [user, host] = CONTACT.email.split('@');
       </div>
     </section>
 
-    <!-- Work: a deck of cards, each held under the bar until the next one covers it -->
-    <section class="section work" id="work" data-section="work">
-      <div class="head-art" aria-hidden="true"><Art id="moses" /></div>
-      <header class="head reveal">
-        <p class="head-num">{num('work')}</p>
-        <h2 class="head-title">{s(UI.workTitle)}</h2>
-        <p class="head-kicker">// {s(NAV.work)}</p>
-      </header>
-      <ol class="deck">
-        {WORK.map((job, i) => (
-          <li class="slide" style={`--i:${i}`}>
-            <div class="slide-art">
-              <p class="slide-bar"><span>FIG. {pad(i + 1)}</span><span>{ART[job.art as ArtId].name}</span><span class="dim">{ART[job.art as ArtId].where}</span></p>
-              <Art id={job.art as ArtId} class:list={['slide-pic', { 'slide-pic--whole': ART[job.art as ArtId].h > ART[job.art as ArtId].w * 1.2 }]} />
-            </div>
-            <div class="slide-body">
-              <p class="slide-count"><span>{pad(i + 1)}</span><span class="dim">/ {pad(WORK.length)}</span></p>
-              <p class="slide-when">{s(job.when)}</p>
-              <h3 class="slide-title">{s(job.title)}</h3>
-              <p class="slide-org">{job.org}</p>
-              <p class="slide-text">{s(job.summary)}</p>
-              <p class="tags">{job.stack.map((x) => <span>{x}</span>)}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
-    </section>
-
-    <!-- Projects: a grid of windows -->
+    <!-- Projects: a deck of cards, each held under the bar until the next one covers it -->
     <section class="section projects" id="projects" data-section="projects">
       <div class="head-art" aria-hidden="true"><Art id="melencolia" /></div>
       <header class="head reveal">
@@ -142,9 +116,9 @@ const [user, host] = CONTACT.email.split('@');
         <p class="head-kicker">// {s(NAV.projects)}</p>
         <p class="head-lede">{s(UI.projectsLede)}</p>
       </header>
-      <div class="cards">
+      <ol class="deck">
         {projects.map((p, i) => (
-          <article class:list={['card reveal', { 'card--wide': i === 0 }]} id={p.id}>
+          <li class="slide" style={`--i:${i}`} id={p.id}>
             <a class="window" href={p.url} target="_blank" rel="noopener noreferrer" tabindex="-1" aria-hidden="true">
               <p class="window-bar"><span class="dots"><i></i><i></i><i></i></span><span>{p.preview ? p.host : p.snippet?.file}</span></p>
               {p.preview ? (
@@ -153,20 +127,21 @@ const [user, host] = CONTACT.email.split('@');
                 <pre class="window-code"><code>{p.snippet?.code}</code></pre>
               )}
             </a>
-            <div class="card-body">
-              <p class="card-num">{pad(i + 1)} <span class="dim">· {p.latin} · {s(TYPE_NAME[p.type])}</span></p>
-              <h3 class="card-title"><a href={p.url} target="_blank" rel="noopener noreferrer">{p.name}<Fragment set:html={ICONS.external} /></a></h3>
-              <p class="card-text">{s(p.summary)}</p>
+            <div class="slide-body">
+              <p class="slide-count"><span>{pad(i + 1)}</span><span class="dim">/ {pad(projects.length)}</span></p>
+              <p class="slide-when">{p.latin} · {s(TYPE_NAME[p.type])} · {s(p.kind)}</p>
+              <h3 class="slide-title"><a href={p.url} target="_blank" rel="noopener noreferrer">{p.name}</a></h3>
+              <p class="slide-text">{s(p.summary)}</p>
               <p class="tags">{p.stack.map((x) => <span>{x}</span>)}</p>
               <p class="links">
-                {p.code && p.code !== p.url && <a href={p.code} target="_blank" rel="noopener noreferrer">{s(UI.readCode)}</a>}
-                <a href={p.url} target="_blank" rel="noopener noreferrer">{linkLabel(p)}</a>
+                {p.code && p.code !== p.url && <a href={p.code} target="_blank" rel="noopener noreferrer">{s(UI.readCode)}<Fragment set:html={ICONS.external} /></a>}
+                <a href={p.url} target="_blank" rel="noopener noreferrer">{linkLabel(p)}<Fragment set:html={ICONS.external} /></a>
               </p>
               {p.note && <p class="note">{s(p.note)}</p>}
             </div>
-          </article>
+          </li>
         ))}
-      </div>
+      </ol>
     </section>
 
     <!-- A painting across the screen, and a motto over it -->
@@ -179,27 +154,7 @@ const [user, host] = CONTACT.email.split('@');
       <p class="interlude-caption">{ART.thames.name} · {ART.thames.where}</p>
     </section>
 
-    <!-- Stack: on the accent -->
-    <section class="section stack-section" id="stack" data-section="stack">
-      <div class="stack-art" aria-hidden="true"><Art id="carceri" /></div>
-      <header class="head reveal">
-        <p class="head-num">{num('stack')}</p>
-        <h2 class="head-title">{s(UI.stackTitle)}</h2>
-        <p class="head-kicker">// {s(NAV.stack)}</p>
-        <p class="head-lede">{s(UI.stackLede)}</p>
-      </header>
-      <div class="stack-groups">
-        {STACK.map((g) => (
-          <div class="stack-group reveal">
-            <p class="stack-head">{s(g.group)}</p>
-            <ul>{g.items.map((x) => <li><span class="stack-logo" set:html={LOGOS[x] ?? ICONS.stack} />{x}</li>)}</ul>
-          </div>
-        ))}
-      </div>
-      <p class="stack-note reveal">+ {s(UI.stackNote)}</p>
-    </section>
-
-    <!-- About -->
+    <!-- About: who, where I've worked, what with -->
     <section class="section about" id="about" data-section="about">
       <div class="about-art reveal"><Art id="gladiator-head" caption /></div>
       <div class="about-text">
@@ -209,6 +164,25 @@ const [user, host] = CONTACT.email.split('@');
           <p class="head-kicker">// {s(NAV.about)}</p>
         </header>
         {ABOUT[lang].map((para) => <p class="about-para reveal">{para}</p>)}
+
+        <h3 class="sub reveal">{s(UI.workTitle)}</h3>
+        <ol class="jobs">
+          {WORK.map((job) => (
+            <li class="job reveal">
+              <p class="job-when">{s(job.when)}</p>
+              <div>
+                <p class="job-title">{s(job.title)} <span class="job-org">· {job.org}</span></p>
+                <p class="job-text">{s(job.summary)}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+
+        <h3 class="sub reveal">{s(UI.stackTitle)}</h3>
+        <ul class="logos reveal">
+          {STACK.flatMap((g) => g.items).map((x) => <li><span class="logo" set:html={LOGOS[x] ?? ICONS.stack} />{x}</li>)}
+        </ul>
+
         <dl class="notes reveal">
           {NOTES.map((n) => (
             <div>

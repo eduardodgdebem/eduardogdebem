@@ -8,14 +8,12 @@ export type T = Record<Lang, string>;
 export const PATHS: Record<Lang, string> = { en: '/', pt: '/pt/' };
 
 /** The page's sections, in order: the nav follows them. */
-export const SECTIONS = ['overview', 'work', 'projects', 'stack', 'about', 'contact'] as const;
+export const SECTIONS = ['overview', 'projects', 'about', 'contact'] as const;
 export type Section = (typeof SECTIONS)[number];
 
 export const NAV: Record<Section, T> = {
   overview: { en: 'Overview', pt: 'Início' },
-  work: { en: 'Work', pt: 'Trabalho' },
   projects: { en: 'Projects', pt: 'Projetos' },
-  stack: { en: 'Stack', pt: 'Stack' },
   about: { en: 'About', pt: 'Sobre' },
   contact: { en: 'Contact', pt: 'Contato' },
 };
@@ -43,18 +41,14 @@ export const UI = {
   },
   ctaContact: { en: 'Get in touch', pt: 'Fale comigo' },
   ctaCv: { en: 'Download CV', pt: 'Baixar currículo' },
-  workTitle: { en: 'Where I’ve Worked', pt: 'Onde Trabalhei' },
+  workTitle: { en: 'Where I’ve worked', pt: 'Onde trabalhei' },
   projectsTitle: { en: 'Things I’ve Made', pt: 'Coisas que Fiz' },
   projectsLede: {
     en: 'Sites for people I know, and a couple of things for myself: a programming language, and a city that grows while you focus.',
     pt: 'Sites para pessoas que conheço, e algumas coisas para mim: uma linguagem de programação e uma cidade que cresce enquanto você foca.',
   },
-  stackTitle: { en: 'What I Work With', pt: 'Com o que Trabalho' },
-  stackLede: {
-    en: 'Mostly TypeScript, front to back. I’m happy to learn whatever else a project needs.',
-    pt: 'Principalmente TypeScript, do front ao back. Aprendo com gosto o que mais um projeto precisar.',
-  },
-  aboutTitle: { en: 'Off the Clock', pt: 'Fora do Expediente' },
+  stackTitle: { en: 'What I work with', pt: 'Com o que trabalho' },
+  aboutTitle: { en: 'About Me', pt: 'Sobre Mim' },
   contactTitle: { en: 'Get in Touch', pt: 'Fale Comigo' },
   contactLede: {
     en: 'For a role, a project, or a question about something I made, email is the quickest way.',
@@ -68,7 +62,6 @@ export const UI = {
   menu: { en: 'Menu', pt: 'Menu' },
   scroll: { en: 'Scroll', pt: 'Role' },
   motto: { en: 'Built to last, as the Romans built.', pt: 'Feito para durar, como construíam os romanos.' },
-  stackNote: { en: 'and whatever a project needs next', pt: 'e o que o próximo projeto precisar' },
   close: { en: 'Close', pt: 'Fechar' },
   explore: { en: 'Explore', pt: 'Explorar' },
   elsewhere: { en: 'Elsewhere', pt: 'Em outros lugares' },
@@ -86,8 +79,6 @@ export interface Job {
   when: T;
   summary: T;
   stack: string[];
-  /** The picture beside it (public/art/<art>.png). */
-  art: string;
 }
 
 export const WORK: Job[] = [
@@ -96,11 +87,10 @@ export const WORK: Job[] = [
     title: { en: 'Data pipelines', pt: 'Pipelines de dados' },
     when: { en: 'Now', pt: 'Agora' },
     summary: {
-      en: 'Back-end pipelines that pull data in, transform it and run the background jobs around it. I started at Zallpy as a front-end intern in 2024 and I’m now a mid-level developer.',
-      pt: 'Pipelines de back-end que trazem os dados, transformam e rodam os jobs em segundo plano em volta deles. Entrei na Zallpy como estagiário de front-end em 2024 e hoje sou desenvolvedor pleno.',
+      en: 'Back-end pipelines that pull data in, transform it and run the background jobs around it.',
+      pt: 'Pipelines de back-end que trazem os dados, transformam e rodam os jobs em segundo plano em volta deles.',
     },
     stack: ['Node.js', 'PostgreSQL', 'BullMQ'],
-    art: 'laocoon',
   },
   {
     org: 'Zallpy · BMW USA',
@@ -111,7 +101,6 @@ export const WORK: Job[] = [
       pt: 'O front-end em Angular, como micro frontends sobre serviços em .NET e MuleSoft. A parte de que mais me orgulho é o tempo de carregamento: de mais de dez segundos para menos de um.',
     },
     stack: ['Angular', '.NET', 'MuleSoft'],
-    art: 'gladiator',
   },
   {
     org: 'Dema',
@@ -122,7 +111,6 @@ export const WORK: Job[] = [
       pt: 'Uma plataforma que mostra às pessoas no Brasil os programas sociais a que têm direito e sugere carreiras a partir de um teste de personalidade e do que a cidade delas oferece.',
     },
     stack: ['React', 'NestJS', 'RabbitMQ', 'PostgreSQL'],
-    art: 'caravane',
   },
   {
     org: 'eTopocart',
@@ -133,7 +121,6 @@ export const WORK: Job[] = [
       pt: 'Meu primeiro emprego como desenvolvedor, numa plataforma usada por prefeituras de todo o Brasil: mapas mais rápidos, tabelas que aguentam dez mil linhas sem travar e relatórios levados para o AWS Lambda.',
     },
     stack: ['Angular', 'AWS Lambda', 'Maps'],
-    art: 'wittel',
   },
 ];
 
@@ -146,10 +133,12 @@ export const STACK: { group: T; items: string[] }[] = [
 
 export const ABOUT: Record<Lang, string[]> = {
   en: [
+    'I’m Eduardo, a full stack developer in Florianópolis. I started at Zallpy as a front-end intern in 2024 and I’m now a mid-level developer, working across the whole stack, mostly in TypeScript.',
     'In 2023 I took a year off and lived between the US and Europe, mostly to get my English where I wanted it. I’m finishing Computer Science at UNISUL this year, and I volunteered on TEKTAI, an augmented reality project for its students, which is where I learned WebGL.',
     'I played the violin for years. I don’t anymore, but I still listen to a lot of music.',
   ],
   pt: [
+    'Sou o Eduardo, desenvolvedor full stack em Florianópolis. Entrei na Zallpy como estagiário de front-end em 2024 e hoje sou desenvolvedor pleno, trabalhando em toda a stack, principalmente em TypeScript.',
     'Em 2023 tirei um ano e morei entre os Estados Unidos e a Europa, principalmente para deixar meu inglês onde eu queria. Termino Ciência da Computação na UNISUL este ano, e fui voluntário no TEKTAI, um projeto de realidade aumentada para os estudantes de lá, onde aprendi WebGL.',
     'Toquei violino por anos. Não toco mais, mas ainda escuto muita música.',
   ],
