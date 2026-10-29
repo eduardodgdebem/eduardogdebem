@@ -82,7 +82,7 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
   <Fragment slot="recto">
     <!-- The hero: one large plain sentence, a line under it and two actions. -->
     <header class="hero">
-      <h1 class="headline"><span class="sr-only">Eduardo de Bem: </span><span data-i18n-html="home.headline" set:html={s('home.headline')} /></h1>
+      <h1 class="headline"><span class="sr-only">Eduardo de Bem: </span><span data-i18n="home.headline">{s('home.headline')}</span></h1>
       <p class="lede" data-i18n="home.lede">{s('home.lede')}</p>
       <p class="actions">
         <a class="btn btn--primary" href={href(lang, 'projects')} data-place="fabrica"><Fragment set:html={ICONS.arrow} /><span data-i18n="home.cta.work">{s('home.cta.work')}</span></a>
@@ -499,18 +499,11 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
     max-width: 8em;
     margin: 0;
     font-family: var(--f-display);
-    font-weight: 400;
-    font-size: clamp(3rem, min(6vw, 10.5vh), 7.6rem);
-    line-height: 0.98;
-    letter-spacing: -0.02em;
+    font-weight: 200;
+    font-size: clamp(3.4rem, min(7.6vw, 12.5vh), 9.4rem);
+    line-height: 0.92;
+    letter-spacing: -0.025em;
     text-wrap: balance;
-  }
-
-  /* The end of the line in italic, as a title page turns its last words. */
-  .headline :global(em) {
-    font-style: italic;
-    font-weight: 400;
-    color: var(--ink);
   }
 
   .lede {
@@ -653,7 +646,7 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
     }
 
     .headline {
-      font-size: clamp(2.6rem, 12vw, 4.2rem);
+      font-size: clamp(3rem, 15vw, 5rem);
     }
   }
 

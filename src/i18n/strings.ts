@@ -16,7 +16,7 @@ const EN = {
   'link.cv': 'CV',
 
   'home.role': 'Full stack developer · Florianópolis, Brazil',
-  'home.headline': 'I build software that <em>holds up.</em>',
+  'home.headline': 'I build software that holds up.',
   'home.cta.work': 'See the work',
   'home.cta.cv': 'Résumé',
   'mast.contact': 'Contact',
@@ -220,7 +220,7 @@ const PT: Record<StringKey, string> = {
   'link.cv': 'Currículo',
 
   'home.role': 'Desenvolvedor full stack · Florianópolis, Brasil',
-  'home.headline': 'Construo software que <em>se sustenta.</em>',
+  'home.headline': 'Construo software que se sustenta.',
   'home.cta.work': 'Ver os projetos',
   'home.cta.cv': 'Currículo',
   'mast.contact': 'Contato',
