@@ -10,14 +10,14 @@
 .codex {
   --night: #080b0d;
   --paper: #0d1215;
-  --plate: #10171b;
+  --plate: #d4d1c7;
   --surface: #151d22;
   --surface-2: #1c262c;
   --ink: #e4e1d8;
   --ink-soft: #8d969b;
   --ink-faint: #5a646a;
-  --rubric: #ff5a36;
-  --on-accent: #120805;
+  --rubric: #34d27b;
+  --on-accent: #04130a;
   --rule: #232d33;
   --line: #2f3a41;
 
@@ -466,6 +466,7 @@ a.subject:hover,
 .plate-fallback {
   font-family: var(--f-display);
   font-weight: 200;
+  color: var(--night);
   background: var(--plate);
 }
 

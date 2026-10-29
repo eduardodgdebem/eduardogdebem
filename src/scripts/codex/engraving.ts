@@ -29,11 +29,11 @@ interface Options {
   onContextLost?: () => void;
 }
 
-// Nocturne: silver lines cut into a night-dark plate, and one accent.
-export const PAPER = 0x10171b;
-export const INK = 0xc9c6bc;
-export const RUBRIC = 0xff5a36;
-export const BLUE = 0x7f9cc4;
+// Nocturne: dark ink on a silver plate, set in the night page, and one accent.
+export const PAPER = 0xd4d1c7;
+export const INK = 0x0d1215;
+export const RUBRIC = 0x1f9e58;
+export const BLUE = 0x2b4f86;
 
 // sRGB values passed straight through to the canvas.
 export const raw = (hex: number) => new THREE.Color().setHex(hex, THREE.LinearSRGBColorSpace);
@@ -112,9 +112,7 @@ export const engraveFragment = /* glsl */ `
     float rim = pow(1.0 - max(dot(n, v), 0.0), 2.0);
     // A little fill so faces turned from the lamp still read as form, not solid ink.
     float tone = clamp(0.3 + lambert * 0.85 - rim * 0.3, 0.0, 1.0);
-    // Light on a dark plate, as on scratchboard: lines are cut where the lamp
-    // falls, so the lit faces read light and the shade is left night.
-    float dark = 0.06 + 0.72 * pow(tone, 1.5);
+    float dark = pow(1.0 - tone, 0.85);
     dark *= 1.0 - uPale;
     // Picked out: cut a little deeper.
     float glow = max(uGlow, vInstanceGlow);
@@ -243,7 +241,7 @@ export const compositeFragment = /* glsl */ `
     float shade = 0.0;
     for (int i = 1; i <= 4; i++) shade += texture2D(tNormal, vUv + vec2(-1.5, 2.5) * float(i) * uPixel * t).a;
     shade *= 0.06 * (1.0 - a);
-    gl_FragColor = vec4(col * a, a + shade);
+    gl_FragColor = vec4(col * a + uInk * shade, a + shade);
   #else
     gl_FragColor = vec4(col, 1.0);
   #endif
