@@ -12,6 +12,7 @@ import Corner from '../components/Corner.astro';
 import { STRINGS, type Lang } from '../i18n/strings';
 import { PATHS } from '../i18n/paths';
 import { SECTIONS, book } from '../lib/book';
+import { ICONS } from '../components/icons';
 
 interface Props {
   title: string;
@@ -144,9 +145,16 @@ const mastRight = rest.slice(2);
           <a href={n.href} aria-current={n.current ? 'page' : undefined}>{n.label}</a>
         ))}
       </nav>
-      <a href={PATHS.home[lang]} class="wordmark" aria-current={section === 'home' ? 'page' : undefined}>
-        <span>Eduardo</span> <span>de Bem</span>
-      </a>
+      <div class="mast-centre">
+        <a href={PATHS.home[lang]} class="wordmark" aria-current={section === 'home' ? 'page' : undefined}>
+          <span>Eduardo</span> <span>de Bem</span>
+        </a>
+        <p class="mast-social">
+          <a href="https://github.com/eduardodgdebem" target="_blank" rel="noopener noreferrer" aria-label="GitHub" set:html={ICONS.github} />
+          <a href="https://linkedin.com/in/eduardogdebem" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" set:html={ICONS.linkedin} />
+          <a href="mailto:eduardogdebem@gmail.com" aria-label="Email" set:html={ICONS.mail} />
+        </p>
+      </div>
       <nav class="mast-nav mast-nav--right" aria-label="More sections">
         {mastRight.map((n) => (
           <a href={n.href} aria-current={n.current ? 'page' : undefined}>{n.label}</a>
@@ -171,16 +179,19 @@ const mastRight = rest.slice(2);
       </nav>
       <div class="sheet-foot">
         <a class="mast-cta" href={`${PATHS.about[lang]}#correspondence`}>{DICT['mast.contact']}</a>
-        <p class="sheet-links">
-          <a href="https://github.com/eduardodgdebem" target="_blank" rel="noopener noreferrer">GitHub</a>
-          <a href="https://linkedin.com/in/eduardogdebem" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+        <div class="sheet-links">
+          <p class="mast-social">
+            <a href="https://github.com/eduardodgdebem" target="_blank" rel="noopener noreferrer" aria-label="GitHub" set:html={ICONS.github} />
+            <a href="https://linkedin.com/in/eduardogdebem" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" set:html={ICONS.linkedin} />
+            <a href="mailto:eduardogdebem@gmail.com" aria-label="Email" set:html={ICONS.mail} />
+          </p>
           {alternates && (
           <span class="lang" role="group" aria-label={DICT['lang.toggle']}>
             <a href={alternates.en} hreflang="en" lang="en" data-lang-link aria-current={lang === 'en' ? 'page' : undefined}>EN</a>
             <a href={alternates.pt} hreflang="pt-BR" lang="pt-BR" data-lang-link aria-current={lang === 'pt' ? 'page' : undefined}>PT</a>
           </span>
         )}
-        </p>
+        </div>
       </div>
     </div>
     <script is:inline>
@@ -225,8 +236,6 @@ const mastRight = rest.slice(2);
         </div>
         <footer class="folio">
           <span class="folio-links">
-            <a href="https://github.com/eduardodgdebem" target="_blank" rel="noopener noreferrer">GitHub</a>
-            <a href="https://linkedin.com/in/eduardogdebem" target="_blank" rel="noopener noreferrer">LinkedIn</a>
             <a href="/rss.xml">RSS</a>
             {alternates && (
             <span class="lang" role="group" aria-label={DICT['lang.toggle']}>

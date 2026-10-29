@@ -23,7 +23,7 @@
   --rule: #18271f;
   --line: #243a2e;
 
-  --f-display: "Saira Extra Condensed", "Barlow Condensed", "Arial Narrow", sans-serif;
+  --f-display: "Oswald", "Barlow Condensed", "Arial Narrow", sans-serif;
   --f-label: "Barlow Condensed", "Arial Narrow", sans-serif;
   --f-body: "Barlow", "Helvetica Neue", Arial, sans-serif;
   --f-mono: "JetBrains Mono", ui-monospace, monospace;
@@ -163,15 +163,22 @@
 }
 
 /* The wordmark: the name in two short lines, nothing else. */
+.mast-centre {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+}
+
 .wordmark {
   display: flex;
   flex-direction: column;
   align-items: center;
   font-family: var(--f-display);
   font-weight: 300;
-  font-size: 1.4rem;
-  line-height: 0.84;
-  letter-spacing: 0.02em;
+  font-size: 1.3rem;
+  line-height: 0.9;
+  letter-spacing: 0.01em;
   text-transform: uppercase;
   text-decoration: none;
   color: var(--ink);
@@ -179,6 +186,23 @@
 
 .codex .wordmark:hover {
   color: var(--rubric);
+}
+
+.mast-social {
+  display: flex;
+  gap: 14px;
+  margin: 0;
+  font-size: 15px;
+  line-height: 0;
+}
+
+.mast-social a {
+  color: var(--ink-soft);
+  transition: color 0.25s ease;
+}
+
+.mast-social a:hover {
+  color: var(--ink);
 }
 
 /* The language, quiet: in the text page's foot (and the phone's menu). */
@@ -791,8 +815,16 @@ html.dawn .plate-caption {
     display: none;
   }
 
-  .wordmark {
+  .mast-centre {
     grid-column: 1;
+    align-items: flex-start;
+  }
+
+  .mast-centre .mast-social {
+    display: none;
+  }
+
+  .wordmark {
     flex-direction: row;
     gap: 0.28em;
     font-size: 1.25rem;
@@ -943,6 +975,15 @@ html.dawn .plate-caption {
     text-transform: uppercase;
     text-decoration: none;
     color: var(--ink-soft);
+  }
+
+  .sheet-links .mast-social {
+    gap: 22px;
+  }
+
+  .sheet-links .mast-social a {
+    font-size: 18px;
+    line-height: 0;
   }
 
   .sheet-links .lang {

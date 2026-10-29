@@ -78,9 +78,8 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
 
   <!-- Recto: who this is and how to reach him, the index, and what he is listening to -->
   <Fragment slot="recto">
-    <!-- The hero: one large plain sentence, small tracked labels and two actions. -->
+    <!-- The hero: one large plain sentence, a line under it and two actions. -->
     <header class="hero">
-      <p class="eyebrow"><span class="eyebrow-mark" aria-hidden="true"></span><span data-i18n="home.role">{s('home.role')}</span></p>
       <h1 class="headline"><span class="sr-only">Eduardo de Bem: </span><span data-i18n="home.headline">{s('home.headline')}</span></h1>
       <p class="lede" data-i18n="home.lede">{s('home.lede')}</p>
       <p class="actions">
@@ -418,33 +417,15 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
     padding: clamp(8px, 3vh, 40px) 0;
   }
 
-  .eyebrow {
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    margin: 0 0 clamp(14px, 3vh, 30px);
-    font-family: var(--f-label);
-    font-size: 0.72rem;
-    letter-spacing: 0.24em;
-    text-transform: uppercase;
-    color: var(--ink-soft);
-  }
-
-  .eyebrow-mark {
-    width: 28px;
-    height: 1px;
-    background: var(--rubric);
-  }
-
   /* One huge, light, condensed sentence. */
   .headline {
     max-width: 8em;
     margin: 0;
     font-family: var(--f-display);
     font-weight: 200;
-    font-size: clamp(3.4rem, min(8.4vw, 13.5vh), 10rem);
-    line-height: 0.86;
-    letter-spacing: -0.01em;
+    font-size: clamp(3.4rem, min(7.6vw, 12.5vh), 9.4rem);
+    line-height: 0.92;
+    letter-spacing: -0.025em;
     text-wrap: balance;
   }
 
