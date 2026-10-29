@@ -707,18 +707,17 @@ html:active-view-transition-type(back)::view-transition-new(recto) {
   }
 }
 
-/* A first visit: the pages fade up out of the dark. */
-html.dawn .book {
+/* A first visit: the frame, the masthead and the plates' borders are there
+   from the first paint; only what's written on the pages fades up (the plates
+   engrave themselves in). */
+html.dawn .page-body > :not(.plate, figure),
+html.dawn .plate-caption {
   animation: nocturne-in 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) 0.1s both;
 }
 
-html.dawn .masthead {
-  animation: nocturne-out 0.9s ease reverse both;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  html.dawn .book,
-  html.dawn .masthead,
+  html.dawn .page-body > *,
+  html.dawn .plate-caption,
   .mast-sheet,
   .mast-sheet li {
     animation: none !important;
