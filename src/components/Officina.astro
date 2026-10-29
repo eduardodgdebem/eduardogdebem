@@ -54,7 +54,7 @@ const pieces = PROJECTS.map((p) => ({ latin: p.latin, work: p.work, preview: p.p
   const tagAct = tag.querySelector<HTMLElement>('[data-tag-act]')!;
   const entries = [...document.querySelectorAll<HTMLElement>('[data-work]')];
 
-  await Promise.all([document.fonts.load('150px "IM Fell English SC"'), document.fonts.load('600 80px Cinzel')]).catch(() => undefined);
+  await Promise.all([document.fonts.load('300 150px "Barlow Condensed"'), document.fonts.load('600 80px Cinzel')]).catch(() => undefined);
 
   // A piece opens in a new tab, from the click or key itself (so it isn't
   // blocked); the citizen walks over to it meanwhile.

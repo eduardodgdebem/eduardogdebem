@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { gsap } from 'gsap';
+import { INK, PAPER } from './engraving';
 
 // Re-draws an album cover as a line engraving: tone becomes the weight of
 // diagonal lines that bend slightly with the image, crossing lines come in
@@ -73,8 +74,8 @@ export function createCoverEngraving(canvas: HTMLCanvasElement, { reducedMotion 
     uResolution: { value: new THREE.Vector2(1, 1) },
     uPixel: { value: pixel },
     uReveal: { value: 0 },
-    uPaper: { value: raw(0xefe6d0) },
-    uInk: { value: raw(0x1b2419) },
+    uPaper: { value: raw(PAPER) },
+    uInk: { value: raw(INK) },
   };
   const scene = new THREE.Scene();
   const quad = new THREE.Mesh(

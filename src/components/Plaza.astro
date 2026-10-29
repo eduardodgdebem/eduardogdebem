@@ -84,7 +84,7 @@ const s = tr(lang);
   };
 
   // The banderole and the inscriptions letter with the page fonts, so wait for them.
-  await Promise.all([document.fonts.load('150px "IM Fell English SC"'), document.fonts.load('600 80px Cinzel')]).catch(() => undefined);
+  await Promise.all([document.fonts.load('300 150px "Barlow Condensed"'), document.fonts.load('600 80px Cinzel')]).catch(() => undefined);
 
   // On touch screens the label at a monument (or the arch) is the way to act on it.
   let tagged: Subject | null = null;

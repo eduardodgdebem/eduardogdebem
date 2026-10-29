@@ -3,6 +3,7 @@
 // left, <slot name="recto" /> on the right. Navigating between pages turns
 // the leaf (see the page-turn rules in src/styles/codex.css).
 import '../styles/codex.css';
+import '../styles/nocturne.css';
 import type { ImageMetadata } from 'astro';
 import BaseHead from '../components/BaseHead.astro';
 import Logo from '../components/Logo.astro';
@@ -11,6 +12,7 @@ import Corner from '../components/Corner.astro';
 import { STRINGS, type Lang } from '../i18n/strings';
 import { PATHS } from '../i18n/paths';
 import { SECTIONS, book } from '../lib/book';
+import { ICONS } from '../components/icons';
 
 interface Props {
   title: string;
@@ -62,6 +64,10 @@ const next = here >= 0 ? leaves[here + 1] : undefined;
 // The running head: the sections in the same order. A chapter is in its notes.
 const section = at?.startsWith('post:') ? 'notes' : at;
 const nav = SECTIONS.map(({ page, name }) => ({ href: PATHS[page][lang], label: name, current: page === section }));
+// The masthead: the wordmark in the middle (it is the way home), the other sections either side.
+const [, ...rest] = nav;
+const mastLeft = rest.slice(0, 2);
+const mastRight = rest.slice(2);
 ---
 
 <!doctype html>
@@ -92,10 +98,11 @@ const nav = SECTIONS.map(({ page, name }) => ({ href: PATHS[page][lang], label: 
       } catch {}
       try {
         const reloaded = performance.getEntriesByType('navigation')[0]?.type === 'reload';
+        // Nocturne: no closed book. A first visit (or a reload) fades in
+        // and writes its text in instead (html.dawn).
         if ((reloaded || !sessionStorage.getItem('codex-opened')) && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
           sessionStorage.setItem('codex-opened', '1');
-          document.documentElement.classList.add('opening');
-          setTimeout(() => window.__codexOpening || document.documentElement.classList.remove('opening'), 5000);
+          document.documentElement.classList.add('dawn');
         }
       } catch {}
     </script>
@@ -129,6 +136,36 @@ const nav = SECTIONS.map(({ page, name }) => ({ href: PATHS[page][lang], label: 
     </script>
   </head>
   <body class="codex">
+    <header class="masthead">
+      <nav class="mast-nav mast-nav--left" aria-label="Sections">
+        {mastLeft.map((n) => (
+          <a href={n.href} aria-current={n.current ? 'page' : undefined}>{n.label}</a>
+        ))}
+      </nav>
+      <div class="mast-centre">
+        <a href={PATHS.home[lang]} class="wordmark" aria-current={section === 'home' ? 'page' : undefined}>
+          <Logo size={16} />
+          <span>Eduardo de Bem</span>
+        </a>
+        <p class="mast-social">
+          <a href="https://github.com/eduardodgdebem" target="_blank" rel="noopener noreferrer" aria-label="GitHub" set:html={ICONS.github} />
+          <a href="https://linkedin.com/in/eduardogdebem" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" set:html={ICONS.linkedin} />
+          <a href="mailto:eduardogdebem@gmail.com" aria-label="Email" set:html={ICONS.mail} />
+        </p>
+      </div>
+      <nav class="mast-nav mast-nav--right" aria-label="More sections">
+        {mastRight.map((n) => (
+          <a href={n.href} aria-current={n.current ? 'page' : undefined}>{n.label}</a>
+        ))}
+        {alternates && (
+          <span class="lang" role="group" aria-label={DICT['lang.toggle']}>
+            <a href={alternates.en} hreflang="en" lang="en" data-lang-link aria-current={lang === 'en' ? 'page' : undefined}>EN</a>
+            <a href={alternates.pt} hreflang="pt-BR" lang="pt-BR" data-lang-link aria-current={lang === 'pt' ? 'page' : undefined}>PT</a>
+          </span>
+        )}
+        <a class="mast-cta" href={`${PATHS.about[lang]}#correspondence`} data-i18n="mast.contact">{DICT['mast.contact']}</a>
+      </nav>
+    </header>
     <div class:list={['book', { 'book--fit': fit }]}>
       <Binding />
       <section class="page verso">
@@ -140,7 +177,7 @@ const nav = SECTIONS.map(({ page, name }) => ({ href: PATHS[page][lang], label: 
           <slot name="verso" />
         </div>
         <footer class="folio">
-          <span>{roman(folio)}</span>
+          <span>{roman(folio + 1)}</span>
         </footer>
         <Corner dir="back" to={prev} />
         {/* On portrait the spread is one column: the top of the screen is this page's. */}
@@ -148,25 +185,12 @@ const nav = SECTIONS.map(({ page, name }) => ({ href: PATHS[page][lang], label: 
       </section>
 
       <main class="page recto">
-        <header class="running">
-          <nav class="running-nav" aria-label="Sections">
-            {nav.map((n) => (
-              <a href={n.href} aria-current={n.current ? 'page' : undefined}>{n.label}</a>
-            ))}
-          </nav>
-          {alternates && (
-            <nav class="lang" aria-label={DICT['lang.toggle']}>
-              <a href={alternates.en} hreflang="en" lang="en" data-lang-link aria-current={lang === 'en' ? 'page' : undefined}>EN</a>
-              <a href={alternates.pt} hreflang="pt-BR" lang="pt-BR" data-lang-link aria-current={lang === 'pt' ? 'page' : undefined}>PT</a>
-            </nav>
-          )}
-        </header>
         <div class="page-body">
           <slot name="recto" />
         </div>
         <footer class="folio">
           <a href="/rss.xml">rss</a>
-          <span>{roman(folio + 1)}</span>
+          <span>{roman(folio)}</span>
         </footer>
         <Corner dir="forward" to={next} />
       </main>
@@ -257,7 +281,7 @@ const nav = SECTIONS.map(({ page, name }) => ({ href: PATHS[page][lang], label: 
         }
         };
         window.codexWrite = write;
-        if (arrived) write();
+        if (arrived || root.classList.contains('dawn')) write();
       })();
     </script>
     <script>

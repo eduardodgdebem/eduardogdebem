@@ -67,7 +67,7 @@ const s = tr(lang);
   const linkFor = (i: number | null) => links.find((a) => Number(a.dataset.roll) === i);
 
   // The banderole and the tags letter with the page fonts, so wait for them.
-  await Promise.all([document.fonts.load('150px "IM Fell English SC"'), document.fonts.load('600 80px Cinzel')]).catch(() => undefined);
+  await Promise.all([document.fonts.load('300 150px "Barlow Condensed"'), document.fonts.load('600 80px Cinzel')]).catch(() => undefined);
 
   // Once he's on his way to a roll, more taps change nothing.
   let going = false;

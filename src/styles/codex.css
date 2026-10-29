@@ -19,7 +19,7 @@
   background:
     radial-gradient(ellipse at 50% 120%, #2a1d14 0%, transparent 60%), #17110c;
   color: var(--ink);
-  font-family: "IM Fell English", Georgia, serif;
+  font-family: var(--f-body);
   font-size: 17px;
   line-height: 1.5;
 }
@@ -33,7 +33,7 @@
 .codex h2,
 .codex h3,
 .codex h4 {
-  font-family: "IM Fell English", Georgia, serif;
+  font-family: var(--f-body);
   font-weight: 400;
   letter-spacing: normal;
   line-height: 1.1;
@@ -209,7 +209,7 @@ html.opening:not(.uncovered) .codex::before {
   display: flex;
   align-items: center;
   gap: 0.8rem;
-  font-family: "IM Fell English SC", serif;
+  font-family: var(--f-label);
   font-size: 0.85rem;
   letter-spacing: 0.12em;
   color: var(--ink-soft);
@@ -241,7 +241,7 @@ html.opening:not(.uncovered) .codex::before {
   flex: none;
   display: flex;
   justify-content: space-between;
-  font-family: "IM Fell English SC", serif;
+  font-family: var(--f-label);
   font-size: 0.85rem;
   color: var(--ink-soft);
   border-top: 1px solid var(--rule);
@@ -436,7 +436,7 @@ html.opening:not(.uncovered) .codex::before {
 }
 
 .tag-latin {
-  font-family: "IM Fell English SC", serif;
+  font-family: var(--f-label);
   font-size: 1.05rem;
   letter-spacing: 0.08em;
   color: var(--rubric);
@@ -449,7 +449,7 @@ html.opening:not(.uncovered) .codex::before {
 }
 
 .tag-by {
-  font-family: "IM Fell English SC", serif;
+  font-family: var(--f-label);
   font-size: 0.72rem;
   letter-spacing: 0.04em;
   color: var(--ink-soft);
@@ -484,7 +484,7 @@ html.opening:not(.uncovered) .codex::before {
 .tag-act {
   display: none;
   margin-top: 0.15rem;
-  font-family: "IM Fell English SC", serif;
+  font-family: var(--f-label);
   font-size: 0.8rem;
   letter-spacing: 0.06em;
   color: var(--rubric);
@@ -507,7 +507,7 @@ html.opening:not(.uncovered) .codex::before {
   display: flex;
   gap: 0.1rem;
   margin-left: 1rem;
-  font-family: "IM Fell English SC", serif;
+  font-family: var(--f-label);
 }
 
 .lang a {
@@ -564,7 +564,7 @@ html.opening:not(.uncovered) .codex::before {
 /* ── Book typography ── */
 
 .rubric {
-  font-family: "IM Fell English SC", serif;
+  font-family: var(--f-label);
   color: var(--rubric);
   letter-spacing: 0.12em;
   margin: 0 0 0.4rem;
@@ -602,7 +602,7 @@ html.opening:not(.uncovered) .codex::before {
 }
 
 .contents .num {
-  font-family: "IM Fell English SC", serif;
+  font-family: var(--f-label);
   color: var(--rubric);
   min-width: 2.6ch;
 }
@@ -622,7 +622,7 @@ html.opening:not(.uncovered) .codex::before {
 }
 
 .contents .pg {
-  font-family: "IM Fell English SC", serif;
+  font-family: var(--f-label);
   font-size: 0.85em;
   color: var(--ink-soft);
 }
@@ -635,7 +635,7 @@ html.opening:not(.uncovered) .codex::before {
 
 /* Subject tags, set as small caps in brackets. */
 .subject {
-  font-family: "IM Fell English SC", serif;
+  font-family: var(--f-label);
   font-size: 0.85rem;
   letter-spacing: 0.06em;
   color: var(--ink-soft);
@@ -718,7 +718,7 @@ a.subject:hover,
   display: none;
   place-items: end center;
   padding-bottom: 12%;
-  font-family: "IM Fell English SC", serif;
+  font-family: var(--f-label);
   font-size: 2rem;
   letter-spacing: 0.14em;
   background:
@@ -747,13 +747,13 @@ a.subject:hover,
 }
 
 .plate-caption .tab {
-  font-family: "IM Fell English SC", serif;
+  font-family: var(--f-label);
   color: var(--rubric);
   letter-spacing: 0.08em;
 }
 
 .plate-caption .cap-latin {
-  font-family: "IM Fell English SC", serif;
+  font-family: var(--f-label);
   font-size: 1.25rem;
   letter-spacing: 0.16em;
 }
@@ -813,7 +813,7 @@ a.subject:hover,
 .codex-prose h1,
 .codex-prose h2,
 .codex-prose h3 {
-  font-family: "IM Fell English SC", serif;
+  font-family: var(--f-label);
   color: var(--rubric);
   letter-spacing: 0.08em;
   font-size: 1.15em;
@@ -855,7 +855,7 @@ a.subject:hover,
 }
 
 .codex-prose code {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--f-mono);
   font-size: 0.82em;
   background: rgb(27 36 25 / 0.06);
   color: var(--ink);
@@ -1613,7 +1613,7 @@ html.opening.uncovered .recto > * {
 
 .plate-info-title {
   margin: 0 0 0.35rem;
-  font-family: "IM Fell English SC", serif;
+  font-family: var(--f-label);
   letter-spacing: 0.08em;
   color: var(--rubric);
 }

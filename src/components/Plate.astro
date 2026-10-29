@@ -32,7 +32,7 @@ const { numeral, latin, note } = CATALOGUE[plate];
   import { bookOpened } from '../scripts/codex/opening';
 
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  await document.fonts.load('150px "IM Fell English SC"').catch(() => undefined);
+  await document.fonts.load('300 150px "Barlow Condensed"').catch(() => undefined);
 
   for (const canvas of document.querySelectorAll<HTMLCanvasElement>('[data-engraving]')) {
     const plate = createEngraving(canvas, {

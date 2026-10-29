@@ -3,7 +3,7 @@
 import Codex from '../layouts/Codex.astro';
 import PlateTools from '../components/PlateTools.astro';
 import { CV_PDF, SHOW_NOW_PLAYING, SITE_DESCRIPTION, SITE_TITLE } from '../consts';
-import Woodcut from '../components/Woodcut.astro';
+import { ICONS } from '../components/icons';
 import { tr, type Lang } from '../i18n/strings';
 import { PATHS, href } from '../i18n/paths';
 import { PERSON, WEBSITE } from '../seo';
@@ -25,6 +25,21 @@ const META = {
 
 // The places in the forum on the left page, each standing for a page. Their
 // notes are in src/i18n/strings.ts, under place.<id>.
+// The terminal on the hero: real commands, one a tab.
+const SITE = Astro.site!.origin;
+const COMMANDS = [
+  { tab: 'cv', cmd: `curl -O ${SITE}${CV_PDF}` },
+  { tab: 'rss', cmd: `curl ${SITE}/rss.xml` },
+  { tab: 'git', cmd: 'git clone https://github.com/eduardodgdebem/eduardogdebem' },
+];
+
+// The rays over the forum: lines out from one point in its sky, as a diagram's.
+const RAYS = Array.from({ length: 36 }, (_, i) => {
+  const a = (i / 36) * Math.PI * 2 + 0.05;
+  const r = i % 3 ? 900 : 1400;
+  return `M${(720 + Math.cos(a) * 46).toFixed(1)},${(170 + Math.sin(a) * 46).toFixed(1)}L${(720 + Math.cos(a) * r).toFixed(1)},${(170 + Math.sin(a) * r).toFixed(1)}`;
+}).join('');
+
 const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabrica', statua: 'Statua', amphitheatrum: 'Amphitheatrum' };
 ---
 
@@ -43,6 +58,14 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
       <div class="plate-frame">
         <canvas id="engraving" class="plate-canvas" aria-hidden="true"></canvas>
         <div class="plate-fallback" aria-hidden="true"><span>Forum</span></div>
+        <!-- Ray lines and registration over the forum: an engraving read as a diagram. -->
+        <svg class="rays" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <g class="rays-burst"><path d={RAYS} pathLength="1" /></g>
+          <circle class="rays-ring" cx="720" cy="170" r="46" pathLength="1" />
+          <circle class="rays-ring" cx="720" cy="170" r="118" pathLength="1" />
+          <path class="rays-axis" d="M0,170H1000M720,0V1000" pathLength="1" />
+        </svg>
+        <p class="plate-coords" aria-hidden="true"><span>41°53′32″N</span><span>12°29′07″E</span></p>
         <!-- The label over a building in the forum: what it is, and where it leads. -->
         <div class="place-tag" data-tag aria-hidden="true">
           <span class="tag-latin" data-tag-latin></span>
@@ -63,41 +86,46 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
 
   <!-- Recto: who this is and how to reach him, the index, and what he is listening to -->
   <Fragment slot="recto">
-    <!-- The hero, set as a title page: the name, opened with a woodcut initial as old books open their text. -->
-    <header class="author">
-      <h1 class="title">
-        <Woodcut letter="E" class="title-initial" />
-        <span class="sr-only">E</span><span class="title-name"><span class="title-line">duardo</span><span class="title-line">de Bem</span></span>
-      </h1>
-      <p class="title-rule" aria-hidden="true"><span></span><span class="fl">❦</span><span></span></p>
-      <p class="role" data-i18n="home.role">{s('home.role')}</p>
-      <p class="tagline" data-i18n="home.tagline">{s('home.tagline')}</p>
-      <p class="links">
-        <a href="mailto:eduardogdebem@gmail.com" data-i18n="link.email">{s('link.email')}</a>
-        <a href="https://linkedin.com/in/eduardogdebem" target="_blank" rel="noopener noreferrer">LinkedIn</a>
-        <a href="https://github.com/eduardodgdebem" target="_blank" rel="noopener noreferrer">GitHub</a>
-        <a href={CV_PDF} download data-i18n="link.cv">{s('link.cv')}</a>
-        <a href={`${href(lang, 'about')}#correspondence`} data-i18n="link.contact">{s('link.contact')}</a>
+    <!-- The hero: one large plain sentence, small tracked labels, two actions and a terminal. -->
+    <header class="hero">
+      <p class="eyebrow"><span class="eyebrow-mark" aria-hidden="true"></span><span data-i18n="home.role">{s('home.role')}</span></p>
+      <h1 class="headline"><span class="sr-only">Eduardo de Bem: </span><span data-i18n="home.headline">{s('home.headline')}</span></h1>
+      <p class="lede" data-i18n="home.lede">{s('home.lede')}</p>
+      <p class="actions">
+        <a class="btn btn--primary" href={href(lang, 'projects')} data-place="fabrica"><Fragment set:html={ICONS.arrow} /><span data-i18n="home.cta.work">{s('home.cta.work')}</span></a>
+        <a class="btn" href={CV_PDF} download><Fragment set:html={ICONS.download} /><span data-i18n="home.cta.cv">{s('home.cta.cv')}</span></a>
       </p>
+      <div class="term" data-term>
+        <div class="term-tabs" role="tablist" aria-label="Commands">
+          {COMMANDS.map((c, i) => (
+            <button type="button" role="tab" aria-selected={i === 0 ? 'true' : 'false'} data-cmd={c.cmd}>{c.tab}</button>
+          ))}
+        </div>
+        <div class="term-line">
+          <span class="term-prompt" aria-hidden="true">$</span>
+          <code data-term-cmd>{COMMANDS[0].cmd}</code>
+          <button type="button" class="term-copy" data-term-copy aria-label={s('term.copy')} data-copied={s('term.copied')}><Fragment set:html={ICONS.copy} /></button>
+        </div>
+      </div>
     </header>
 
     <nav class="contents" aria-label="Contents">
       <p class="rubric">Index</p>
       <ol>
         <li class="chapter">
-          <a href={href(lang, 'notes')} data-place="bibliotheca"><span class="point" aria-hidden="true">☞</span><span class="num">I.</span><span class="label" data-i18n="home.index.notes">{s('home.index.notes')}</span><span class="leader"><i></i></span><span class="pg" data-i18n="home.index.notes.pg">{s('home.index.notes.pg')}</span></a>
+          <a href={href(lang, 'notes')} data-place="bibliotheca"><span class="num">01</span><span class="label" data-i18n="home.index.notes">{s('home.index.notes')}</span><span class="leader"><i></i></span><span class="pg" data-i18n="home.index.notes.pg">{s('home.index.notes.pg')}</span></a>
         </li>
         <li class="chapter">
-          <a href={href(lang, 'about')} data-place="statua"><span class="point" aria-hidden="true">☞</span><span class="num">II.</span><span class="label" data-i18n="home.index.author">{s('home.index.author')}</span><span class="leader"><i></i></span><span class="pg" data-i18n="home.index.author.pg">{s('home.index.author.pg')}</span></a>
+          <a href={href(lang, 'about')} data-place="statua"><span class="num">02</span><span class="label" data-i18n="home.index.author">{s('home.index.author')}</span><span class="leader"><i></i></span><span class="pg" data-i18n="home.index.author.pg">{s('home.index.author.pg')}</span></a>
         </li>
         <li class="chapter">
-          <a href={href(lang, 'projects')} data-place="fabrica"><span class="point" aria-hidden="true">☞</span><span class="num">III.</span><span class="label" data-i18n="home.index.workshop">{s('home.index.workshop')}</span><span class="leader"><i></i></span><span class="pg" data-i18n="home.index.workshop.pg">{s('home.index.workshop.pg')}</span></a>
+          <a href={href(lang, 'projects')} data-place="fabrica"><span class="num">03</span><span class="label" data-i18n="home.index.workshop">{s('home.index.workshop')}</span><span class="leader"><i></i></span><span class="pg" data-i18n="home.index.workshop.pg">{s('home.index.workshop.pg')}</span></a>
         </li>
         <li class="chapter">
-          <a href={href(lang, 'ludus')} data-place="amphitheatrum"><span class="point" aria-hidden="true">☞</span><span class="num">IV.</span><span class="label" data-i18n="home.index.ludus">{s('home.index.ludus')}</span><span class="leader"><i></i></span><span class="pg" data-i18n="home.index.ludus.pg">{s('home.index.ludus.pg')}</span></a>
+          <a href={href(lang, 'ludus')} data-place="amphitheatrum"><span class="num">04</span><span class="label" data-i18n="home.index.ludus">{s('home.index.ludus')}</span><span class="leader"><i></i></span><span class="pg" data-i18n="home.index.ludus.pg">{s('home.index.ludus.pg')}</span></a>
         </li>
         <li class="chapter">
-          <a href={`${href(lang, 'about')}#correspondence`}><span class="point" aria-hidden="true">☞</span><span class="num">V.</span><span class="label" data-i18n="home.index.letters">{s('home.index.letters')}</span><span class="leader"><i></i></span><span class="pg" data-i18n="home.index.letters.pg">{s('home.index.letters.pg')}</span></a>
+          <a href={`${href(lang, 'about')}#correspondence`}><span class="num">05</span><span class="label" data-i18n="home.index.letters">{s('home.index.letters')}</span><span class="leader"><i></i></span><span class="pg" data-i18n="home.index.letters.pg">{s('home.index.letters.pg')}</span></a>
         </li>
       </ol>
     </nav>
@@ -130,6 +158,7 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
   import { pick, t } from '../scripts/codex/lang';
   import { inView } from '../scripts/codex/visible';
   import { bookOpened } from '../scripts/codex/opening';
+  import { ICONS } from '../components/icons';
 
   const root = document.documentElement;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -138,7 +167,7 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
   const canvas = document.getElementById('engraving') as HTMLCanvasElement;
 
   // The banderole and the inscriptions letter with the page fonts, so wait for them.
-  await Promise.all([document.fonts.load('150px "IM Fell English SC"'), document.fonts.load('600 80px Cinzel')]).catch(() => undefined);
+  await Promise.all([document.fonts.load('300 150px "Barlow Condensed"'), document.fonts.load('600 80px Cinzel')]).catch(() => undefined);
 
   /* ── The forum: hover a place (here or in the index) to pick it out; go to it to turn the page ── */
 
@@ -307,28 +336,35 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
 
   const turned = !!(window as unknown as { navigation?: { activation?: { from?: unknown } } }).navigation?.activation?.from;
   if (!reduced && !turned) {
-    // Under a closed board the right page is already set; only the plate's
-    // furniture waits for the book to open.
-    const opening = root.classList.contains('opening');
-    if (!opening) gsap.from('.recto .page-body > *:not(.author)', { autoAlpha: 0, y: 8, duration: 1.4, stagger: 0.12, ease: 'power2.out', delay: 1.4 });
-    // The title page lands first: the initial is cut (ground, vines, leaves,
-    // then the letter), the name is set beside it, and the rule is drawn out.
-    const title = gsap.timeline({ paused: true, defaults: { ease: 'power2.out' } });
-    title
-      .from('.title-initial .wc-ground', { autoAlpha: 0, duration: 0.6 })
-      .fromTo('.title-initial .wc-vine', { strokeDasharray: 1, strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 1.3, ease: 'power1.inOut' }, '<0.1')
-      .from('.title-initial .wc-leaves path', { scale: 0, transformOrigin: '0% 50%', duration: 0.5, stagger: 0.06 }, '-=0.7')
-      .from('.title-initial .wc-letter', { autoAlpha: 0, scale: 1.35, transformOrigin: '50% 60%', duration: 0.9, ease: 'power3.out' }, '-=0.6')
-      .from('.title-line', { autoAlpha: 0, x: -14, duration: 0.9, stagger: 0.15 }, '-=0.6')
-      .from('.title-rule span:not(.fl)', { scaleX: 0, duration: 0.9, ease: 'power2.inOut' }, '-=0.5')
-      .from('.title-rule .fl', { autoAlpha: 0, rotate: -90, duration: 0.6 }, '<0.3');
-    // After the opening the quill writes those in; otherwise they rise in.
-    if (!opening) title.from('.author .role, .author .tagline, .author .links', { autoAlpha: 0, y: 6, duration: 0.8, stagger: 0.1 }, '-=0.5');
-    // (Its from-states are set at once, so nothing shows before it plays.)
-    if (opening) bookOpened().then(() => title.play());
-    else title.delay(0.2).play();
-    bookOpened().then(() => gsap.from('.plate-caption', { autoAlpha: 0, duration: 1.4, delay: opening ? 1.2 : 2.4 }));
+    // The hero rises in, line by line, and the rays are drawn out from the
+    // forum's sky, slowly.
+    gsap.from('.hero > *, .contents', { autoAlpha: 0, y: 12, duration: 1.1, stagger: 0.09, ease: 'power3.out', delay: 0.15 });
+    gsap.fromTo('.rays path, .rays circle', { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 2.6, stagger: 0.25, ease: 'power2.inOut', delay: 0.6 });
+    gsap.from('.plate-caption, .plate-coords', { autoAlpha: 0, duration: 1.4, delay: 1.6 });
   }
+
+  /* ── The terminal: a tab a command, and a button to copy it ── */
+
+  const term = document.querySelector<HTMLElement>('[data-term]')!;
+  const cmd = term.querySelector<HTMLElement>('[data-term-cmd]')!;
+  const copy = term.querySelector<HTMLButtonElement>('[data-term-copy]')!;
+  const tabs = [...term.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+  for (const tab of tabs)
+    tab.addEventListener('click', () => {
+      tabs.forEach((b) => b.setAttribute('aria-selected', String(b === tab)));
+      cmd.textContent = tab.dataset.cmd!;
+      if (!reduced) gsap.from(cmd, { autoAlpha: 0, x: -6, duration: 0.35, ease: 'power2.out' });
+    });
+  const COPY_ICON = copy.innerHTML;
+  copy.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(cmd.textContent ?? '');
+    } catch {
+      return;
+    }
+    copy.innerHTML = `${ICONS.check}<span class="term-copied">${copy.dataset.copied}</span>`;
+    setTimeout(() => (copy.innerHTML = COPY_ICON), 1600);
+  });
 
   // Kept alive when the page goes into the back/forward cache.
   window.addEventListener('pagehide', (e) => {
@@ -348,259 +384,337 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
     cursor: default;
   }
 
-  /* ── Recto: the hero, set as a title page, then the index ── */
+  /* ── Verso: rays and coordinates over the forum ── */
 
-  /* The right page is the first thing read: the title stands in the middle of
-     the space above the index, centred as a title page is. */
-  .author {
-    flex: 1 0 auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: clamp(8px, 3vh, 40px) 0;
+  .rays {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 0.6;
+    vector-effect: non-scaling-stroke;
+    opacity: 0.16;
   }
 
-  /* The name, large, in two lines beside a woodcut initial as tall as both. */
-  .title {
-    display: flex;
-    align-items: stretch;
-    gap: 0.12em;
-    font-size: clamp(2.8rem, min(6.4vw, 9.4vh), 7.4rem);
-    line-height: 0.98;
-    font-weight: 400;
-    letter-spacing: 0.01em;
-    text-align: left;
-    margin: 0;
+  .rays :is(path, circle) {
+    stroke-dasharray: 1;
+    vector-effect: non-scaling-stroke;
   }
 
-  .title :global(.title-initial) {
-    width: 1.96em;
-    height: 1.96em;
-    margin-top: 0.04em;
-    filter: drop-shadow(1px 2px 0 rgb(80 60 30 / 0.12));
+  .rays-burst {
+    transform-origin: 720px 170px;
+    animation: drift 240s linear infinite;
   }
 
-  .title-name {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 0.02em 0 0.06em;
+  .rays-ring {
+    stroke: var(--rubric);
+    opacity: 0.9;
   }
 
-  .title-line {
-    display: block;
+  .rays-axis {
+    stroke-dasharray: 0.004 0.006 !important;
+    opacity: 0.7;
   }
 
-  /* The second line set in from the first, as a title page staggers its lines. */
-  .title-line + .title-line {
-    padding-left: 0.5em;
-    font-style: italic;
-  }
-
-  /* A double rule with a fleuron, drawn out from the middle on arrival. */
-  .title-rule {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    width: min(100%, 34rem);
-    margin: clamp(10px, 2.2vh, 24px) 0 0;
-    color: var(--rubric);
-    font-size: 1.2rem;
-    line-height: 1;
-  }
-
-  .title-rule span:not(.fl) {
-    flex: 1;
-    height: 0;
-    border-top: 1px solid var(--ink);
-    border-bottom: 1px solid var(--ink);
-    padding-top: 2px;
-  }
-
-  .title-rule span:first-child {
-    transform-origin: 100% 50%;
-  }
-
-  .title-rule span:last-child {
-    transform-origin: 0% 50%;
-  }
-
-  .fl {
-    display: inline-block;
-  }
-
-  .role {
-    margin: clamp(8px, 1.6vh, 18px) 0 0;
-    font-family: 'IM Fell English SC', serif;
-    font-size: clamp(1.05rem, 0.5vw + 0.75rem, 1.3rem);
-    letter-spacing: 0.1em;
-    color: var(--ink);
-  }
-
-  .tagline {
-    max-width: 34ch;
-    margin: 0.35rem 0 0;
-    font-style: italic;
-    font-size: clamp(1.05rem, 0.5vw + 0.75rem, 1.28rem);
-    line-height: 1.4;
-    color: var(--ink-soft);
-    text-wrap: balance;
-  }
-
-  .links {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.2rem 1.4rem;
-    margin: clamp(10px, 2vh, 22px) 0 0;
-    font-family: 'IM Fell English SC', serif;
-    font-size: 1.08rem;
-    letter-spacing: 0.06em;
-  }
-
-  /* A link is underlined with a stroke of the pen, drawn left to right as
-     the pointer comes to it, and its ink darkens. */
-  .links a {
-    position: relative;
-    color: var(--rubric);
-    text-decoration: none;
-    padding-bottom: 0.18em;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 8' preserveAspectRatio='none'%3E%3Cpath d='M1,5.2 C18,2.6 34,6.6 52,4.2 S84,2.8 99,4.6 L98.6,6 C82,4.6 66,7.4 50,6 S16,5.4 1.4,6.6Z' fill='%239b2d20'/%3E%3C/svg%3E")
-      0 100% / 0% 0.34em no-repeat;
-    transition:
-      background-size 0.45s cubic-bezier(0.6, 0, 0.2, 1),
-      color 0.3s;
-  }
-
-  .links a:focus-visible {
-    background-size: 100% 0.34em;
-    color: #6e1d14;
-  }
-
-  @media (hover: hover) {
-    .links a:hover {
-      background-size: 100% 0.34em;
-      color: #6e1d14;
+  @keyframes drift {
+    to {
+      rotate: 360deg;
     }
   }
 
-  /* ── The index: short, at the foot of the page ── */
+  .plate-coords {
+    position: absolute;
+    z-index: 1;
+    left: 14px;
+    bottom: 10px;
+    display: flex;
+    gap: 1.2em;
+    margin: 0;
+    font-family: var(--f-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rays-burst {
+      animation: none;
+    }
+  }
+
+  /* ── Recto: the hero, then the index ── */
+
+  .hero {
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: clamp(8px, 3vh, 40px) 0;
+  }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin: 0 0 clamp(14px, 3vh, 30px);
+    font-family: var(--f-label);
+    font-size: 0.72rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .eyebrow-mark {
+    width: 28px;
+    height: 1px;
+    background: var(--rubric);
+  }
+
+  /* One huge, light, condensed sentence. */
+  .headline {
+    max-width: 9.5em;
+    margin: 0;
+    font-family: var(--f-display);
+    font-weight: 200;
+    font-size: clamp(3rem, min(7vw, 10.5vh), 8.2rem);
+    line-height: 0.9;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  .lede {
+    max-width: 38ch;
+    margin: clamp(16px, 3vh, 30px) 0 0;
+    font-weight: 300;
+    font-size: clamp(0.95rem, 0.3vw + 0.8rem, 1.08rem);
+    line-height: 1.6;
+    color: var(--ink-soft);
+  }
+
+  /* Flat, sharp buttons, told apart by tone, not colour. */
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: clamp(18px, 3.4vh, 34px) 0 0;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.85rem 1.2rem;
+    font-family: var(--f-label);
+    font-size: 0.74rem;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--ink);
+    background: var(--surface);
+    transition: background-color 0.3s ease;
+  }
+
+  .btn--primary {
+    background: var(--surface-2);
+  }
+
+  .btn :global(svg) {
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+
+  .btn:hover,
+  .btn.is-lit {
+    color: var(--ink);
+    background: #26323a;
+  }
+
+  /* The terminal: the loudest thing on the page, a solid block of the accent. */
+  .term {
+    width: min(100%, 34rem);
+    margin: clamp(18px, 3.4vh, 34px) 0 0;
+    background: var(--rubric);
+    color: var(--on-accent);
+    font-family: var(--f-mono);
+  }
+
+  .term-tabs {
+    display: flex;
+    gap: 1.2rem;
+    padding: 0.7rem 1rem 0;
+  }
+
+  .term-tabs button {
+    padding: 0 0 0.15rem;
+    font: inherit;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    color: inherit;
+    background: none;
+    border: 0;
+    border-bottom: 1px solid currentColor;
+    opacity: 0.7;
+    cursor: pointer;
+  }
+
+  .term-tabs button[aria-selected="true"] {
+    font-weight: 500;
+    border-bottom-color: transparent;
+    opacity: 1;
+  }
+
+  .term-tabs button:hover {
+    opacity: 1;
+  }
+
+  .term-line {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.75rem 0.6rem 0.85rem 1rem;
+    font-size: clamp(0.7rem, 0.25vw + 0.6rem, 0.8rem);
+  }
+
+  .term-prompt {
+    opacity: 0.55;
+  }
+
+  .term-line code {
+    padding: 0;
+    color: inherit;
+    background: none;
+    font-size: inherit;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .term-copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem;
+    font: inherit;
+    font-size: 0.68rem;
+    color: inherit;
+    background: none;
+    border: 0;
+    cursor: pointer;
+  }
+
+  .term-copy :global(svg) {
+    font-size: 15px;
+  }
+
+  .term-copy:hover {
+    background: rgb(0 0 0 / 0.12);
+  }
+
+  .codex .term :is(button):focus-visible {
+    outline-color: var(--on-accent);
+  }
+
+  /* ── The index ── */
 
   .contents {
     flex: none;
-    width: min(100%, 36rem);
-    margin: 0 auto clamp(4px, 1.5vh, 18px);
-  }
-
-  .contents > .rubric {
-    text-align: center;
-  }
-
-  /* Room in the margin for the manicule. */
-  .contents > ol {
-    padding-left: 1.9em !important;
+    width: min(100%, 34rem);
+    margin: clamp(10px, 2vh, 20px) 0 clamp(4px, 1.5vh, 14px);
+    padding-top: clamp(10px, 2vh, 18px);
+    border-top: 1px solid var(--rule);
   }
 
   .chapter > a {
-    position: relative;
-    font-size: 1.12rem;
-    transition: transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
+    font-family: var(--f-label);
+    font-size: 0.82rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding: 0.32rem 0;
+    transition:
+      color 0.3s,
+      padding 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
 
-  /* On a chapter: a manicule points to it from the margin, the dotted leader
-     is inked over in red from the title to the page, the page's number steps
-     out to meet it, and the line leans in a little. (Lit, too, when its
-     building is under the pointer in the forum.) */
-  .point {
-    position: absolute;
-    left: -1.7em;
-    color: var(--rubric);
-    opacity: 0;
-    transform: translateX(-0.6em) rotate(-8deg);
-    transition:
-      opacity 0.25s,
-      transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
+  .contents .num {
+    min-width: 3ch;
   }
 
   .contents .leader {
     position: relative;
+    transform: translateY(-0.35em);
   }
 
+  /* On a chapter (or its building lit in the forum): the rule is drawn over
+     in the accent, and the line steps in. */
   .contents .leader i {
     position: absolute;
     left: 0;
     right: 0;
     bottom: -1px;
-    height: 1.5px;
+    height: 1px;
     background: var(--rubric);
     transform: scaleX(0);
     transform-origin: 0 50%;
-    transition: transform 0.5s cubic-bezier(0.6, 0, 0.2, 1);
+    transition: transform 0.6s cubic-bezier(0.6, 0, 0.2, 1);
   }
 
-  .contents .pg,
-  .contents .num {
-    transition:
-      color 0.3s,
-      letter-spacing 0.4s;
+  .contents .label,
+  .contents .pg {
+    color: var(--ink-soft);
+    transition: color 0.3s;
   }
 
   .contents a.is-lit,
   .contents a:focus-visible {
-    transform: translateX(0.5ch);
+    padding-left: 0.6ch;
   }
 
-  .contents a.is-lit .point,
-  .contents a:focus-visible .point {
-    opacity: 1;
-    transform: none;
+  .contents a.is-lit :is(.label, .pg),
+  .contents a:focus-visible :is(.label, .pg) {
+    color: var(--ink);
   }
 
   .contents a.is-lit .leader i,
   .contents a:focus-visible .leader i {
     transform: scaleX(1);
-    transition-delay: 0.08s;
-  }
-
-  .contents a.is-lit .label,
-  .contents a.is-lit .pg {
-    color: var(--rubric);
-  }
-
-  .contents a.is-lit .pg,
-  .contents a:focus-visible .pg {
-    letter-spacing: 0.08em;
   }
 
   @media (hover: hover) {
     .contents a:hover {
-      transform: translateX(0.5ch);
+      padding-left: 0.6ch;
     }
 
-    .contents a:hover .point {
-      opacity: 1;
-      transform: none;
+    .contents a:hover :is(.label, .pg) {
+      color: var(--ink);
     }
 
     .contents a:hover .leader i {
       transform: scaleX(1);
-      transition-delay: 0.08s;
-    }
-
-    .contents a:hover .pg {
-      color: var(--rubric);
-      letter-spacing: 0.08em;
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
     .chapter > a,
-    .point,
-    .contents .leader i,
-    .links a {
+    .contents .leader i {
       transition: none;
+    }
+  }
+
+  @media (max-aspect-ratio: 1/1) {
+    .hero {
+      padding: 18px 0 8px;
+    }
+
+    .headline {
+      font-size: clamp(3rem, 15vw, 5rem);
     }
   }
 
@@ -667,8 +781,8 @@ const PLACES = { forum: 'Via Sacra', bibliotheca: 'Bibliotheca', fabrica: 'Fabri
       display: none;
     }
 
-    .chapter > a {
-      font-size: 1rem;
+    .contents {
+      display: none;
     }
   }
 

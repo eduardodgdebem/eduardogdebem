@@ -689,7 +689,7 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
   });
 
   // The banderole letters with the page font, so wait for it.
-  await document.fonts.load('150px "IM Fell English SC"').catch(() => undefined);
+  await document.fonts.load('300 150px "Barlow Condensed"').catch(() => undefined);
   ludus = createLudus(canvas, {
     name: 'Amphitheatrum',
     reducedMotion: reduced,
@@ -750,11 +750,11 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
     align-items: center;
     gap: 0.3rem;
     padding: 0.2rem 0.6rem;
-    font-family: 'IM Fell English SC', serif;
+    font-family: var(--f-label);
     font-size: 1.05rem;
-    background: rgb(239 230 208 / 0.92);
+    background: rgb(21 29 34 / 0.94);
     border: 1px solid var(--ink);
-    border-radius: 999px;
+    border-radius: 0;
   }
 
   .purse b,
@@ -785,14 +785,14 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
     height: 5px;
     margin-left: 0.15rem;
     border: 1px solid var(--ink);
-    border-radius: 3px;
+    border-radius: 0;
     overflow: hidden;
   }
 
   .purse-bar > i {
     display: block;
     height: 100%;
-    background: #b8892f;
+    background: #c9c6bc;
     transition: width 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
 
@@ -814,7 +814,7 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
     position: absolute;
     left: 1.4rem;
     top: 0;
-    font-family: 'IM Fell English SC', serif;
+    font-family: var(--f-label);
     font-size: 1.15rem;
     pointer-events: none;
     animation: coin-fly 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
@@ -851,8 +851,8 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
     right: 0.7rem;
     bottom: 0.18rem;
     height: 3px;
-    background: #1e3a78;
-    border-radius: 2px;
+    background: #7f9cc4;
+    border-radius: 0;
     overflow: hidden;
   }
 
@@ -881,12 +881,12 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
     pointer-events: none;
     opacity: 0;
     transform: translate(-50%, -50%);
-    filter: drop-shadow(0 4px 6px rgb(40 25 10 / 0.25));
+    filter: none;
     --hue: var(--rubric);
   }
 
   .callout[data-side='gallia'] {
-    --hue: #1e3a78;
+    --hue: #7f9cc4;
   }
 
   .callout :global(.band-text) {
@@ -928,7 +928,7 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
 
   .callout :global(b) {
     position: relative;
-    font-family: 'IM Fell English SC', serif;
+    font-family: var(--f-label);
     font-weight: 400;
     font-size: clamp(1.6rem, 3.4vw, 2.3rem);
     line-height: 1;
@@ -983,9 +983,9 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
     padding: 0.4rem 0.9rem;
     font-style: italic;
     text-align: center;
-    background: rgb(239 230 208 / 0.92);
+    background: rgb(21 29 34 / 0.94);
     border: 1px dashed var(--ink-soft);
-    border-radius: 6px;
+    border-radius: 0;
     transform: translate(-50%, -50%);
     pointer-events: none;
     opacity: 0;
@@ -1052,11 +1052,11 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
   }
 
   .tally .gallia i {
-    background: #1e3a78;
+    background: #7f9cc4;
   }
 
   .tally .gallia b {
-    color: #1e3a78;
+    color: #7f9cc4;
   }
 
   .tally .clock {
@@ -1088,13 +1088,13 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
     border: 2px solid var(--rubric);
     border-radius: 50%;
     color: var(--rubric);
-    box-shadow: 0 1px 3px rgb(40 25 10 / 0.3);
+    box-shadow: none;
     transition: opacity 0.3s;
   }
 
   .badges :global(.badge.gallia) {
-    border-color: #1e3a78;
-    color: #1e3a78;
+    border-color: #7f9cc4;
+    color: #7f9cc4;
   }
 
   .badges :global(.badge.is-planning) {
@@ -1118,8 +1118,8 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
     right: 3px;
     bottom: -7px;
     height: 4px;
-    background: rgb(27 36 25 / 0.2);
-    border-radius: 2px;
+    background: rgb(228 225 216 / 0.18);
+    border-radius: 0;
     overflow: hidden;
   }
 
@@ -1146,8 +1146,8 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
     margin-left: -88px;
     background: var(--paper);
     border: 1px solid var(--ink);
-    border-radius: 999px;
-    box-shadow: 0 3px 10px rgb(40 25 10 / 0.3);
+    border-radius: 0;
+    box-shadow: none;
   }
 
   .forms[hidden] {
@@ -1217,10 +1217,10 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
     padding: 6px 0 4px;
     font-size: 26px;
     border: 1px solid var(--ink);
-    border-radius: 8px;
+    border-radius: 0;
     touch-action: none;
     cursor: grab;
-    box-shadow: 0 2px 6px rgb(40 25 10 / 0.25);
+    box-shadow: none;
   }
 
   .tile[aria-pressed='true'] {
@@ -1239,7 +1239,7 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
     display: inline-flex;
     align-items: center;
     gap: 1px;
-    font-family: 'IM Fell English SC', serif;
+    font-family: var(--f-label);
     font-size: 14px;
     color: var(--ink-soft);
   }
@@ -1263,8 +1263,8 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
     color: var(--paper);
     background: var(--rubric);
     border: 3px double var(--paper);
-    border-radius: 50%;
-    box-shadow: 0 3px 10px rgb(40 25 10 / 0.4);
+    border-radius: 0;
+    box-shadow: none;
   }
 
   .go .ic {
@@ -1273,13 +1273,13 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
 
   .go-label {
     margin-top: -14px;
-    font-family: 'IM Fell English SC', serif;
+    font-family: var(--f-label);
     font-size: 12px;
     letter-spacing: 0.04em;
   }
 
   .go:hover:not(:disabled) {
-    background: #7f2318;
+    background: #d9482a;
   }
 
   .go:disabled {
@@ -1318,7 +1318,7 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
     border: 1px solid var(--ink);
     outline: 1px solid var(--ink);
     outline-offset: 3px;
-    box-shadow: 0 8px 30px rgb(40 25 10 / 0.35);
+    box-shadow: none;
   }
 
   .verdict[hidden] {
@@ -1402,7 +1402,7 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
     top: -20px;
     width: calc(12px * var(--s));
     height: calc(8px * var(--s));
-    background: radial-gradient(ellipse at 30% 30%, #c2493a, #9b2d20 70%);
+    background: var(--rubric);
     border-radius: 80% 10% 80% 10%;
     opacity: 0.9;
     animation: petal var(--t) var(--d) ease-in forwards;
@@ -1429,14 +1429,14 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
   .verdict-title {
     position: relative;
     margin: 0;
-    font-family: 'IM Fell English SC', serif;
+    font-family: var(--f-label);
     font-size: 2rem;
     letter-spacing: 0.06em;
     color: var(--rubric);
   }
 
   .verdict[data-result='victus'] .verdict-title {
-    color: #1e3a78;
+    color: #7f9cc4;
   }
 
   .verdict-note {
@@ -1454,10 +1454,10 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
 
   .verdict button,
   .presets button {
-    font-family: 'IM Fell English SC', serif;
+    font-family: var(--f-label);
     letter-spacing: 0.04em;
     padding: 0.3rem 0.8rem;
-    border-radius: 999px;
+    border-radius: 0;
   }
 
   .verdict .again {
@@ -1483,7 +1483,7 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
     font-style: italic;
     color: var(--paper);
     background: var(--ink);
-    border-radius: 999px;
+    border-radius: 0;
     opacity: 0;
     pointer-events: none;
     transition:
@@ -1514,7 +1514,7 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
     background: var(--paper);
     border: 2px solid var(--rubric);
     border-radius: 50%;
-    box-shadow: 0 6px 16px rgb(40 25 10 / 0.35);
+    box-shadow: none;
     pointer-events: none;
   }
 
@@ -1595,7 +1595,7 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
   }
 
   .beats b {
-    font-family: 'IM Fell English SC', serif;
+    font-family: var(--f-label);
     font-weight: 400;
   }
 
@@ -1631,13 +1631,13 @@ const PRESETS = [['triplex', 'Triplex acies'], ['testudo', 'Testudo'], ['cuneus'
   }
 
   .annales :global(li.end) {
-    font-family: 'IM Fell English SC', serif;
+    font-family: var(--f-label);
     letter-spacing: 0.04em;
     color: var(--rubric);
   }
 
   .annales :global(.at) {
-    font-family: 'IM Fell English SC', serif;
+    font-family: var(--f-label);
     font-size: 0.8rem;
     color: var(--ink-soft);
     margin-right: 0.3rem;

@@ -167,7 +167,7 @@ const monuments: PlazaMonument[] = NOTES.map(({ key, plate, inscription }) => ({
   }
 
   .notes dt {
-    font-family: 'IM Fell English SC', serif;
+    font-family: var(--f-label);
     letter-spacing: 0.08em;
     color: var(--ink);
   }
@@ -184,7 +184,7 @@ const monuments: PlazaMonument[] = NOTES.map(({ key, plate, inscription }) => ({
     flex-wrap: wrap;
     gap: 0.2rem 1.1rem;
     margin: -0.4rem 0 1.1rem;
-    font-family: 'IM Fell English SC', serif;
+    font-family: var(--f-label);
     letter-spacing: 0.06em;
   }
 
@@ -220,7 +220,7 @@ const monuments: PlazaMonument[] = NOTES.map(({ key, plate, inscription }) => ({
   }
 
   .letters dt {
-    font-family: 'IM Fell English SC', serif;
+    font-family: var(--f-label);
     letter-spacing: 0.08em;
     color: var(--ink-soft);
   }
@@ -239,14 +239,14 @@ const monuments: PlazaMonument[] = NOTES.map(({ key, plate, inscription }) => ({
 
   .copy {
     font: inherit;
-    font-family: 'IM Fell English SC', serif;
+    font-family: var(--f-label);
     font-size: 0.85rem;
     letter-spacing: 0.06em;
     padding: 0 0.5rem;
     color: var(--ink-soft);
     background: none;
     border: 1px solid var(--rule);
-    border-radius: 2px;
+    border-radius: 0;
     cursor: pointer;
   }
 
@@ -262,16 +262,16 @@ const monuments: PlazaMonument[] = NOTES.map(({ key, plate, inscription }) => ({
   .write-button {
     display: inline-block;
     padding: 0.35rem 1.1rem 0.4rem;
-    font-family: 'IM Fell English SC', serif;
+    font-family: var(--f-label);
     letter-spacing: 0.08em;
     color: var(--paper) !important;
     background: var(--rubric);
     text-decoration: none;
-    border-radius: 2px;
+    border-radius: 0;
   }
 
   .write-button:hover {
-    background: #7f2318;
+    background: #d9482a;
   }
 
   @media (max-width: 560px) {

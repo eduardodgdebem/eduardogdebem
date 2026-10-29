@@ -67,11 +67,11 @@ export function inscriptionTexture(text: string, w: number, h: number, colour = 
   ctx.textBaseline = 'middle';
   const spaced = text.split('').join(' ');
   let size = canvas.height * 0.78;
-  ctx.font = `600 ${size}px Cinzel, "IM Fell English SC", serif`;
+  ctx.font = `600 ${size}px Cinzel, serif`;
   const width = ctx.measureText(spaced).width;
   if (width > canvas.width * 0.92) {
     size *= (canvas.width * 0.92) / width;
-    ctx.font = `600 ${size}px Cinzel, "IM Fell English SC", serif`;
+    ctx.font = `600 ${size}px Cinzel, serif`;
   }
   ctx.fillText(spaced, canvas.width / 2, canvas.height / 2 + size * 0.04);
   const texture = new THREE.CanvasTexture(canvas);

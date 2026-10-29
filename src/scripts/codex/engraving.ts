@@ -29,10 +29,11 @@ interface Options {
   onContextLost?: () => void;
 }
 
-export const PAPER = 0xefe6d0;
-export const INK = 0x1b2419;
-export const RUBRIC = 0x9b2d20;
-export const BLUE = 0x1e3a78;
+// Nocturne: silver lines cut into a night-dark plate, and one accent.
+export const PAPER = 0x10171b;
+export const INK = 0xc9c6bc;
+export const RUBRIC = 0xff5a36;
+export const BLUE = 0x7f9cc4;
 
 // sRGB values passed straight through to the canvas.
 export const raw = (hex: number) => new THREE.Color().setHex(hex, THREE.LinearSRGBColorSpace);
@@ -111,7 +112,9 @@ export const engraveFragment = /* glsl */ `
     float rim = pow(1.0 - max(dot(n, v), 0.0), 2.0);
     // A little fill so faces turned from the lamp still read as form, not solid ink.
     float tone = clamp(0.3 + lambert * 0.85 - rim * 0.3, 0.0, 1.0);
-    float dark = pow(1.0 - tone, 0.85);
+    // Light on a dark plate, as on scratchboard: lines are cut where the lamp
+    // falls, so the lit faces read light and the shade is left night.
+    float dark = 0.06 + 0.72 * pow(tone, 1.5);
     dark *= 1.0 - uPale;
     // Picked out: cut a little deeper.
     float glow = max(uGlow, vInstanceGlow);
@@ -240,7 +243,7 @@ export const compositeFragment = /* glsl */ `
     float shade = 0.0;
     for (int i = 1; i <= 4; i++) shade += texture2D(tNormal, vUv + vec2(-1.5, 2.5) * float(i) * uPixel * t).a;
     shade *= 0.06 * (1.0 - a);
-    gl_FragColor = vec4(col * a + uInk * shade, a + shade);
+    gl_FragColor = vec4(col * a, a + shade);
   #else
     gl_FragColor = vec4(col, 1.0);
   #endif
@@ -270,10 +273,10 @@ export function letteringTexture(text: string, height = 200) {
   const initial = (k: number) => glyphs[k] !== ' ' && (k === 0 || glyphs[k - 1] === ' ');
   let size = height * 0.66;
   const layout = (sz: number) => {
-    const track = sz * 0.1;
+    const track = sz * 0.24;
     return glyphs.map((c, k) => {
-      const s = initial(k) ? sz * 1.22 : sz;
-      ctx.font = `${s}px "IM Fell English SC", serif`;
+      const s = sz;
+      ctx.font = `300 ${s}px "Barlow Condensed", sans-serif`;
       return { c, s, w: c === ' ' ? sz * 0.42 : ctx.measureText(c).width + track };
     });
   };
@@ -290,19 +293,25 @@ export function letteringTexture(text: string, height = 200) {
   let x = (canvas.width - width) / 2;
   const base = mid + size * 0.36;
   set.forEach((g, k) => {
-    ctx.font = `${g.s}px "IM Fell English SC", serif`;
+    ctx.font = `300 ${g.s}px "Barlow Condensed", sans-serif`;
     ctx.fillStyle = initial(k) ? RED : BLACK;
     ctx.fillText(g.c, x, base);
     x += g.w;
   });
 
   // Fleurons, then a tapering rule out toward each tail.
-  ctx.font = `${size * 0.8}px "IM Fell English", serif`;
-  ctx.textAlign = 'center';
   for (const side of [-1, 1]) {
     const fx = canvas.width / 2 + side * (width / 2 + size * 0.75);
-    ctx.fillStyle = RED;
-    ctx.fillText('\u2766', fx, base - size * 0.05);
+    // A registration mark in the accent: a ring on a cross.
+    ctx.strokeStyle = RED;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(fx, mid, size * 0.16, 0, Math.PI * 2);
+    ctx.moveTo(fx - size * 0.3, mid);
+    ctx.lineTo(fx + size * 0.3, mid);
+    ctx.moveTo(fx, mid - size * 0.3);
+    ctx.lineTo(fx, mid + size * 0.3);
+    ctx.stroke();
     ctx.fillStyle = BLACK;
     const from = fx + side * size * 0.7;
     ctx.beginPath();
