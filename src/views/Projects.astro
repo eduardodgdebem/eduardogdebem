@@ -319,7 +319,8 @@ const META = {
   .code-plate::before {
     content: '';
     position: absolute;
-    inset: 0;
+    /* Taller than its window, so it can drift as the page scrolls (nocturne.css). */
+    inset: -12% 0;
     background: url('/projects/engraving.jpg') center 30% / cover;
     filter: grayscale(1) contrast(1.2);
     mix-blend-mode: multiply;
@@ -371,16 +372,11 @@ const META = {
     background: none;
   }
 
-  /* ── The picture: folded away until the entry is lit, then printed into
-     the page: drained to the paper's ink, soft at its edges, in a ruled frame ── */
+  /* ── The picture, always shown: a green duotone under a halftone screen,
+     drifting a little as the page scrolls (nocturne.css) ── */
 
   .shot {
     display: grid;
-    grid-template-rows: 0fr;
-    opacity: 0;
-    transition:
-      grid-template-rows 0.45s cubic-bezier(0.2, 0.7, 0.2, 1),
-      opacity 0.35s;
   }
 
   .shot-inner {
@@ -418,12 +414,6 @@ const META = {
     background: radial-gradient(circle, transparent 0.7px, rgb(5 11 8 / 0.5) 1.25px) 0 0 / 3px 3px;
   }
 
-  .work.is-lit .shot,
-  .work:focus-within .shot {
-    grid-template-rows: 1fr;
-    opacity: 1;
-  }
-
   .work.is-lit::before,
   .work:focus-within::before {
     opacity: 1;
@@ -436,11 +426,6 @@ const META = {
   }
 
   @media (hover: hover) {
-    .work:hover .shot {
-      grid-template-rows: 1fr;
-      opacity: 1;
-    }
-
     .work:hover::before {
       opacity: 1;
       transform: none;
@@ -451,17 +436,8 @@ const META = {
     }
   }
 
-  /* No hover on a phone: the pictures stay open. */
-  @media (hover: none) {
-    .shot {
-      grid-template-rows: 1fr;
-      opacity: 1;
-    }
-  }
-
   @media (prefers-reduced-motion: reduce) {
     .work::before,
-    .shot,
     .group-mark,
     .group::details-content {
       transition: none;

@@ -1057,3 +1057,45 @@ html.dawn .plate-caption {
     animation: nocturne-in 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) 0.15s both;
   }
 }
+
+/* ── Pictures drift on scroll: each frame is a view timeline, and the picture
+   in it moves a few percent against the page as it passes (the pages scroll
+   inside themselves, and a view timeline follows the nearest scroller). Where
+   scroll-driven animations aren't supported, or motion is reduced, they hold still. ── */
+
+.shot figure,
+.code-plate,
+.codex-prose p:has(> img:only-child) {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .shot figure,
+    .code-plate,
+    .codex-prose p:has(> img:only-child) {
+      view-timeline: --picture block;
+    }
+
+    .shot img,
+    .codex-prose p:has(> img:only-child) > img {
+      scale: 1.14;
+      animation: picture-drift linear both;
+      animation-timeline: --picture;
+    }
+
+    .code-plate::before {
+      animation: picture-drift linear both;
+      animation-timeline: --picture;
+    }
+  }
+}
+
+@keyframes picture-drift {
+  from {
+    translate: 0 -6%;
+  }
+  to {
+    translate: 0 6%;
+  }
+}
