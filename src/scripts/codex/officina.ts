@@ -204,8 +204,10 @@ export function createOfficina(canvas: HTMLCanvasElement, { pieces, name, reduce
   // Finished work on the shelf; what's still being made, on the anvil.
   const done = pieces.flatMap((p, i) => (p.preview ? [i] : []));
   const bays = Math.max(1, done.length);
-  const shelfX = doorX + 1.45 + (bays * SHELF.bay) / 2;
-  const bayX = (k: number) => shelfX - (bays * SHELF.bay) / 2 + SHELF.bay * (k + 0.5);
+  // The bays narrow as work is added, so the shelf stays between the door and the forge.
+  const bay = Math.min(SHELF.bay, (FORGE_X - 1.1 - (doorX + 1.45)) / bays);
+  const shelfX = doorX + 1.45 + (bays * bay) / 2;
+  const bayX = (k: number) => shelfX - (bays * bay) / 2 + bay * (k + 0.5);
   build(paries(HALF * 2, 5.4, doorX, [FORGE_X + 1.4]), 0, BACK, 0, wall);
   for (const x of [doorX + 1.0, HALF - 0.5]) build(pilaster(x, 3.92), 0, BACK, 0, wall);
   inscribe('EXITVS', 1.0, 0.13, new THREE.Vector3(doorX, 2.62, BACK + 0.11));
@@ -213,7 +215,7 @@ export function createOfficina(canvas: HTMLCanvasElement, { pieces, name, reduce
   proxy(new THREE.Vector3(1.4, 2.6, 0.6), new THREE.Vector3(doorX, 1.3, BACK + 0.2), { exitus: true });
   for (const s of [-1, 1]) build([new THREE.BoxGeometry(0.3, 1.1, FRONT - BACK - 0.5).translate(s * (HALF + 0.15), 0.55, (FRONT + BACK - 0.5) / 2)], 0, 0, 0, wall);
 
-  build(pluteus(bays), shelfX, BACK);
+  build(pluteus(bays, bay), shelfX, BACK);
   const forge = caminus();
   build(forge.parts, FORGE_X, BACK);
   const fire = forge.fire.clone().add(new THREE.Vector3(FORGE_X, 0, BACK));
@@ -273,8 +275,8 @@ export function createOfficina(canvas: HTMLCanvasElement, { pieces, name, reduce
     group.position.set(x, shelfTop, BACK + 0.3);
     group.scale.setScalar(1.25);
     // Its picture over it, on the top shelf, leaning back against the wall.
-    const fw = 1.22;
-    const fh = 0.78;
+    const fw = Math.min(1.22, bay - 0.24);
+    const fh = fw * 0.64;
     const frame = new THREE.Group();
     frame.add(new THREE.Mesh(merge(tabella(fw, fh)), material(glow)));
     const picture = material(glow);
@@ -290,7 +292,7 @@ export function createOfficina(canvas: HTMLCanvasElement, { pieces, name, reduce
       picture.uniforms.uHasText.value = 1;
     });
     inscribe(piece.latin.toUpperCase(), 0.8, 0.06, new THREE.Vector3(x, SHELF.shelves[0] - 0.02, BACK + SHELF.d + 0.006), glow);
-    proxy(new THREE.Vector3(SHELF.bay - 0.1, 2.0, 0.9), new THREE.Vector3(x, 1.25, BACK + 0.45), { work: i });
+    proxy(new THREE.Vector3(bay - 0.1, 2.0, 0.9), new THREE.Vector3(x, 1.25, BACK + 0.45), { work: i });
     return { group, glow, lift: { value: 0 }, stand: new THREE.Vector3(x, 0, BACK + SHELF.d + 0.7), base: shelfTop, spin: 0, label: new THREE.Vector3(x, 2.55, BACK + 0.3) };
   });
 
@@ -330,7 +332,7 @@ export function createOfficina(canvas: HTMLCanvasElement, { pieces, name, reduce
   scene.add(citizen);
   const around = (x: number, z: number, r: number) => ({ x0: x - r, x1: x + r, z0: z - r, z1: z + r });
   const obstacles = [
-    { x0: shelfX - (bays * SHELF.bay) / 2 - 0.1, x1: shelfX + (bays * SHELF.bay) / 2 + 0.1, z0: BACK, z1: BACK + SHELF.d + 0.25 },
+    { x0: shelfX - (bays * bay) / 2 - 0.1, x1: shelfX + (bays * bay) / 2 + 0.1, z0: BACK, z1: BACK + SHELF.d + 0.25 },
     { x0: ANVIL.x - 0.6, x1: ANVIL.x + 0.7, z0: ANVIL.z - 1.1, z1: ANVIL.z + 0.55 },
     { x0: ANVIL.x + 0.75, x1: ANVIL.x + 1.75, z0: ANVIL.z, z1: ANVIL.z + 0.55 },
     { x0: FORGE_X - 1.75, x1: FORGE_X + 1.0, z0: BACK, z1: BACK + 1.25 },

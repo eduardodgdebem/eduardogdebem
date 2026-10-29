@@ -16,7 +16,7 @@ const { lang } = Astro.props;
 const s = tr(lang);
 const NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
 // Grouped by what they are, each keeping its index (its piece in the workshop).
-const LATIN = { site: 'Paginae', language: 'Linguae' } as const;
+const LATIN = { site: 'Paginae', app: 'Instrumenta', language: 'Linguae' } as const;
 const roman = (n: number) =>
   ([['M', 1000], ['CM', 900], ['D', 500], ['CD', 400], ['C', 100], ['XC', 90], ['L', 50], ['XL', 40], ['X', 10], ['IX', 9], ['V', 5], ['IV', 4], ['I', 1]] as const).reduce(
     (acc, [sym, v]) => {
@@ -85,7 +85,10 @@ const META = {
               <p class="summary">{p.summary[lang]}</p>
               <p class="foot">
                 <span class="made">{p.stack.join(' · ')}</span>
-                <a href={p.url} target="_blank" rel="noopener noreferrer">{p.code === p.url ? s('officina.code') : s('officina.site')} <span aria-hidden="true">↗</span></a>
+                <span class="links">
+                  {p.code && p.code !== p.url && <a href={p.code} target="_blank" rel="noopener noreferrer">{s('officina.code')} <span aria-hidden="true">↗</span></a>}
+                  <a href={p.url} target="_blank" rel="noopener noreferrer">{p.code === p.url ? s('officina.code') : p.type === 'app' ? s('officina.app') : s('officina.site')} <span aria-hidden="true">↗</span></a>
+                </span>
               </p>
               {p.note && <p class="note">{p.note[lang]}</p>}
             </li>
@@ -271,8 +274,13 @@ const META = {
     color: var(--ink-soft);
   }
 
-  .foot a {
+  .foot .links {
+    display: flex;
+    gap: 1rem;
     margin-left: auto;
+  }
+
+  .foot a {
     font-family: var(--f-label);
     letter-spacing: 0.06em;
     color: var(--rubric);

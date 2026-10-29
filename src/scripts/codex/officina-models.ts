@@ -84,6 +84,8 @@ export function opus(work: Work): THREE.BufferGeometry[] {
       return tabula();
     case 'ouroboros':
       return ouroboros();
+    case 'urbs':
+      return urbs();
   }
 }
 
@@ -148,6 +150,27 @@ function tabula() {
   return parts;
 }
 
+/** A city on a board, as Ode City raises it: towers in the middle, blocks and gabled houses round them, a tree or two. */
+function urbs() {
+  const parts = [box(0.5, 0.04, 0.4, 0, 0.02, 0)];
+  const top = 0.04;
+  // Towers, each with a pointed cap.
+  for (const [x, z, h] of [[-0.02, -0.06, 0.46], [0.09, 0.02, 0.36], [-0.11, 0.05, 0.3]] as const) {
+    parts.push(box(0.08, h, 0.08, x, top + h / 2, z));
+    parts.push(new THREE.ConeGeometry(0.06, 0.08, 4).rotateY(Math.PI / 4).translate(x, top + h + 0.04, z));
+  }
+  // Blocks of flats.
+  for (const [x, z, w, h] of [[0.17, -0.1, 0.1, 0.2], [-0.18, -0.11, 0.09, 0.16], [0.17, 0.12, 0.09, 0.12]] as const) parts.push(box(w, h, 0.09, x, top + h / 2, z));
+  // Houses with pitched roofs along the front.
+  for (const x of [-0.17, -0.05, 0.06]) {
+    parts.push(box(0.07, 0.06, 0.06, x, top + 0.03, 0.15));
+    parts.push(new THREE.CylinderGeometry(0.001, 0.05, 0.04, 4, 1).rotateY(Math.PI / 4).scale(1, 1, 0.85).translate(x, top + 0.08, 0.15));
+  }
+  // Trees at the corner.
+  for (const [x, z] of [[0.21, 0.02], [-0.21, 0.13]] as const) parts.push(cyl(0.008, 0.008, 0.04, x, top, z, 5), new THREE.ConeGeometry(0.03, 0.08, 7).translate(x, top + 0.08, z));
+  return parts;
+}
+
 /** The ouroboros: a snake bent round into a ring, its tail in its mouth, set upright on the anvil. */
 function ouroboros() {
   const R = 0.2;
@@ -197,8 +220,8 @@ export function faber() {
 export const SHELF = { bay: 1.5, d: 0.55, h: 2.65, shelves: [0.72, 1.56] };
 
 /** Open shelving against the back wall, `bays` wide: uprights, boards, a cornice. Front at z = SHELF.d. */
-export function pluteus(bays: number) {
-  const { bay, d, h, shelves } = SHELF;
+export function pluteus(bays: number, bay = SHELF.bay) {
+  const { d, h, shelves } = SHELF;
   const w = bays * bay;
   const parts: THREE.BufferGeometry[] = [];
   for (let i = 0; i <= bays; i++) parts.push(box(0.08, h, d, -w / 2 + i * bay, h / 2, d / 2));

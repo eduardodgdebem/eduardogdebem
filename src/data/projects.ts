@@ -5,10 +5,10 @@ import type { Lang } from '../i18n/strings';
 // that stands for it (`work`, see officina-models.ts); one still being made
 // (no preview) lies on the anvil. Order is the order along the shelf.
 
-export type Work = 'forfex' | 'caput' | 'tabula' | 'ouroboros';
+export type Work = 'forfex' | 'caput' | 'tabula' | 'ouroboros' | 'urbs';
 
 /** What kind of thing it is: the facing page lists them in groups, in this order. */
-export const TYPES = ['site', 'language'] as const;
+export const TYPES = ['site', 'app', 'language'] as const;
 export type Type = (typeof TYPES)[number];
 
 export interface Project {
@@ -83,6 +83,24 @@ export const PROJECTS: Project[] = [
     summary: {
       en: 'A management consultancy: strategic planning, structure, processes and people. In Portuguese and English, drawn to the brand’s own blueprint of sharp lines.',
       pt: 'Uma consultoria de gestão: planejamento estratégico, estrutura, processos e pessoas. Em português e inglês, desenhado no próprio projeto gráfico da marca, de linhas retas.',
+    },
+  },
+  {
+    id: 'ode-city',
+    preview: '/projects/ode-city.jpg',
+    latin: 'Urbs',
+    name: 'Ode City',
+    url: 'https://eduardodgdebem.github.io/ode-city/',
+    host: 'eduardodgdebem.github.io/ode-city',
+    code: 'https://github.com/eduardodgdebem/ode-city',
+    year: 2026,
+    work: 'urbs',
+    type: 'app',
+    stack: ['Ode', 'WebAssembly', 'WebGL2'],
+    kind: { en: 'A focus timer', pt: 'Um timer de foco' },
+    summary: {
+      en: 'A focus timer that builds a city while you work: the longer the session, the bigger the building, and giving up leaves a ruin. Written in Ode, compiled to WebAssembly, drawn with WebGL2; it installs and runs offline.',
+      pt: 'Um timer de foco que constrói uma cidade enquanto você trabalha: quanto mais longa a sessão, maior o prédio, e desistir deixa uma ruína. Escrito em Ode, compilado para WebAssembly, desenhado com WebGL2; instala e funciona offline.',
     },
   },
   {

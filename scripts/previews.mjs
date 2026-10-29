@@ -11,13 +11,15 @@ const SITES = {
   'brazilian-hair-studio': 'https://brazilian-hair-studio.com/',
   'cabelos-e-formas': 'https://cbf.jeffersonrdebem.workers.dev/',
   'debem-consultoria': 'https://debemconsultoria.com/',
+  // A big city, made up for the picture (?demo saves nothing).
+  'ode-city': 'https://eduardodgdebem.github.io/ode-city/?demo=1500',
 };
 
 const dir = mkdtempSync(join(tmpdir(), 'previews-'));
 for (const [id, url] of Object.entries(SITES)) {
   const png = join(dir, `${id}.png`);
   // Time for the page's fonts and its entrance animations before the shot.
-  execFileSync(CHROME, ['--headless', '--hide-scrollbars', '--window-size=1280,800', '--virtual-time-budget=6000', `--screenshot=${png}`, url], { stdio: 'ignore' });
+  execFileSync(CHROME, ['--headless', '--hide-scrollbars', '--use-angle=metal', '--enable-gpu', '--window-size=1280,800', '--virtual-time-budget=6000', `--screenshot=${png}`, url], { stdio: 'ignore' });
   await sharp(png).jpeg({ quality: 72 }).toFile(`public/projects/${id}.jpg`);
   console.log(id);
 }
