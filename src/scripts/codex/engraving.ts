@@ -29,11 +29,11 @@ interface Options {
   onContextLost?: () => void;
 }
 
-// Nocturne: dark ink on a silver plate, set in the night page, and one accent.
-export const PAPER = 0xd4d1c7;
-export const INK = 0x0d1215;
-export const RUBRIC = 0x1f9e58;
-export const BLUE = 0x2b4f86;
+// Nocturne: light lines on a night plate, and one accent.
+export const PAPER = 0x10171b;
+export const INK = 0xd6d3c9;
+export const RUBRIC = 0x34d27b;
+export const BLUE = 0x7f9cc4;
 
 // sRGB values passed straight through to the canvas.
 export const raw = (hex: number) => new THREE.Color().setHex(hex, THREE.LinearSRGBColorSpace);
@@ -112,7 +112,9 @@ export const engraveFragment = /* glsl */ `
     float rim = pow(1.0 - max(dot(n, v), 0.0), 2.0);
     // A little fill so faces turned from the lamp still read as form, not solid ink.
     float tone = clamp(0.3 + lambert * 0.85 - rim * 0.3, 0.0, 1.0);
-    float dark = pow(1.0 - tone, 0.85);
+    // Light on a dark plate, as on scratchboard: the lines are cut where the
+    // lamp falls, and some still in the shade, so nothing sinks into the night.
+    float dark = 0.16 + 0.7 * pow(tone, 1.3);
     dark *= 1.0 - uPale;
     // Picked out: cut a little deeper.
     float glow = max(uGlow, vInstanceGlow);
@@ -142,8 +144,9 @@ export const engraveFragment = /* glsl */ `
       ink = max(ink * 0.6, letters);
       red = max(red, tx.r * letters);
     }
-    // Red ink in r, blue ink in g, coverage in a.
-    gl_FragColor = vec4(red, max(uBlue, vInstanceBlue), 0.0, ink * (1.0 - vInstanceFade));
+    // Red ink in r, blue ink in g, the surface's light in b (the paper pass
+    // tints the form with it), coverage in a.
+    gl_FragColor = vec4(red, max(uBlue, vInstanceBlue), tone, ink * (1.0 - vInstanceFade));
   }
 `;
 
@@ -229,6 +232,11 @@ export const compositeFragment = /* glsl */ `
     edge *= step(0.002, uReveal);
     float covered = texture2D(tNormal, vUv).a;
 
+    // Under the lines, the form itself in slate tones, lighter where it's lit,
+    // so a building stands out of the sky even where it's in shade.
+    vec3 body = uPaper * (1.5 + 1.3 * inkSample.b);
+    col = mix(col, body, covered * clamp(uReveal * 1.5, 0.0, 1.0));
+
     float s = star(px + uStarShift) * (1.0 - covered) * 0.75;
     float coverage = clamp(max(max(ink, edge), s), 0.0, 1.0);
     // Ink sits a little unevenly on the plate.
@@ -241,7 +249,7 @@ export const compositeFragment = /* glsl */ `
     float shade = 0.0;
     for (int i = 1; i <= 4; i++) shade += texture2D(tNormal, vUv + vec2(-1.5, 2.5) * float(i) * uPixel * t).a;
     shade *= 0.06 * (1.0 - a);
-    gl_FragColor = vec4(col * a + uInk * shade, a + shade);
+    gl_FragColor = vec4(col * a, a + shade);
   #else
     gl_FragColor = vec4(col, 1.0);
   #endif
