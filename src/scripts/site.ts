@@ -1,11 +1,9 @@
 // The page's behaviour (src/views/Site.astro): the bar marks the section being
 // read and darkens once the hero is behind; things are printed in as they come
-// into view; a job's picture follows the pointer over its row; the phone's
-// menu; copying the address.
+// into view; the phone's menu; copying the address.
 
 const root = document.documentElement;
 const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
 
 /* ── The section being read, and the bar over the hero ── */
 
@@ -44,43 +42,6 @@ if (still) {
 }
 // The hero is there at once.
 requestAnimationFrame(() => root.classList.add('loaded'));
-
-/* ── A job's picture follows the pointer over its row ── */
-
-const follow = document.querySelector<HTMLElement>('[data-follow]');
-if (follow && fine && !still) {
-  const layers = [...follow.querySelectorAll<HTMLElement>('[data-follow-art]')];
-  const at = { x: innerWidth / 2, y: innerHeight / 2 };
-  const pos = { ...at };
-  let raf = 0;
-  let on = false;
-  const loop = () => {
-    pos.x += (at.x - pos.x) * 0.16;
-    pos.y += (at.y - pos.y) * 0.16;
-    const lean = Math.max(-8, Math.min(8, (at.x - pos.x) * 0.06));
-    follow.style.transform = `translate(${pos.x}px, ${pos.y}px) translate(-50%, -50%) rotate(${lean}deg)`;
-    raf = on || Math.abs(at.x - pos.x) > 0.5 ? requestAnimationFrame(loop) : 0;
-  };
-  for (const row of document.querySelectorAll<HTMLElement>('[data-hover-art]')) {
-    row.addEventListener('pointerenter', (e) => {
-      on = true;
-      at.x = e.clientX;
-      at.y = e.clientY;
-      if (!follow.classList.contains('is-on')) Object.assign(pos, at);
-      follow.classList.add('is-on');
-      layers.forEach((l) => l.classList.toggle('is-on', l.dataset.followArt === row.dataset.hoverArt));
-      if (!raf) raf = requestAnimationFrame(loop);
-    });
-    row.addEventListener('pointermove', (e) => {
-      at.x = e.clientX;
-      at.y = e.clientY;
-    });
-    row.addEventListener('pointerleave', () => {
-      on = false;
-      follow.classList.remove('is-on');
-    });
-  }
-}
 
 /* ── The phone's menu ── */
 

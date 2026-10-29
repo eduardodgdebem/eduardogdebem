@@ -607,121 +607,123 @@ body::after {
   mask-image: linear-gradient(#000 55%, transparent);
 }
 
-/* ── Work: an index of jobs ── */
+/* ── Work: a deck of cards. Each is held under the bar, a little lower than
+   the last, until the next one slides over it. ── */
 
-.jobs {
-  border-top: 1px solid var(--line);
-}
-
-.job {
+.deck {
   display: grid;
-  grid-template-columns: minmax(5rem, 1fr) minmax(0, 3fr) minmax(0, 1.2fr) minmax(0, 0.8fr);
-  gap: 2rem;
-  padding: 2rem 0;
-  border-bottom: 1px solid var(--line);
-  transition: background-color 0.4s ease;
+  gap: 4vh;
 }
 
-.job-num,
-.job-org,
-.job-when {
-  padding-top: 0.6rem;
-  font-family: var(--f-display);
-  font-size: 0.86rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--ink-soft);
-}
-
-.job-when {
-  text-align: right;
-}
-
-.job-title {
-  font-family: var(--f-display);
-  font-weight: 300;
-  font-size: clamp(1.9rem, 3.6vw, 3.4rem);
-  line-height: 1;
-  letter-spacing: -0.02em;
-  transition:
-    color 0.3s ease,
-    translate 0.5s var(--ease);
-}
-
-.job-text {
-  max-width: 36rem;
-  margin-top: 0.8rem;
-  color: var(--ink-soft);
-}
-
-.job-art {
-  display: none;
-}
-
-@media (hover: hover) {
-  .job:hover {
-    background: var(--night-2);
-  }
-
-  .job:hover .job-title {
-    color: var(--accent);
-    translate: 0.4rem 0;
-  }
-}
-
-/* The picture that follows the pointer over a job. */
-.follow {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 40;
-  width: clamp(220px, 22vw, 340px);
-  pointer-events: none;
-  opacity: 0;
-  scale: 0.9;
-  transition:
-    opacity 0.3s ease,
-    scale 0.4s var(--ease);
-}
-
-.follow.is-on {
-  opacity: 1;
-  scale: 1;
-}
-
-.follow-layer {
-  display: none;
+.slide {
+  position: sticky;
+  top: calc(var(--bar) + 24px + var(--i) * 22px);
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  min-height: min(72vh, 640px);
   border: 1px solid var(--line-2);
-  background: var(--night);
+  background: var(--night-2);
+  box-shadow: 0 -24px 40px -20px rgb(0 0 0 / 0.6);
 }
 
-.follow-layer.is-on {
-  display: block;
-}
-
-.follow-bar {
+.slide-art {
   display: flex;
-  gap: 0.8rem;
-  padding: 0.25rem 0.6rem;
+  flex-direction: column;
+  border-right: 1px solid var(--line);
+  background: var(--night);
+  min-height: 0;
+}
+
+.slide-bar {
+  display: flex;
+  gap: 1.2rem;
+  padding: 0.4rem 0.9rem;
   font-family: var(--f-display);
-  font-size: 0.7rem;
+  font-size: 0.74rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--ink-soft);
   border-bottom: 1px solid var(--line);
 }
 
-.follow-layer .art {
-  aspect-ratio: 4 / 5;
+.slide-bar .dim:last-child {
+  margin-left: auto;
+}
+
+.slide-pic {
+  flex: 1;
+  min-height: 260px;
   overflow: hidden;
 }
 
-.follow-layer .art-ink,
-.job-art .art-ink {
+.slide-pic .art-ink {
   height: 100%;
   aspect-ratio: auto !important;
   -webkit-mask-size: cover;
   mask-size: cover;
+  -webkit-mask-position: center 35%;
+  mask-position: center 35%;
+}
+
+.slide-pic--whole .art-ink {
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-position: center bottom;
+  mask-position: center bottom;
+}
+
+.slide-body {
+  display: flex;
+  flex-direction: column;
+  padding: clamp(24px, 3.4vw, 52px);
+}
+
+.slide-count {
+  display: flex;
+  gap: 0.6rem;
+  font-family: var(--f-display);
+  font-weight: 200;
+  font-size: clamp(3.4rem, 6vw, 6rem);
+  line-height: 0.85;
+  color: var(--accent);
+}
+
+.slide-count .dim {
+  font-size: 0.4em;
+  align-self: flex-end;
+  padding-bottom: 0.35em;
+}
+
+.slide-when {
+  margin-top: auto;
+  padding-top: 2rem;
+  font-family: var(--f-display);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+}
+
+.slide-title {
+  margin-top: 0.3rem;
+  font-family: var(--f-display);
+  font-weight: 300;
+  font-size: clamp(2.2rem, 3.8vw, 3.8rem);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+.slide-org {
+  margin-top: 0.5rem;
+  font-size: 0.82rem;
+  color: var(--accent);
+}
+
+.slide-text {
+  max-width: 34rem;
+  margin-top: 1rem;
+  color: var(--ink-soft);
 }
 
 /* ── Projects: a grid of windows, on a panel ── */
@@ -769,14 +771,13 @@ body::after {
   border-bottom: 1px solid var(--line);
 }
 
-/* A site's screenshot: inverted, so a white page is the night and its lines
-   the ink, under a halftone screen. */
+/* A site's screenshot, in its own colours. */
 .shot {
   position: relative;
   display: block;
   aspect-ratio: 16 / 10;
   overflow: hidden;
-  background: var(--art-ink);
+  background: var(--night);
 }
 
 .shot img {
@@ -785,25 +786,11 @@ body::after {
   height: 100%;
   object-fit: cover;
   object-position: top;
-  filter: grayscale(1) invert(1) contrast(1.25) brightness(0.95);
-  mix-blend-mode: multiply;
   transition: scale 0.8s var(--ease);
-}
-
-.shot::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle, transparent 0.7px, rgb(4 10 7 / 0.55) 1.3px) 0 0 / 3px 3px;
-  transition: opacity 0.4s ease;
 }
 
 .window:hover .shot img {
   scale: 1.04;
-}
-
-.window:hover .shot::after {
-  opacity: 0.3;
 }
 
 .window-code {
@@ -1021,11 +1008,34 @@ body::after {
 }
 
 .stack-group li {
+  display: flex;
+  align-items: center;
+  gap: 0.55em;
   font-family: var(--f-display);
   font-weight: 300;
   font-size: clamp(1.4rem, 2.2vw, 2.1rem);
   line-height: 1.2;
   letter-spacing: -0.01em;
+}
+
+.stack-logo {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 1.5em;
+  height: 1.5em;
+  font-size: 0.75em;
+  border: 1px solid rgb(3 20 10 / 0.3);
+}
+
+.stack-logo svg {
+  width: 0.95em;
+  height: 0.95em;
+}
+
+.stack-group li:hover .stack-logo {
+  color: var(--accent);
+  background: var(--on-accent);
 }
 
 .stack-note {
@@ -1478,28 +1488,27 @@ body::after {
     grid-column: 1;
   }
 
-  .job {
+  .slide {
+    position: relative;
+    top: 0;
     grid-template-columns: 1fr;
-    gap: 0.6rem;
+    min-height: 0;
+    box-shadow: none;
   }
 
-  .job-num,
-  .job-org,
-  .job-when {
-    padding: 0;
-    text-align: left;
+  .slide-art {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
   }
 
-  .job-num {
-    order: -1;
-  }
-
-  .job-art {
-    display: block;
-    margin-top: 0.8rem;
+  .slide-pic {
+    flex: none;
     aspect-ratio: 16 / 10;
-    overflow: hidden;
-    border: 1px solid var(--line);
+    min-height: 0;
+  }
+
+  .slide-bar .dim:last-child {
+    display: none;
   }
 
   .cards,

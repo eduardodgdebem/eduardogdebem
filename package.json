@@ -24,6 +24,7 @@
     "sharp": "^0.34.3"
   },
   "devDependencies": {
+    "simple-icons": "^16.36.0",
     "wrangler": "^4.95.0"
   },
   "overrides": {
