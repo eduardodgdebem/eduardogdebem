@@ -271,16 +271,31 @@ body::after {
   gap: 2rem;
   padding: 0 calc(var(--gutter) - var(--frame));
   border-bottom: 1px solid transparent;
-  transition:
-    background-color 0.4s ease,
-    border-color 0.4s ease;
+  transition: border-color 0.4s ease;
+}
+
+/* Its fill, on a layer of its own: a backdrop-filter on the bar itself would
+   become the containing block of the phone's menu sheet (position: fixed) and
+   shut the sheet up inside the bar. */
+.bar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: rgb(4 10 7 / 0.88);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  transition: opacity 0.4s ease;
 }
 
 .past-hero .bar,
 .menu-open .bar {
-  background: rgb(4 10 7 / 0.88);
   border-color: var(--line);
-  backdrop-filter: blur(8px);
+}
+
+.past-hero .bar::before,
+.menu-open .bar::before {
+  opacity: 1;
 }
 
 .brand {
@@ -1605,6 +1620,7 @@ body::after {
 
   .bar-nav ol a {
     display: flex;
+    align-items: baseline;
     width: 100%;
     padding: 0.7rem 0;
     font-size: clamp(2rem, 9vw, 2.8rem);

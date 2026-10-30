@@ -44,6 +44,8 @@ const MAX_BRIGHT = 0.5;
 /** The tone before dithering. */
 const GAMMA = 1.8;
 const GAIN = 1.1;
+/** How much of each frame, from its foot, the dots thin out over. */
+const FADE = 0.3;
 
 const BAYER = [
   [0, 32, 8, 40, 2, 34, 10, 42],
@@ -270,11 +272,15 @@ for (let y = 0; y < H * ROWS; y++) {
     const cx = Math.floor(x / DOT);
     const cy = Math.floor(y / DOT);
     const l = lum[cy * SW + cx];
+    // Toward the foot of each frame the dots thin out, so he dissolves into the night instead of stopping at an edge.
+    const fy = (cy % (H / DOT)) / (H / DOT);
+    const fade = fy < 1 - FADE ? 1 : Math.pow(Math.max(0, (1 - fy) / FADE), 1.6);
     const v =
       l < 0
         ? 0
         : Math.pow(Math.min(1, Math.max(0, (l - lo) / (hi - lo))), GAMMA) *
-          GAIN;
+          GAIN *
+          fade;
     const i = (y * W * COLS + x) * 4;
     out[i] = out[i + 1] = out[i + 2] = 255;
     out[i + 3] = v > (BAYER[cy % 8][cx % 8] + 0.5) / 64 ? 255 : 0;
