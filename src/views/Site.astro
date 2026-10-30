@@ -26,6 +26,12 @@ const roman = (n: number) => ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VII
 const sections = SECTIONS.filter((id) => id !== 'overview');
 const num = (id: (typeof SECTIONS)[number]) => roman(sections.indexOf(id as (typeof sections)[number]) + 1);
 const projects = TYPES.flatMap((type) => PROJECTS.filter((p) => p.type === type));
+// His own work gets a card each; the sites made for others share the last one.
+const own = projects.filter((p) => p.type !== 'site');
+const sites = projects.filter((p) => p.type === 'site');
+const cards = own.length + (sites.length ? 1 : 0);
+// Their stacks together, without a name another one already contains (Cloudflare, beside Cloudflare Workers).
+const siteStack = [...new Set(sites.flatMap((p) => p.stack))].filter((x, _, all) => !all.some((y) => y !== x && y.startsWith(x)));
 const TYPE_NAME = { site: { en: 'Site', pt: 'Site' }, app: { en: 'App', pt: 'App' }, language: { en: 'Language', pt: 'Linguagem' } };
 const linkLabel = (p: (typeof PROJECTS)[number]) => (p.code === p.url ? s(UI.readCode) : p.type === 'app' ? s(UI.openApp) : s(UI.visit));
 // Only the pictures on the page are credited.
@@ -109,7 +115,7 @@ const [user, host] = CONTACT.email.split('@');
         <p class="head-lede">{s(UI.projectsLede)}</p>
       </header>
       <ol class="deck">
-        {projects.map((p, i) => (
+        {own.map((p, i) => (
           <li class="slide" style={`--i:${i}`} id={p.id}>
             <a class="window" href={p.url} target="_blank" rel="noopener noreferrer" tabindex="-1" aria-hidden="true">
               <p class="window-bar"><span class="dots"><i></i><i></i><i></i></span><span>{p.preview ? p.host : p.snippet?.file}</span></p>
@@ -120,7 +126,7 @@ const [user, host] = CONTACT.email.split('@');
               )}
             </a>
             <div class="slide-body">
-              <p class="slide-count"><span>{roman(i + 1)}</span><span class="dim">/ {roman(projects.length)}</span></p>
+              <p class="slide-count"><span>{roman(i + 1)}</span><span class="dim">/ {roman(cards)}</span></p>
               <p class="slide-when">{s(TYPE_NAME[p.type])}</p>
               <h3 class="slide-title"><a href={p.url} target="_blank" rel="noopener noreferrer">{p.name}</a></h3>
               <p class="slide-text">{s(p.short)}</p>
@@ -132,6 +138,32 @@ const [user, host] = CONTACT.email.split('@');
             </div>
           </li>
         ))}
+        {sites.length > 0 && (
+          <li class="slide slide--sites" style={`--i:${own.length}`} id="sites">
+            <div class="mosaic">
+              {sites.map((p) => (
+                <a class="window" href={p.url} target="_blank" rel="noopener noreferrer" tabindex="-1" aria-hidden="true">
+                  <p class="window-bar"><span class="dots"><i></i><i></i><i></i></span><span>{p.host}</span></p>
+                  <span class="shot"><img src={p.preview} alt="" width="1280" height="800" loading="lazy" decoding="async" /></span>
+                </a>
+              ))}
+            </div>
+            <div class="slide-body">
+              <p class="slide-count"><span>{roman(cards)}</span><span class="dim">/ {roman(cards)}</span></p>
+              <p class="slide-when">{s(UI.sitesKind)}</p>
+              <h3 class="slide-title">{s(UI.sitesTitle)}</h3>
+              <ul class="site-list">
+                {sites.map((p) => (
+                  <li>
+                    <a href={p.url} target="_blank" rel="noopener noreferrer">{p.name}<Fragment set:html={ICONS.external} /></a>
+                    <span>{s(p.short)}</span>
+                  </li>
+                ))}
+              </ul>
+              <p class="slide-stack">{siteStack.join(' · ')}</p>
+            </div>
+          </li>
+        )}
       </ol>
     </section>
 

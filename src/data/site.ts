@@ -47,6 +47,8 @@ export const UI = {
   contactLede: { en: 'Email is the quickest way. I answer within a day or two.', pt: 'E-mail é o jeito mais rápido. Respondo em um ou dois dias.' },
   copy: { en: 'Copy', pt: 'Copiar' },
   copied: { en: 'Copied', pt: 'Copiado' },
+  sitesKind: { en: 'Sites', pt: 'Sites' },
+  sitesTitle: { en: 'For people I know', pt: 'Para quem eu conheço' },
   visit: { en: 'Visit the site', pt: 'Visitar o site' },
   openApp: { en: 'Open the app', pt: 'Abrir o app' },
   readCode: { en: 'Read the code', pt: 'Ler o código' },

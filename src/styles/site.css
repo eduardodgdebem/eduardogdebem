@@ -817,6 +817,82 @@ body::after {
   color: var(--ink-faint);
 }
 
+/* The sites made for others, on one card: their screenshots as a mosaic
+   (the first across the top, the others under it), and a list of them. */
+.mosaic {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1.3fr 1fr;
+  gap: 1px;
+  background: var(--line);
+  border-right: 1px solid var(--line);
+}
+
+.mosaic .window {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 0;
+}
+
+.mosaic .window-bar span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mosaic .window:first-child {
+  grid-column: 1 / -1;
+}
+
+.mosaic .shot {
+  flex: 1;
+  aspect-ratio: auto;
+  min-height: 140px;
+}
+
+.site-list {
+  margin: 1.4rem 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+
+.site-list li {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.site-list a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: fit-content;
+  font-family: var(--f-display);
+  font-size: 1.15rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  transition: color 0.25s ease;
+}
+
+.site-list a svg {
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.site-list a:hover {
+  color: var(--accent);
+}
+
+.site-list span {
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+}
+
 /* ── Projects: a deck on a panel ── */
 
 .projects {
@@ -1758,6 +1834,21 @@ body::after {
   .slide .window {
     border-right: 0;
     border-bottom: 1px solid var(--line);
+  }
+
+  .mosaic {
+    grid-template-rows: auto auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .mosaic .window {
+    border-bottom: 0;
+  }
+
+  .mosaic .shot {
+    aspect-ratio: 16 / 10;
+    min-height: 0;
   }
 
   .slide .shot,
