@@ -34,7 +34,7 @@ export const META: Record<Lang, { title: string; description: string }> = {
 export const UI = {
   role: { en: 'Full stack developer', pt: 'Desenvolvedor full stack' },
   place: { en: 'Florianópolis, Brazil', pt: 'Florianópolis, Brasil' },
-  headline: { en: 'Software Built to Hold Up', pt: 'Software Feito para Durar' },
+  headline: { en: 'Eduardo de Bem', pt: 'Eduardo de Bem' },
   lede: { en: 'I build web software end to end. Right now, on BMW Europe at Zallpy.', pt: 'Construo software para a web de ponta a ponta. Agora, na BMW Europa pela Zallpy.' },
   ctaContact: { en: 'Get in touch', pt: 'Fale comigo' },
   ctaCv: { en: 'Download CV', pt: 'Baixar currículo' },
