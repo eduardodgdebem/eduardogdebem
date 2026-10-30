@@ -70,7 +70,7 @@ export const PROJECTS: Project[] = [
     short: { en: 'A management consultancy, drawn in sharp lines.', pt: 'Uma consultoria de gestão, em linhas retas.' },
     summary: {
       en: 'A management consultancy: strategic planning, structure, processes and people. In Portuguese and English, drawn to the brand’s own blueprint of sharp lines.',
-      pt: 'Uma consultoria de gestão: planejamento estratégico, estrutura, processos e pessoas. Em português e inglês, desenhado no próprio projeto gráfico da marca, de linhas retas.',
+      pt: 'Uma consultoria de gestão: planejamento estratégico, estrutura, processos e pessoas. O site, em português e inglês, segue a identidade visual da marca, de linhas retas.',
     },
   },
   {
@@ -97,7 +97,7 @@ let MINUTE: f64 = 60000.0;`,
     short: { en: 'A focus timer that builds a city while you work.', pt: 'Um timer de foco que constrói uma cidade enquanto você trabalha.' },
     summary: {
       en: 'A focus timer that builds a city while you work: the longer the session, the bigger the building, and giving up leaves a ruin. Written in Ode, compiled to WebAssembly, drawn with WebGL2; it installs and runs offline.',
-      pt: 'Um timer de foco que constrói uma cidade enquanto você trabalha: quanto mais longa a sessão, maior o prédio, e desistir deixa uma ruína. Escrito em Ode, compilado para WebAssembly, desenhado com WebGL2; instala e funciona offline.',
+      pt: 'Um timer de foco que constrói uma cidade enquanto você trabalha: quanto mais longa a sessão, maior o prédio, e desistir deixa uma ruína. Escrito em Ode, compilado para WebAssembly, renderizado com WebGL2; pode ser instalado e funciona offline.',
     },
   },
   {

@@ -20,9 +20,9 @@ export const NAV: Record<Section, T> = {
 
 export const META: Record<Lang, { title: string; description: string }> = {
   en: {
-    title: 'Eduardo de Bem — Full Stack Developer in Florianópolis',
+    title: 'Eduardo de Bem — Full-Stack Developer in Florianópolis',
     description:
-      'Eduardo de Bem, full stack developer in Florianópolis, Brazil. TypeScript, Angular, React, Node.js and .NET; an ECU development tool for BMW Europe at Zallpy.',
+      'Eduardo de Bem, full-stack developer in Florianópolis, Brazil. TypeScript, Angular, React, Node.js and .NET; an ECU development tool for BMW Europe at Zallpy.',
   },
   pt: {
     title: 'Eduardo de Bem — Desenvolvedor Full Stack em Florianópolis',
@@ -32,18 +32,18 @@ export const META: Record<Lang, { title: string; description: string }> = {
 };
 
 export const UI = {
-  role: { en: 'Full stack developer', pt: 'Desenvolvedor full stack' },
+  role: { en: 'Full-stack developer', pt: 'Desenvolvedor full stack' },
   place: { en: 'Florianópolis, Brazil', pt: 'Florianópolis, Brasil' },
   headline: { en: 'Eduardo de Bem', pt: 'Eduardo de Bem' },
   lede: { en: 'I build web software end to end. Right now, on BMW Europe at Zallpy.', pt: 'Construo software para a web de ponta a ponta. Agora, na BMW Europa pela Zallpy.' },
   ctaContact: { en: 'Get in touch', pt: 'Fale comigo' },
   ctaCv: { en: 'Download CV', pt: 'Baixar currículo' },
   workTitle: { en: 'Where I’ve worked', pt: 'Onde trabalhei' },
-  projectsTitle: { en: 'Things I’ve Made', pt: 'Coisas que Fiz' },
+  projectsTitle: { en: 'Things I’ve made', pt: 'Coisas que fiz' },
   projectsLede: { en: 'A language and an app of my own, then sites for people I know.', pt: 'Uma linguagem e um app meus, depois sites para pessoas que conheço.' },
   stackTitle: { en: 'What I work with', pt: 'Com o que trabalho' },
-  aboutTitle: { en: 'About Me', pt: 'Sobre Mim' },
-  contactTitle: { en: 'Get in Touch', pt: 'Fale Comigo' },
+  aboutTitle: { en: 'About me', pt: 'Sobre mim' },
+  contactTitle: { en: 'Get in touch', pt: 'Fale comigo' },
   contactLede: { en: 'Email is the quickest way. I answer within a day or two.', pt: 'E-mail é o jeito mais rápido. Respondo em um ou dois dias.' },
   copy: { en: 'Copy', pt: 'Copiar' },
   copied: { en: 'Copied', pt: 'Copiado' },
@@ -58,11 +58,14 @@ export const UI = {
   festina: { en: 'Make haste slowly. Augustus’ motto, and a fair rule for software.', pt: 'Apressa-te devagar. O lema de Augusto, e uma boa regra para software.' },
   motto: { en: 'Built to last, as the Romans built.', pt: 'Feito para durar, como construíam os romanos.' },
   close: { en: 'Close', pt: 'Fechar' },
+  sections: { en: 'Sections', pt: 'Seções' },
+  email: { en: 'Email', pt: 'E-mail' },
+  previewAlt: { en: 'Eduardo de Bem’s site: his name beside a statue of Julius Caesar, printed in green on black.', pt: 'O site de Eduardo de Bem: o nome ao lado de uma estátua de Júlio César, impressa em verde sobre preto.' },
   explore: { en: 'Explore', pt: 'Explorar' },
   elsewhere: { en: 'Elsewhere', pt: 'Em outros lugares' },
   credits: { en: 'Pictures', pt: 'Imagens' },
   language: { en: 'Language', pt: 'Idioma' },
-  notFound: { en: 'Nothing Here but Marble', pt: 'Só Mármore Aqui' },
+  notFound: { en: 'Nothing here but marble', pt: 'Aqui só há mármore' },
   notFoundText: { en: 'This page doesn’t exist, or doesn’t any more.', pt: 'Esta página não existe, ou não existe mais.' },
   back: { en: 'Back to the start', pt: 'Voltar ao início' },
 } satisfies Record<string, T>;
@@ -88,12 +91,12 @@ export const WORK: Job[] = [
     org: 'Zallpy · BMW USA',
     title: { en: 'A financial platform', pt: 'Uma plataforma financeira' },
     when: { en: 'Before that', pt: 'Antes disso' },
-    summary: { en: 'An Angular front end, from over ten seconds to load to under one.', pt: 'Um front-end em Angular, de mais de dez segundos para carregar a menos de um.' },
+    summary: { en: 'An Angular front end whose load time went from over ten seconds to under one.', pt: 'Um front-end em Angular que passou de mais de dez segundos para menos de um para carregar.' },
     stack: ['Angular', '.NET', 'MuleSoft'],
   },
   {
     org: 'Dema',
-    title: { en: 'Social programs, found', pt: 'Programas sociais, encontrados' },
+    title: { en: 'Finding social programs', pt: 'Encontrar programas sociais' },
     when: { en: 'Also', pt: 'Também' },
     summary: { en: 'Showing people in Brazil the social programs they can get.', pt: 'Mostra às pessoas no Brasil os programas sociais a que têm direito.' },
     stack: ['React', 'NestJS', 'RabbitMQ', 'PostgreSQL'],
@@ -116,7 +119,7 @@ export const STACK: { group: T; items: string[] }[] = [
 
 export const ABOUT: Record<Lang, string[]> = {
   en: [
-    'A full stack developer in Florianópolis, mostly in TypeScript. I started at Zallpy as an intern in 2024; I’m finishing Computer Science at UNISUL this year.',
+    'A full-stack developer in Florianópolis, working mostly in TypeScript. I started at Zallpy as an intern in 2024; I’m finishing my Computer Science degree at UNISUL this year.',
   ],
   pt: [
     'Desenvolvedor full stack em Florianópolis, principalmente em TypeScript. Entrei na Zallpy como estagiário em 2024; termino Ciência da Computação na UNISUL este ano.',
@@ -124,8 +127,8 @@ export const ABOUT: Record<Lang, string[]> = {
 }
 
 export const NOTES: { head: T; items: T }[] = [
-  { head: { en: 'Off the clock', pt: 'Fora do trabalho' }, items: { en: 'Formula 1 · MMA · Sci-fi · The violin, once', pt: 'Fórmula 1 · MMA · Ficção científica · O violino, um dia' } },
-  { head: { en: 'Languages', pt: 'Línguas' }, items: { en: 'Portuguese · English · Spanish', pt: 'Português · Inglês · Espanhol' } },
+  { head: { en: 'Off the clock', pt: 'Fora do trabalho' }, items: { en: 'Formula 1 · MMA · Sci-fi · The violin, once', pt: 'Fórmula 1 · MMA · Ficção científica · O violino, já faz tempo' } },
+  { head: { en: 'Languages', pt: 'Idiomas' }, items: { en: 'Portuguese · English · Spanish', pt: 'Português · Inglês · Espanhol' } },
 ]
 
 export const CONTACT = {

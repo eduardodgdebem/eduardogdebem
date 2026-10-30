@@ -55,7 +55,7 @@ const [user, host] = CONTACT.email.split('@');
       <span class="brand-mark"><Logo size={18} /></span>
       <span class="brand-name">Eduardo de Bem</span>
     </a>
-    <nav class="bar-nav" id="bar-nav" aria-label="Sections">
+    <nav class="bar-nav" id="bar-nav" aria-label={s(UI.sections)}>
       <ol>
         {sections.map((id) => (
           <li><a href={`#${id}`} data-nav={id}><span class="bar-num">{num(id)}</span>{s(NAV[id])}</a></li>
@@ -89,7 +89,7 @@ const [user, host] = CONTACT.email.split('@');
           <circle cx="500" cy="430" r="250" />
         </svg>
         <figure class="art caesar caesar-turn" data-turn="/art/caesar-turn.png" data-frames="36" data-cols="6">
-          <div class="art-ink" role="img" aria-label={`${ART['caesar-turn'].name}, ${ART['caesar-turn'].where}`} style="--src:url(/art/caesar-still.png)"></div>
+          <div class="art-ink" role="img" aria-label={`${s(ART['caesar-turn'].name)}, ${s(ART['caesar-turn'].where)}`} style="--src:url(/art/caesar-still.png)"></div>
         </figure>
       </div>
       <h1 class="hero-title">
@@ -106,7 +106,7 @@ const [user, host] = CONTACT.email.split('@');
 
     <!-- Projects: a deck of cards, each held under the bar until the next one covers it -->
     <section class="section projects" id="projects" data-section="projects">
-      <div class="head-art" aria-hidden="true"><Art id="melencolia" /></div>
+      <div class="head-art" aria-hidden="true"><Art id="melencolia" lang={lang} /></div>
       <header class="head reveal">
         <p class="head-num">{num('projects')}</p>
         <h2 class="head-title">{s(UI.projectsTitle)}</h2>
@@ -174,13 +174,13 @@ const [user, host] = CONTACT.email.split('@');
         <p class="interlude-latin reveal">Festina<br /><em>lente.</em></p>
         <p class="interlude-gloss reveal">{s(UI.festina)}</p>
       </div>
-      <p class="interlude-caption">Laocoön and His Sons · Vatican Museums</p>
+      <p class="interlude-caption">{s(ART.laocoon.name)} · {s(ART.laocoon.where)}</p>
     </section>
     <div class="key" aria-hidden="true"></div>
 
     <!-- About: who, where I've worked, what with -->
     <section class="section about" id="about" data-section="about">
-      <div class="about-art reveal"><Art id="gladiator-head" caption /></div>
+      <div class="about-art reveal"><Art id="gladiator-head" caption lang={lang} /></div>
       <div class="about-text">
         <header class="head head--tight reveal">
           <p class="head-num">{num('about')}</p>
@@ -246,8 +246,8 @@ const [user, host] = CONTACT.email.split('@');
           <circle cx="200" cy="200" r="140" class="orbit-dash" />
           <path d="M200 0V400M0 200H400" />
         </svg>
-        <Art id="mercury" class="mercury" />
-        <figcaption><span>{ART.mercury.name}</span><span>{ART.mercury.where}</span></figcaption>
+        <Art id="mercury" class="mercury" lang={lang} />
+        <figcaption><span>{s(ART.mercury.name)}</span><span>{s(ART.mercury.where)}</span></figcaption>
       </figure>
     </section>
   </main>
@@ -262,7 +262,7 @@ const [user, host] = CONTACT.email.split('@');
         <a class="brand" href={PATHS[lang]}><span class="brand-mark"><Logo size={18} /></span><span class="brand-name">Eduardo de Bem</span></a>
         <p class="foot-motto">{s(UI.role)} · {s(UI.place)}</p>
       </div>
-      <nav class="foot-col" aria-label="Sections">
+      <nav class="foot-col" aria-label={s(UI.sections)}>
         <p class="foot-head">{s(UI.explore)}</p>
         <ul>{sections.map((id) => <li><a href={`#${id}`}>{s(NAV[id])}</a></li>)}</ul>
       </nav>
@@ -271,7 +271,7 @@ const [user, host] = CONTACT.email.split('@');
         <ul>
           <li><a href={CONTACT.github} target="_blank" rel="noopener noreferrer">GitHub</a></li>
           <li><a href={CONTACT.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a></li>
-          <li><a href={`mailto:${CONTACT.email}`}>Email</a></li>
+          <li><a href={`mailto:${CONTACT.email}`}>{s(UI.email)}</a></li>
           <li><a href={CV_PDF} download>{s(UI.ctaCv)}</a></li>
         </ul>
       </div>
@@ -287,7 +287,7 @@ const [user, host] = CONTACT.email.split('@');
       <p class="foot-head">{s(UI.credits)}</p>
       <ul class="credits">
         {credited.map(([, a]) => (
-          <li>{a.source ? <a href={a.source} target="_blank" rel="noopener noreferrer">{a.name}</a> : a.name}<span class="dim"> — {a.where}. {a.credit}.</span></li>
+          <li>{a.source ? <a href={a.source} target="_blank" rel="noopener noreferrer">{s(a.name)}</a> : s(a.name)}<span class="dim"> — {s(a.where)}. {s(a.credit)}.</span></li>
         ))}
       </ul>
     </div>

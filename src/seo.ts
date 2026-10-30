@@ -13,7 +13,7 @@ export const PERSON = {
   url: `${SITE_URL}/`,
   image: `${SITE_URL}/og.jpg`,
   email: 'mailto:eduardogdebem@gmail.com',
-  jobTitle: 'Full Stack Developer',
+  jobTitle: 'Full-Stack Developer',
   worksFor: { '@type': 'Organization', name: 'Zallpy' },
   alumniOf: { '@type': 'CollegeOrUniversity', name: 'UNISUL' },
   address: { '@type': 'PostalAddress', addressLocality: 'Florianópolis', addressRegion: 'SC', addressCountry: 'BR' },
