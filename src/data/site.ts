@@ -22,12 +22,12 @@ export const META: Record<Lang, { title: string; description: string }> = {
   en: {
     title: 'Eduardo de Bem — Full Stack Developer in Florianópolis',
     description:
-      'Eduardo de Bem, full stack developer in Florianópolis, Brazil. TypeScript, Angular, React, Node.js and .NET; data pipelines for BMW Europe at Zallpy.',
+      'Eduardo de Bem, full stack developer in Florianópolis, Brazil. TypeScript, Angular, React, Node.js and .NET; an ECU development tool for BMW Europe at Zallpy.',
   },
   pt: {
     title: 'Eduardo de Bem — Desenvolvedor Full Stack em Florianópolis',
     description:
-      'Eduardo de Bem, desenvolvedor full stack em Florianópolis. TypeScript, Angular, React, Node.js e .NET; pipelines de dados para a BMW Europa na Zallpy.',
+      'Eduardo de Bem, desenvolvedor full stack em Florianópolis. TypeScript, Angular, React, Node.js e .NET; uma ferramenta de desenvolvimento de ECUs para a BMW Europa na Zallpy.',
   },
 };
 
@@ -79,9 +79,9 @@ export interface Job {
 export const WORK: Job[] = [
   {
     org: 'Zallpy · BMW Europe',
-    title: { en: 'Data pipelines', pt: 'Pipelines de dados' },
+    title: { en: 'An ECU development tool', pt: 'Uma ferramenta de desenvolvimento de ECUs' },
     when: { en: 'Now', pt: 'Agora' },
-    summary: { en: 'Data pipelines and the background jobs around them.', pt: 'Pipelines de dados e os jobs em segundo plano em volta deles.' },
+    summary: { en: 'A tool for developing the cars’ ECUs, their electronic control units.', pt: 'Uma ferramenta para o desenvolvimento das ECUs dos carros, as unidades de controle eletrônico.' },
     stack: ['Node.js', 'PostgreSQL', 'BullMQ'],
   },
   {
