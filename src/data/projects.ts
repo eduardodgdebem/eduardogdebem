@@ -24,6 +24,8 @@ export interface Project {
   stack: string[];
   kind: Record<Lang, string>;
   summary: Record<Lang, string>;
+  /** One line, for the page. */
+  short: Record<Lang, string>;
   note?: Record<Lang, string>;
   /** A few real lines of its source, set in a window over an engraving. */
   snippet?: { file: string; code: string };
@@ -41,6 +43,7 @@ export const PROJECTS: Project[] = [
     type: 'site',
     stack: ['Astro', 'Tailwind CSS', 'Cloudflare Workers'],
     kind: { en: 'A salon’s site', pt: 'Site de um salão' },
+    short: { en: 'A salon in Fort Myers, in three languages.', pt: 'Um salão em Fort Myers, em três línguas.' },
     summary: {
       en: 'For a hair salon in Fort Myers, Florida, with 25 years behind it in Criciúma. In English, Portuguese and Spanish, its content kept in plain files, no CMS.',
       pt: 'Para um salão em Fort Myers, na Flórida, com 25 anos de história em Criciúma. Em inglês, português e espanhol, com o conteúdo em arquivos simples, sem CMS.',
@@ -57,6 +60,7 @@ export const PROJECTS: Project[] = [
     type: 'site',
     stack: ['Astro', 'Tailwind CSS', 'GSAP', 'Cloudflare Workers'],
     kind: { en: 'A chain of salons', pt: 'Uma rede de salões' },
+    short: { en: 'Four salons in Criciúma and Içara.', pt: 'Quatro salões em Criciúma e Içara.' },
     summary: {
       en: 'Four salons in Criciúma and Içara: their services, bridal packages, and each location with its map and WhatsApp. Ratings come from Google at build time.',
       pt: 'Quatro salões em Criciúma e Içara: os serviços, os pacotes de noiva e cada unidade com mapa e WhatsApp. As avaliações vêm do Google na hora do build.',
@@ -74,6 +78,7 @@ export const PROJECTS: Project[] = [
     type: 'site',
     stack: ['Astro', 'Tailwind CSS', 'GSAP', 'Cloudflare'],
     kind: { en: 'A consultancy’s site', pt: 'Site de uma consultoria' },
+    short: { en: 'A management consultancy, drawn in sharp lines.', pt: 'Uma consultoria de gestão, em linhas retas.' },
     summary: {
       en: 'A management consultancy: strategic planning, structure, processes and people. In Portuguese and English, drawn to the brand’s own blueprint of sharp lines.',
       pt: 'Uma consultoria de gestão: planejamento estratégico, estrutura, processos e pessoas. Em português e inglês, desenhado no próprio projeto gráfico da marca, de linhas retas.',
@@ -102,6 +107,7 @@ export const PROJECTS: Project[] = [
 let MINUTE: f64 = 60000.0;`,
     },
     kind: { en: 'A focus timer', pt: 'Um timer de foco' },
+    short: { en: 'A focus timer that builds a city while you work.', pt: 'Um timer de foco que constrói uma cidade enquanto você trabalha.' },
     summary: {
       en: 'A focus timer that builds a city while you work: the longer the session, the bigger the building, and giving up leaves a ruin. Written in Ode, compiled to WebAssembly, drawn with WebGL2; it installs and runs offline.',
       pt: 'Um timer de foco que constrói uma cidade enquanto você trabalha: quanto mais longa a sessão, maior o prédio, e desistir deixa uma ruína. Escrito em Ode, compilado para WebAssembly, desenhado com WebGL2; instala e funciona offline.',
@@ -128,6 +134,7 @@ let MINUTE: f64 = 60000.0;`,
 }`,
     },
     kind: { en: 'A programming language', pt: 'Uma linguagem de programação' },
+    short: { en: 'A small language that compiles itself.', pt: 'Uma linguagem pequena que compila a si mesma.' },
     summary: {
       en: 'A small, statically typed language that compiles to native code through LLVM. Its compiler is written in Ode and compiles itself: the snake with its tail in its mouth.',
       pt: 'Uma linguagem pequena, de tipagem estática, que compila para código nativo via LLVM. O compilador é escrito em Ode e compila a si mesmo: a serpente com a cauda na boca.',

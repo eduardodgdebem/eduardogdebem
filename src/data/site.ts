@@ -35,25 +35,16 @@ export const UI = {
   role: { en: 'Full stack developer', pt: 'Desenvolvedor full stack' },
   place: { en: 'Florianópolis, Brazil', pt: 'Florianópolis, Brasil' },
   headline: { en: 'Software Built to Hold Up', pt: 'Software Feito para Durar' },
-  lede: {
-    en: 'I build web software end to end, from the interface people touch to the pipelines they never see. Right now, on BMW Europe at Zallpy. Before that, a financial platform I took from ten seconds to load to under one.',
-    pt: 'Construo software para a web de ponta a ponta, da interface que as pessoas tocam aos pipelines que elas nunca veem. Agora, na BMW Europa pela Zallpy. Antes, uma plataforma financeira que levei de dez segundos para carregar a menos de um.',
-  },
+  lede: { en: 'I build web software end to end. Right now, on BMW Europe at Zallpy.', pt: 'Construo software para a web de ponta a ponta. Agora, na BMW Europa pela Zallpy.' },
   ctaContact: { en: 'Get in touch', pt: 'Fale comigo' },
   ctaCv: { en: 'Download CV', pt: 'Baixar currículo' },
   workTitle: { en: 'Where I’ve worked', pt: 'Onde trabalhei' },
   projectsTitle: { en: 'Things I’ve Made', pt: 'Coisas que Fiz' },
-  projectsLede: {
-    en: 'Sites for people I know, and a couple of things for myself: a programming language, and a city that grows while you focus.',
-    pt: 'Sites para pessoas que conheço, e algumas coisas para mim: uma linguagem de programação e uma cidade que cresce enquanto você foca.',
-  },
+  projectsLede: { en: 'Sites for people I know, and a few things for myself.', pt: 'Sites para pessoas que conheço, e algumas coisas para mim.' },
   stackTitle: { en: 'What I work with', pt: 'Com o que trabalho' },
   aboutTitle: { en: 'About Me', pt: 'Sobre Mim' },
   contactTitle: { en: 'Get in Touch', pt: 'Fale Comigo' },
-  contactLede: {
-    en: 'For a role, a project, or a question about something I made, email is the quickest way. I answer within a day or two.',
-    pt: 'Para uma vaga, um projeto ou uma pergunta sobre algo que fiz, e-mail é o jeito mais rápido. Respondo em um ou dois dias.',
-  },
+  contactLede: { en: 'Email is the quickest way. I answer within a day or two.', pt: 'E-mail é o jeito mais rápido. Respondo em um ou dois dias.' },
   copy: { en: 'Copy', pt: 'Copiar' },
   copied: { en: 'Copied', pt: 'Copiado' },
   visit: { en: 'Visit the site', pt: 'Visitar o site' },
@@ -87,40 +78,28 @@ export const WORK: Job[] = [
     org: 'Zallpy · BMW Europe',
     title: { en: 'Data pipelines', pt: 'Pipelines de dados' },
     when: { en: 'Now', pt: 'Agora' },
-    summary: {
-      en: 'Back-end pipelines that pull data in, transform it and run the background jobs around it.',
-      pt: 'Pipelines de back-end que trazem os dados, transformam e rodam os jobs em segundo plano em volta deles.',
-    },
+    summary: { en: 'Data pipelines and the background jobs around them.', pt: 'Pipelines de dados e os jobs em segundo plano em volta deles.' },
     stack: ['Node.js', 'PostgreSQL', 'BullMQ'],
   },
   {
     org: 'Zallpy · BMW USA',
     title: { en: 'A financial platform', pt: 'Uma plataforma financeira' },
     when: { en: 'Before that', pt: 'Antes disso' },
-    summary: {
-      en: 'The Angular front end, as micro frontends on top of .NET and MuleSoft services. The part I’m proudest of is the load time: from over ten seconds to under one.',
-      pt: 'O front-end em Angular, como micro frontends sobre serviços em .NET e MuleSoft. A parte de que mais me orgulho é o tempo de carregamento: de mais de dez segundos para menos de um.',
-    },
+    summary: { en: 'An Angular front end, from over ten seconds to load to under one.', pt: 'Um front-end em Angular, de mais de dez segundos para carregar a menos de um.' },
     stack: ['Angular', '.NET', 'MuleSoft'],
   },
   {
     org: 'Dema',
     title: { en: 'Social programs, found', pt: 'Programas sociais, encontrados' },
     when: { en: 'Also', pt: 'Também' },
-    summary: {
-      en: 'A platform that shows people in Brazil the social programs they can get, and suggests careers from a personality test and what’s on offer in their city.',
-      pt: 'Uma plataforma que mostra às pessoas no Brasil os programas sociais a que têm direito e sugere carreiras a partir de um teste de personalidade e do que a cidade delas oferece.',
-    },
+    summary: { en: 'Showing people in Brazil the social programs they can get.', pt: 'Mostra às pessoas no Brasil os programas sociais a que têm direito.' },
     stack: ['React', 'NestJS', 'RabbitMQ', 'PostgreSQL'],
   },
   {
     org: 'eTopocart',
     title: { en: 'Geoprocessing for city halls', pt: 'Geoprocessamento para prefeituras' },
     when: { en: 'First job', pt: 'Primeiro emprego' },
-    summary: {
-      en: 'My first job as a developer, on a platform city halls around Brazil use: faster map views, tables that hold ten thousand rows without choking, and reports moved onto AWS Lambda.',
-      pt: 'Meu primeiro emprego como desenvolvedor, numa plataforma usada por prefeituras de todo o Brasil: mapas mais rápidos, tabelas que aguentam dez mil linhas sem travar e relatórios levados para o AWS Lambda.',
-    },
+    summary: { en: 'Geoprocessing for city halls around Brazil.', pt: 'Geoprocessamento para prefeituras de todo o Brasil.' },
     stack: ['Angular', 'AWS Lambda', 'Maps'],
   },
 ];
@@ -134,23 +113,17 @@ export const STACK: { group: T; items: string[] }[] = [
 
 export const ABOUT: Record<Lang, string[]> = {
   en: [
-    'I’m Eduardo, a full stack developer in Florianópolis. I started at Zallpy as a front-end intern in 2024 and I’m now a mid-level developer, working across the whole stack, mostly in TypeScript.',
-    'In 2023 I took a year off and lived between the US and Europe, mostly to get my English where I wanted it. I’m finishing Computer Science at UNISUL this year, and I volunteered on TEKTAI, an augmented reality project for its students, which is where I learned WebGL.',
-    'I played the violin for years. I don’t anymore, but I still listen to a lot of music.',
+    'A full stack developer in Florianópolis, mostly in TypeScript. I started at Zallpy as an intern in 2024; I’m finishing Computer Science at UNISUL this year.',
   ],
   pt: [
-    'Sou o Eduardo, desenvolvedor full stack em Florianópolis. Entrei na Zallpy como estagiário de front-end em 2024 e hoje sou desenvolvedor pleno, trabalhando em toda a stack, principalmente em TypeScript.',
-    'Em 2023 tirei um ano e morei entre os Estados Unidos e a Europa, principalmente para deixar meu inglês onde eu queria. Termino Ciência da Computação na UNISUL este ano, e fui voluntário no TEKTAI, um projeto de realidade aumentada para os estudantes de lá, onde aprendi WebGL.',
-    'Toquei violino por anos. Não toco mais, mas ainda escuto muita música.',
+    'Desenvolvedor full stack em Florianópolis, principalmente em TypeScript. Entrei na Zallpy como estagiário em 2024; termino Ciência da Computação na UNISUL este ano.',
   ],
-};
+}
 
 export const NOTES: { head: T; items: T }[] = [
-  { head: { en: 'Reading', pt: 'Leitura' }, items: { en: 'Sci-fi · Fantasy · Whatever catches me', pt: 'Ficção científica · Fantasia · O que me fisgar' } },
-  { head: { en: 'Racing', pt: 'Corridas' }, items: { en: 'Formula 1 · Constructors over drivers', pt: 'Fórmula 1 · Construtores acima de pilotos' } },
-  { head: { en: 'Fighting', pt: 'Lutas' }, items: { en: 'MMA · Boxing', pt: 'MMA · Boxe' } },
+  { head: { en: 'Off the clock', pt: 'Fora do trabalho' }, items: { en: 'Formula 1 · MMA · Sci-fi · The violin, once', pt: 'Fórmula 1 · MMA · Ficção científica · O violino, um dia' } },
   { head: { en: 'Languages', pt: 'Línguas' }, items: { en: 'Portuguese · English · Spanish', pt: 'Português · Inglês · Espanhol' } },
-];
+]
 
 export const CONTACT = {
   email: 'eduardogdebem@gmail.com',

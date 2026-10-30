@@ -416,8 +416,8 @@ body::after {
   height: 120%;
   fill: none;
   stroke: var(--art-ink);
-  stroke-width: 0.6;
-  opacity: 0.22;
+  stroke-width: 0.5;
+  opacity: 0.12;
 }
 
 .rays-dash {
@@ -476,11 +476,13 @@ body::after {
   align-items: flex-end;
   justify-content: space-between;
   gap: 1.6rem 3rem;
-  padding: clamp(24px, 4vh, 44px) 0 clamp(24px, 4vh, 40px);
+  padding: clamp(32px, 5vh, 56px) 0 clamp(48px, 9vh, 96px);
 }
 
 .lede {
-  max-width: 34rem;
+  max-width: 24rem;
+  font-size: 1rem;
+  color: var(--ink-soft);
 }
 
 .actions {
@@ -549,7 +551,7 @@ body::after {
 
 .section {
   position: relative;
-  padding: clamp(90px, 14vh, 160px) var(--gutter);
+  padding: clamp(120px, 20vh, 240px) var(--gutter);
 }
 
 .head {
@@ -558,7 +560,7 @@ body::after {
   grid-template-columns: minmax(5rem, 1fr) minmax(0, 5fr);
   align-items: end;
   gap: 0.4rem 2rem;
-  margin-bottom: clamp(40px, 7vh, 80px);
+  margin-bottom: clamp(60px, 10vh, 120px);
 }
 
 .head-num {
@@ -612,12 +614,12 @@ body::after {
 
 .deck {
   display: grid;
-  gap: 4vh;
+  gap: 14vh;
 }
 
 .slide {
   position: sticky;
-  top: calc(var(--bar) + 24px + var(--i) * 22px);
+  top: calc(var(--bar) + 40px + var(--i) * 18px);
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
   min-height: min(72vh, 640px);
@@ -644,7 +646,7 @@ body::after {
 .slide-body {
   display: flex;
   flex-direction: column;
-  padding: clamp(24px, 3.4vw, 52px);
+  padding: clamp(32px, 4.4vw, 72px);
 }
 
 .slide-count {
@@ -699,9 +701,16 @@ body::after {
 }
 
 .slide-text {
-  max-width: 34rem;
-  margin-top: 1rem;
+  max-width: 26rem;
+  margin-top: 1.2rem;
+  font-size: 1.05rem;
   color: var(--ink-soft);
+}
+
+.slide-stack {
+  margin-top: 1.6rem;
+  font-size: 0.74rem;
+  color: var(--ink-faint);
 }
 
 /* ── Projects: a deck on a panel ── */
@@ -815,28 +824,23 @@ body::after {
   color: var(--ink-faint);
 }
 
-/* ── A painting across the screen, a motto over it ── */
+/* ── A photograph across the screen, in greys with a heavy grain ── */
 
 .interlude {
   position: relative;
   display: grid;
   place-items: center;
-  min-height: 90vh;
-  padding: 0 var(--gutter);
+  min-height: 110vh;
   overflow: hidden;
 }
 
-.interlude-art {
+.interlude-photo {
   position: absolute;
-  inset: -12% 0;
-}
-
-.interlude-art .art-ink {
-  height: 100%;
-  aspect-ratio: auto !important;
-  -webkit-mask-size: cover;
-  mask-size: cover;
-  opacity: 0.55;
+  inset: -10% 0;
+  width: 100%;
+  height: 120%;
+  object-fit: cover;
+  object-position: center 30%;
 }
 
 .interlude::before {
@@ -844,12 +848,13 @@ body::after {
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: linear-gradient(var(--night), transparent 30%, transparent 70%, var(--night));
+  background: linear-gradient(var(--night), transparent 25%, transparent 70%, var(--night));
 }
 
 .interlude-text {
   position: relative;
   z-index: 2;
+  padding: 0 var(--gutter);
   text-align: center;
 }
 
@@ -860,24 +865,20 @@ body::after {
   line-height: 0.86;
   letter-spacing: -0.03em;
   text-transform: uppercase;
-  text-shadow: 0 0 40px var(--night);
+  mix-blend-mode: difference;
 }
 
 .interlude-latin em {
   font-style: normal;
   color: var(--accent);
-}
-
-.interlude-note {
-  margin-top: 1.4rem;
-  font-size: 0.85rem;
+  mix-blend-mode: normal;
 }
 
 .interlude-caption {
   position: absolute;
   z-index: 2;
   left: var(--gutter);
-  bottom: 22px;
+  bottom: 28px;
   font-size: 0.66rem;
   color: var(--ink-faint);
 }
@@ -901,9 +902,10 @@ body::after {
 }
 
 .about-para {
-  max-width: 38rem;
+  max-width: 34rem;
   margin-bottom: 1rem;
-  font-size: 1rem;
+  font-size: 1.15rem;
+  line-height: 1.7;
 }
 
 .notes {
@@ -929,7 +931,7 @@ body::after {
 
 /* Inside about: where I've worked, and what with. */
 .sub {
-  margin: 3rem 0 1rem;
+  margin: 4.4rem 0 1.4rem;
   font-family: var(--f-display);
   font-size: 0.86rem;
   font-weight: 400;
@@ -946,7 +948,7 @@ body::after {
   display: grid;
   grid-template-columns: 9rem minmax(0, 1fr);
   gap: 1rem;
-  padding: 1rem 0;
+  padding: 1.3rem 0;
   border-bottom: 1px solid var(--line);
 }
 
@@ -1105,10 +1107,10 @@ body::after {
 
 .ways a {
   display: grid;
-  grid-template-columns: 1.6rem minmax(0, 0.7fr) minmax(0, 1fr) auto;
+  grid-template-columns: 1.6rem minmax(0, 1fr) auto;
   align-items: center;
   gap: 1rem;
-  padding: 1rem 0.2rem;
+  padding: 1.2rem 0.2rem;
   border-bottom: 1px solid var(--line);
   text-decoration: none;
   transition:
@@ -1200,7 +1202,8 @@ body::after {
 /* ── Footer: columns with room round them ── */
 
 .foot {
-  padding: clamp(80px, 12vh, 140px) var(--gutter) 0;
+  position: relative;
+  padding: 0 var(--gutter);
   border-top: 1px solid var(--line);
   background: var(--night-2);
   font-size: 0.8rem;
@@ -1208,7 +1211,37 @@ body::after {
   overflow: hidden;
 }
 
+/* A closing line, as large as a section's head, and the address. */
+.foot-close {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: clamp(100px, 16vh, 180px) 0 clamp(70px, 11vh, 120px);
+}
+
+.foot-close-title {
+  max-width: 12ch;
+  font-family: var(--f-display);
+  font-weight: 300;
+  font-size: clamp(2.6rem, 6vw, 6rem);
+  line-height: 0.92;
+  letter-spacing: -0.025em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.foot-close .button {
+  text-transform: none;
+  letter-spacing: 0.02em;
+  font-size: 1rem;
+  padding: 0.8rem 1.1rem;
+}
+
 .foot-grid {
+  padding-top: clamp(50px, 8vh, 90px);
+  border-top: 1px solid var(--line);
   display: grid;
   grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr));
   gap: clamp(32px, 5vw, 80px);
@@ -1216,13 +1249,9 @@ body::after {
 }
 
 .foot-motto {
-  max-width: 22rem;
-  margin-top: 1.4rem;
-  font-family: var(--f-display);
-  font-weight: 300;
-  font-size: clamp(1.4rem, 2vw, 1.9rem);
-  line-height: 1.15;
-  color: var(--ink);
+  margin-top: 1.2rem;
+  font-size: 0.78rem;
+  color: var(--ink-faint);
 }
 
 .foot-head {
@@ -1290,18 +1319,21 @@ body::after {
   color: var(--accent);
 }
 
-/* The name, as wide as the page, cut by its foot. */
+/* The name, as wide as the page, cut out of the grainy photograph and sunk into the page's foot. */
 .foot-name {
-  margin: clamp(24px, 4vh, 48px) 0 calc(-0.2em - var(--frame));
+  margin: clamp(30px, 6vh, 70px) calc(-1 * var(--gutter)) calc(-0.16em - var(--frame));
+  padding: 0 var(--gutter);
   font-family: var(--f-display);
-  font-weight: 300;
-  font-size: 15.6vw;
-  line-height: 0.8;
-  letter-spacing: -0.04em;
+  font-weight: 400;
+  font-size: 15.2vw;
+  line-height: 0.82;
+  letter-spacing: -0.045em;
   text-transform: uppercase;
   white-space: nowrap;
-  color: var(--night);
-  -webkit-text-stroke: 1px var(--line-2);
+  color: transparent;
+  background: url("/art/laocoon-strip.jpg") center / 100% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
 }
 
 /* ── Motion ── */
@@ -1349,7 +1381,7 @@ body::after {
       view-timeline: --band block;
     }
 
-    .interlude-art {
+    .interlude-photo {
       animation: drift linear both;
       animation-timeline: --band;
     }

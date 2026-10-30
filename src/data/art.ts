@@ -19,8 +19,8 @@ export const ART = {
   caesar: { name: 'Julius Caesar', where: 'The Tusculum portrait · Turin', w: 1400, h: 1746, credit: 'Photo: Marie-Lan Taÿ Pamart, public domain', source: 'https://commons.wikimedia.org/wiki/File:Head_of_Julius_Caesar_from_Tusculum_MAntTorino_2089_n02.jpg' },
   melencolia: { name: 'Melencolia I', where: 'Albrecht Dürer, 1514', w: 1000, h: 1322, credit: 'The Met, CC0', source: 'https://commons.wikimedia.org/wiki/File:Melencolia_I_MET_DP815743.jpg' },
   'gladiator-head': { name: 'The Borghese Gladiator', where: 'Agasias of Ephesus · Louvre, Paris', w: 900, h: 1062, credit: 'Photo: public domain', source: 'https://commons.wikimedia.org/wiki/File:Borghese_Gladiator_Louvre_Ma_527_n3.jpg' },
+  laocoon: { name: 'Laocoön and His Sons', where: 'Vatican Museums', w: 1800, h: 1531, credit: 'Photo: Wilfredor, CC0', source: 'https://commons.wikimedia.org/wiki/File:Laoco%C3%B6n_and_his_sons_group.jpg' },
   mercury: { name: 'Mercury', where: 'Giambologna, c. 1580 · The Met', w: 1000, h: 1634, credit: 'CC0', source: 'https://commons.wikimedia.org/wiki/File:Mercury_MET_DP-733-001.jpg' },
-  thames: { name: 'The River Thames', where: 'Canaletto (detail)', w: 1800, h: 810, credit: 'Public domain' },
 } satisfies Record<string, Art>;
 
 export type ArtId = keyof typeof ART;

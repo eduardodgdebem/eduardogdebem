@@ -31,9 +31,6 @@ const ART = {
   // Engravings, the right way round: the paper is the ink, the lines are the night.
   // Albrecht Dürer, Melencolia I, 1514. The Met, CC0.
   melencolia: { crop: [0.06, 0.05, 0.88, 0.9], width: 1000, dot: 2, gamma: 1.6, gain: 1.0 },
-  // Paintings, as wide bands of round dots.
-  // Canaletto, The River Thames (detail), public domain.
-  thames: { crop: [0, 0.2, 1, 0.6], width: 1800, dot: 6, mode: 'halftone', gamma: 2.1, gain: 0.9 },
 };
 
 const BAYER = [
@@ -42,6 +39,55 @@ const BAYER = [
 ];
 
 mkdirSync(OUT, { recursive: true });
+
+/**
+ * Monochrome pictures, as Hermes sets its own: the photograph in greys toward
+ * the page's ink, darkened to the night at its edges, with a heavy film grain
+ * baked in. Saved as JPEGs.
+ */
+const MONO = {
+  // Laocoön and His Sons. Vatican Museums. Photo: Wilfredor, CC0.
+  laocoon: { crop: [0.04, 0.02, 0.92, 0.72], width: 1800, grain: 46, gamma: 2.1, strip: [0.24, 0.24, 0.42, 0.36] },
+};
+
+const only0 = process.argv.slice(2);
+for (const [name, m] of Object.entries(MONO)) {
+  if (only0.length && !only0.includes(name)) continue;
+  const { width: W, height: H } = await sharp(`${SRC}/${name}.jpg`).metadata();
+  const [l, t, w, h] = m.crop;
+  const box = { left: Math.round(l * W), top: Math.round(t * H), width: Math.round(w * W), height: Math.round(h * H) };
+  const ow = m.width;
+  const oh = Math.round((ow * box.height) / box.width);
+  const { data } = await sharp(`${SRC}/${name}.jpg`).extract(box).resize(ow, oh).greyscale().normalise().raw().toBuffer({ resolveWithObject: true });
+  const out = Buffer.alloc(ow * oh * 3);
+  // Night #040a07 to ink #e3ebe4.
+  const lo = [4, 10, 7];
+  const hi = [227, 235, 228];
+  for (let y = 0; y < oh; y++) {
+    for (let x = 0; x < ow; x++) {
+      let v = Math.pow(data[y * ow + x] / 255, m.gamma);
+      const dx = (x / ow - 0.5) * 2;
+      const dy = (y / oh - 0.5) * 2;
+      v *= 1 - 0.75 * Math.min(1, Math.pow(Math.hypot(dx, dy * 0.9) / 1.3, 2.5));
+      v += ((Math.random() + Math.random() + Math.random()) / 1.5 - 1) * (m.grain / 255);
+      v = Math.min(1, Math.max(0, v));
+      for (let c = 0; c < 3; c++) out[(y * ow + x) * 3 + c] = lo[c] + (hi[c] - lo[c]) * v;
+    }
+  }
+  await sharp(out, { raw: { width: ow, height: oh, channels: 3 } }).jpeg({ quality: 74, mozjpeg: true }).toFile(`${OUT}/${name}-mono.jpg`);
+  console.log(name, 'mono', `${ow}×${oh}`);
+  // A strip of it with no wall in it, for letters cut out of the marble.
+  if (m.strip) {
+    const [sl, st, sw, sh] = m.strip;
+    await sharp(`${OUT}/${name}-mono.jpg`)
+      .extract({ left: Math.round(sl * ow), top: Math.round(st * oh), width: Math.round(sw * ow), height: Math.round(sh * oh) })
+      .resize(2000, 520, { fit: 'fill' })
+      .modulate({ brightness: 1.25 })
+      .jpeg({ quality: 72, mozjpeg: true })
+      .toFile(`${OUT}/${name}-strip.jpg`);
+  }
+}
+
 const only = process.argv.slice(2);
 for (const [name, a] of Object.entries(ART)) {
   if (only.length && !only.includes(name)) continue;
