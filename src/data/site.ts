@@ -51,8 +51,8 @@ export const UI = {
   aboutTitle: { en: 'About Me', pt: 'Sobre Mim' },
   contactTitle: { en: 'Get in Touch', pt: 'Fale Comigo' },
   contactLede: {
-    en: 'For a role, a project, or a question about something I made, email is the quickest way.',
-    pt: 'Para uma vaga, um projeto ou uma pergunta sobre algo que fiz, e-mail é o jeito mais rápido.',
+    en: 'For a role, a project, or a question about something I made, email is the quickest way. I answer within a day or two.',
+    pt: 'Para uma vaga, um projeto ou uma pergunta sobre algo que fiz, e-mail é o jeito mais rápido. Respondo em um ou dois dias.',
   },
   copy: { en: 'Copy', pt: 'Copiar' },
   copied: { en: 'Copied', pt: 'Copiado' },
@@ -60,6 +60,7 @@ export const UI = {
   openApp: { en: 'Open the app', pt: 'Abrir o app' },
   readCode: { en: 'Read the code', pt: 'Ler o código' },
   menu: { en: 'Menu', pt: 'Menu' },
+  top: { en: 'Back to top', pt: 'Voltar ao topo' },
   scroll: { en: 'Scroll', pt: 'Role' },
   motto: { en: 'Built to last, as the Romans built.', pt: 'Feito para durar, como construíam os romanos.' },
   close: { en: 'Close', pt: 'Fechar' },

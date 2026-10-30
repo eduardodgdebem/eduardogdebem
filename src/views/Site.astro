@@ -30,7 +30,7 @@ const TYPE_NAME = { site: { en: 'Site', pt: 'Site' }, app: { en: 'App', pt: 'App
 const linkLabel = (p: (typeof PROJECTS)[number]) => (p.code === p.url ? s(UI.readCode) : p.type === 'app' ? s(UI.openApp) : s(UI.visit));
 const ticker = STACK.flatMap((g) => g.items);
 // Only the pictures on the page are credited.
-const SHOWN: ArtId[] = ['caesar', 'melencolia', 'thames', 'gladiator-head', 'venus'];
+const SHOWN: ArtId[] = ['caesar', 'melencolia', 'thames', 'gladiator-head', 'mercury'];
 const credited = SHOWN.map((id) => [id, ART[id]] as const);
 const [user, host] = CONTACT.email.split('@');
 ---
@@ -194,38 +194,78 @@ const [user, host] = CONTACT.email.split('@');
       </div>
     </section>
 
-    <!-- Contact: one huge address -->
+    <!-- Contact: Mercury, the messenger, beside the ways to reach me -->
     <section class="section contact" id="contact" data-section="contact">
-      <div class="contact-art" aria-hidden="true"><Art id="venus" /></div>
-      <header class="head reveal">
-        <p class="head-num">{num('contact')}</p>
-        <h2 class="head-title">{s(UI.contactTitle)}</h2>
-        <p class="head-kicker">// {s(NAV.contact)}</p>
-        <p class="head-lede">{s(UI.contactLede)}</p>
-      </header>
-      <a class="address reveal" href={`mailto:${CONTACT.email}`}><span>{user}</span><span class="address-at">@{host}</span></a>
-      <p class="contact-actions reveal">
-        <button type="button" class="button button--accent" data-copy={CONTACT.email} data-copied={s(UI.copied)}><Fragment set:html={ICONS.copy} /><span data-copy-label>{s(UI.copy)}</span></button>
-        <a class="button button--line" href={CONTACT.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a>
-        <a class="button button--line" href={CONTACT.github} target="_blank" rel="noopener noreferrer">GitHub</a>
-        <a class="button button--line" href={CV_PDF} download>{s(UI.ctaCv)}</a>
-      </p>
-      <p class="contact-based reveal">{s(CONTACT.based)}</p>
+      <div class="contact-main">
+        <header class="head head--tight reveal">
+          <p class="head-num">{num('contact')}</p>
+          <h2 class="head-title">{s(UI.contactTitle)}</h2>
+          <p class="head-kicker">// {s(NAV.contact)}</p>
+        </header>
+        <p class="contact-lede reveal">{s(UI.contactLede)}</p>
+        <div class="mail reveal">
+          <p class="mail-bar"><span>mailto</span><span>{s(CONTACT.based)}</span></p>
+          <p class="mail-line">
+            <a href={`mailto:${CONTACT.email}`}><span>{user}</span><span class="mail-host">@{host}</span></a>
+            <button type="button" class="mail-copy" data-copy={CONTACT.email} data-copied={s(UI.copied)} aria-label={s(UI.copy)}><Fragment set:html={ICONS.copy} /><span data-copy-label>{s(UI.copy)}</span></button>
+          </p>
+        </div>
+        <ul class="ways reveal">
+          <li><a href={CONTACT.linkedin} target="_blank" rel="noopener noreferrer"><span class="ways-icon" set:html={ICONS.linkedin} /><span class="ways-name">LinkedIn</span><span class="ways-where">linkedin.com/in/eduardogdebem</span><span class="ways-go" set:html={ICONS.external} /></a></li>
+          <li><a href={CONTACT.github} target="_blank" rel="noopener noreferrer"><span class="ways-icon" set:html={ICONS.github} /><span class="ways-name">GitHub</span><span class="ways-where">github.com/eduardodgdebem</span><span class="ways-go" set:html={ICONS.external} /></a></li>
+          <li><a href={CV_PDF} download><span class="ways-icon" set:html={ICONS.cv} /><span class="ways-name">{s(UI.ctaCv)}</span><span class="ways-where">PDF · English</span><span class="ways-go" set:html={ICONS.download} /></a></li>
+        </ul>
+      </div>
+      <figure class="contact-art reveal" aria-hidden="true">
+        <svg class="orbit" viewBox="0 0 400 400">
+          <circle cx="200" cy="200" r="190" />
+          <circle cx="200" cy="200" r="140" class="orbit-dash" />
+          <path d="M200 0V400M0 200H400" />
+        </svg>
+        <Art id="mercury" class="mercury" />
+        <figcaption><span>{ART.mercury.name}</span><span>{ART.mercury.where}</span></figcaption>
+      </figure>
     </section>
   </main>
 
   <footer class="foot">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href={PATHS[lang]}><span class="brand-mark"><Logo size={18} /></span><span class="brand-name">Eduardo de Bem</span></a>
+        <p class="foot-motto">{s(UI.motto)}</p>
+      </div>
+      <nav class="foot-col" aria-label="Sections">
+        <p class="foot-head">{s(UI.explore)}</p>
+        <ul>{sections.map((id) => <li><a href={`#${id}`}>{s(NAV[id])}</a></li>)}</ul>
+      </nav>
+      <div class="foot-col">
+        <p class="foot-head">{s(UI.elsewhere)}</p>
+        <ul>
+          <li><a href={CONTACT.github} target="_blank" rel="noopener noreferrer">GitHub</a></li>
+          <li><a href={CONTACT.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a></li>
+          <li><a href={`mailto:${CONTACT.email}`}>Email</a></li>
+          <li><a href={CV_PDF} download>{s(UI.ctaCv)}</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <p class="foot-head">{s(UI.language)}</p>
+        <ul>
+          <li><a href={PATHS.en} hreflang="en" aria-current={lang === 'en' ? 'page' : undefined}>English</a></li>
+          <li><a href={PATHS.pt} hreflang="pt-BR" aria-current={lang === 'pt' ? 'page' : undefined}>Português</a></li>
+        </ul>
+      </div>
+    </div>
     <div class="foot-credits">
-      <p class="chip">{s(UI.credits)}</p>
+      <p class="foot-head">{s(UI.credits)}</p>
       <ul class="credits">
         {credited.map(([, a]) => (
-          <li>{a.source ? <a href={a.source} target="_blank" rel="noopener noreferrer">{a.name}</a> : a.name}<span class="dim">, {a.where}. {a.credit}.</span></li>
+          <li>{a.source ? <a href={a.source} target="_blank" rel="noopener noreferrer">{a.name}</a> : a.name}<span class="dim"> — {a.where}. {a.credit}.</span></li>
         ))}
       </ul>
     </div>
     <p class="foot-line">
       <span>© {new Date().getFullYear()} Eduardo de Bem</span>
-      <a href={PATHS[other]} hreflang={other === 'pt' ? 'pt-BR' : 'en'}>{other === 'pt' ? 'Em português' : 'In English'}</a>
+      <a href="#overview" class="foot-top">{s(UI.top)} ↑</a>
     </p>
     <p class="foot-name" aria-hidden="true">Eduardo de Bem</p>
   </footer>

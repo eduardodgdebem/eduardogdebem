@@ -1004,96 +1004,269 @@ body::after {
   border-color: var(--accent);
 }
 
-/* ── Contact: one huge address ── */
+/* ── Contact: Mercury beside the ways to reach me ── */
 
 .contact {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: clamp(32px, 6vw, 110px);
+  align-items: center;
   min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  border-top: 1px solid var(--line);
   overflow: hidden;
+}
+
+.contact-lede {
+  max-width: 34rem;
+  margin: -1rem 0 2.4rem;
+  color: var(--ink-soft);
+}
+
+/* The address: the loudest block on the page, in the accent. */
+.mail {
+  color: var(--on-accent);
+  background: var(--accent);
+}
+
+.mail-bar {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.4rem 1rem;
+  font-family: var(--f-display);
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-bottom: 1px solid rgb(3 20 10 / 0.18);
+}
+
+.mail-bar span:last-child {
+  opacity: 0.6;
+}
+
+.mail-line {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.1rem 1rem 1.3rem;
+}
+
+.mail-line a {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--f-display);
+  font-weight: 300;
+  font-size: clamp(1.8rem, 3.6vw, 3.6rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.mail-host {
+  opacity: 0.55;
+  transition: opacity 0.3s ease;
+}
+
+.mail-line a:hover .mail-host {
+  opacity: 1;
+}
+
+.mail-copy {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  gap: 0.45rem;
+  padding: 0.4rem 0.7rem;
+  font-family: var(--f-display);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: inherit;
+  background: none;
+  border: 1px solid rgb(3 20 10 / 0.35);
+  cursor: pointer;
+  transition: background-color 0.25s ease;
+}
+
+.mail-copy:hover {
+  background: rgb(3 20 10 / 0.12);
+}
+
+.mail-copy svg {
+  font-size: 14px;
+}
+
+/* The other ways, as ruled rows. */
+.ways {
+  margin-top: 1.4rem;
   border-top: 1px solid var(--line);
 }
 
-.contact-art {
-  position: absolute;
-  top: 6%;
-  bottom: 0;
-  left: 50%;
-  width: min(40vw, 560px);
-  translate: -50% 0;
-  opacity: 0.18;
-  pointer-events: none;
-}
-
-.contact-art .art,
-.contact-art .art-ink {
-  height: 100%;
-}
-
-.contact-art .art-ink {
-  aspect-ratio: auto !important;
-  -webkit-mask-position: center bottom;
-  mask-position: center bottom;
-}
-
-.address {
-  position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  font-family: var(--f-display);
-  font-weight: 300;
-  font-size: clamp(2.4rem, 7.6vw, 8.8rem);
-  line-height: 0.95;
-  letter-spacing: -0.03em;
+.ways a {
+  display: grid;
+  grid-template-columns: 1.6rem minmax(0, 0.7fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 0.2rem;
+  border-bottom: 1px solid var(--line);
   text-decoration: none;
-  overflow-wrap: anywhere;
+  transition:
+    padding 0.4s var(--ease),
+    background-color 0.3s ease;
+}
+
+.ways-icon,
+.ways-go {
+  display: inline-grid;
+  font-size: 16px;
+  color: var(--ink-soft);
   transition: color 0.3s ease;
 }
 
-.address-at {
+.ways-name {
+  font-family: var(--f-display);
+  font-size: 1.3rem;
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.ways-where {
+  font-size: 0.78rem;
   color: var(--ink-faint);
-  transition: color 0.3s ease;
 }
 
-.address:hover,
-.address:hover .address-at {
+.ways a:hover {
+  padding-left: 0.9rem;
+  background: var(--night-2);
+}
+
+.ways a:hover .ways-icon,
+.ways a:hover .ways-go {
   color: var(--accent);
 }
 
-.contact-actions {
+/* Mercury, the messenger, standing in an orbit. */
+.contact-art {
+  position: relative;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: min(80vh, 760px);
+}
+
+.orbit {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 115%;
+  translate: -50% -50%;
+  fill: none;
+  stroke: var(--line-2);
+  stroke-width: 0.6;
+}
+
+.orbit-dash {
+  stroke: var(--accent);
+  stroke-dasharray: 2 6;
+  opacity: 0.6;
+}
+
+.mercury {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.mercury .art-ink {
+  height: 100%;
+  aspect-ratio: auto !important;
+}
+
+.contact-art figcaption {
   position: relative;
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 2.6rem;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.68rem;
+  color: var(--ink-faint);
 }
 
-.contact-based {
-  position: relative;
-  margin-top: 1.6rem;
-  font-size: 0.78rem;
-  color: var(--ink-soft);
-}
-
-/* ── Footer ── */
+/* ── Footer: columns with room round them ── */
 
 .foot {
-  padding: 3rem var(--gutter) 0;
+  padding: clamp(80px, 12vh, 140px) var(--gutter) 0;
   border-top: 1px solid var(--line);
-  font-size: 0.72rem;
+  background: var(--night-2);
+  font-size: 0.8rem;
   color: var(--ink-soft);
   overflow: hidden;
+}
+
+.foot-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr));
+  gap: clamp(32px, 5vw, 80px);
+  padding-bottom: clamp(60px, 9vh, 100px);
+}
+
+.foot-motto {
+  max-width: 22rem;
+  margin-top: 1.4rem;
+  font-family: var(--f-display);
+  font-weight: 300;
+  font-size: clamp(1.4rem, 2vw, 1.9rem);
+  line-height: 1.15;
+  color: var(--ink);
+}
+
+.foot-head {
+  margin-bottom: 1.2rem;
+  font-family: var(--f-display);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+}
+
+.foot-col li + li {
+  margin-top: 0.55rem;
+}
+
+.foot-col a {
+  font-family: var(--f-display);
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  color: var(--ink);
+  transition: color 0.25s ease;
+}
+
+.foot-col a:hover,
+.foot-col a[aria-current] {
+  color: var(--accent);
+}
+
+.foot-credits {
+  padding: clamp(32px, 5vh, 56px) 0;
+  border-top: 1px solid var(--line);
 }
 
 .credits {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
-  gap: 0.2rem 2rem;
-  margin-top: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 24rem), 1fr));
+  gap: 0.5rem 3rem;
+  font-size: 0.74rem;
+  line-height: 1.6;
 }
 
 .credits a {
+  color: var(--ink);
   text-decoration: underline;
   text-decoration-color: var(--line-2);
   text-underline-offset: 3px;
@@ -1102,12 +1275,24 @@ body::after {
 .foot-line {
   display: flex;
   justify-content: space-between;
-  margin-top: 2.4rem;
+  gap: 1rem;
+  padding: 1.6rem 0;
+  border-top: 1px solid var(--line);
+  font-size: 0.74rem;
+}
+
+.foot-top {
+  text-decoration: none;
+  transition: color 0.25s ease;
+}
+
+.foot-top:hover {
+  color: var(--accent);
 }
 
 /* The name, as wide as the page, cut by its foot. */
 .foot-name {
-  margin: 1.4rem 0 calc(-0.2em - var(--frame));
+  margin: clamp(24px, 4vh, 48px) 0 calc(-0.2em - var(--frame));
   font-family: var(--f-display);
   font-weight: 300;
   font-size: 15.6vw;
@@ -1115,7 +1300,7 @@ body::after {
   letter-spacing: -0.04em;
   text-transform: uppercase;
   white-space: nowrap;
-  color: var(--night-2);
+  color: var(--night);
   -webkit-text-stroke: 1px var(--line-2);
 }
 
@@ -1426,8 +1611,29 @@ body::after {
     gap: 0.1rem;
   }
 
+  .contact {
+    grid-template-columns: 1fr;
+  }
+
   .contact-art {
-    width: 90vw;
+    min-height: 0;
+    height: 70vh;
+  }
+
+  .ways a {
+    grid-template-columns: 1.6rem minmax(0, 1fr) auto;
+  }
+
+  .ways-where {
+    display: none;
+  }
+
+  .foot-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .foot-brand {
+    grid-column: 1 / -1;
   }
 
   .head-art {
