@@ -1480,7 +1480,10 @@ body::after {
     animation: print 2.2s steps(30, end) 0.3s forwards;
   }
 
-  .rays {
+  /* Turned round the hub of the rays (500, 430 in the drawing), not the middle of the SVG, so the circle stays behind his head. */
+  .rays-spin {
+    transform-box: view-box;
+    transform-origin: 500px 430px;
     animation: spin 240s linear infinite;
   }
 

@@ -81,12 +81,14 @@ const [user, host] = CONTACT.email.split('@');
     <section class="hero" id="overview" data-section="overview">
       <div class="hero-art" aria-hidden="true">
         <svg class="rays" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice">
+          <g class="rays-spin">
           {Array.from({ length: 24 }, (_, i) => {
             const a = (i / 24) * Math.PI * 2;
             const r = i % 2 ? 640 : 900;
             return <path d={`M${500 + Math.cos(a) * 250},${430 + Math.sin(a) * 250}L${500 + Math.cos(a) * r},${430 + Math.sin(a) * r}`} />;
           })}
           <circle cx="500" cy="430" r="250" />
+          </g>
         </svg>
         <figure class="art caesar caesar-turn" data-turn="/art/caesar-turn.png" data-frames="36" data-cols="6">
           <div class="art-ink" role="img" aria-label={`${s(ART['caesar-turn'].name)}, ${s(ART['caesar-turn'].where)}`} style="--src:url(/art/caesar-still.png)"></div>
