@@ -25,22 +25,38 @@ if (hero) new IntersectionObserver(([e]) => root.classList.toggle('past-hero', !
 
 const turn = document.querySelector<HTMLElement>('[data-turn]');
 if (turn && !still) {
-  const frames = Number(turn.dataset.turn);
+  const frames = Number(turn.dataset.frames);
   const cols = Number(turn.dataset.cols);
-  const ink = turn.querySelector<HTMLElement>('.art-ink')!;
-  let shown = -1;
-  let queued = false;
-  const step = () => {
-    queued = false;
-    const p = Math.min(1, Math.max(0, scrollY / innerHeight));
-    const f = Math.round(p * frames) % frames;
-    if (f === shown) return;
-    shown = f;
-    ink.style.setProperty('--col', String(f % cols));
-    ink.style.setProperty('--row', String(Math.floor(f / cols)));
-  };
-  addEventListener('scroll', () => queued || ((queued = true), requestAnimationFrame(step)), { passive: true });
-  step();
+  const rows = Math.ceil(frames / cols);
+  const sheet = new Image();
+  sheet.src = turn.dataset.turn!;
+  sheet.decode().then(() => {
+    const w = sheet.naturalWidth / cols;
+    const h = sheet.naturalHeight / rows;
+    const canvas = Object.assign(document.createElement('canvas'), { width: w, height: h });
+    canvas.setAttribute('aria-hidden', 'true');
+    turn.append(canvas);
+    const ctx = canvas.getContext('2d')!;
+    const inkColour = getComputedStyle(turn).getPropertyValue('--art-ink');
+    let shown = 0;
+    let queued = false;
+    const step = () => {
+      queued = false;
+      const p = Math.min(1, Math.max(0, scrollY / innerHeight));
+      const f = Math.round(p * frames) % frames;
+      if (f === shown) return;
+      shown = f;
+      // The frame's dots, then the ink poured over them.
+      ctx.globalCompositeOperation = 'copy';
+      ctx.drawImage(sheet, (f % cols) * w, Math.floor(f / cols) * h, w, h, 0, 0, w, h);
+      ctx.globalCompositeOperation = 'source-in';
+      ctx.fillStyle = inkColour;
+      ctx.fillRect(0, 0, w, h);
+      turn.classList.add('turning');
+    };
+    addEventListener('scroll', () => queued || ((queued = true), requestAnimationFrame(step)), { passive: true });
+    step();
+  });
 }
 
 /* ── Printed in as it comes into view ── */
@@ -73,6 +89,10 @@ const setMenu = (open: boolean) => {
   menu.setAttribute('aria-expanded', String(open));
   label.textContent = open ? menu.dataset.close! : menu.dataset.open!;
   root.classList.toggle('menu-open', open);
+  // While the sheet is open the page under it can't be reached, so focus stays in the bar and the sheet.
+  for (const el of document.querySelectorAll<HTMLElement>('main, footer, .skip')) el.inert = open;
+  if (open) document.querySelector<HTMLElement>('#bar-nav a')?.focus();
+  else if (menu.contains(document.activeElement) || document.getElementById('bar-nav')!.contains(document.activeElement)) menu.focus();
 };
 menu.addEventListener('click', () => setMenu(menu.getAttribute('aria-expanded') !== 'true'));
 document.getElementById('bar-nav')!.addEventListener('click', (e) => (e.target as Element).closest('a') && setMenu(false));

@@ -20,6 +20,8 @@ const { title, description, lang, alternates, schema, noindex, canonical } = Ast
 <!doctype html>
 <html lang={lang === 'pt' ? 'pt-BR' : 'en'}>
   <head>
+    <!-- Set before anything paints: motion that hides things first only runs where the script can show them again. -->
+    <script is:inline>document.documentElement.classList.add('js');</script>
     <BaseHead title={title} description={description} lang={lang} alternates={alternates} schema={schema} noindex={noindex} canonical={canonical} />
   </head>
   <body>

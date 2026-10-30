@@ -17,11 +17,12 @@ const DIR = "art-src/caesar-rome/source/x";
 const MODEL = "untitled.obj";
 const MATERIALS = "untitled.mtl";
 const OUT = "public/art/caesar-turn.png";
+const STILL = "public/art/caesar-still.png";
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
 /** Frames all the way round, the sheet's columns, a frame's size in px, and the dither's pixel. */
-const FRAMES = 48;
-const COLS = 8;
+const FRAMES = 36;
+const COLS = 6;
 const W = 680;
 const H = 840;
 const DOT = 2;
@@ -266,27 +267,30 @@ for (let i = 0; i < SW * SH; i++) {
 seen.sort((p, q) => p - q);
 const lo = seen[Math.floor(seen.length * 0.01)];
 const hi = seen[Math.floor(seen.length * 0.99)];
-const out = Buffer.alloc(W * COLS * H * ROWS * 4);
-for (let y = 0; y < H * ROWS; y++) {
-  for (let x = 0; x < W * COLS; x++) {
-    const cx = Math.floor(x / DOT);
-    const cy = Math.floor(y / DOT);
+// One cell of the dither is one pixel of the sheet: the page draws a frame into a
+// canvas and scales it up without smoothing, so the sheet stays small to decode.
+const FW = W / DOT;
+const FH = H / DOT;
+const ink = new Uint8Array(SW * SH);
+for (let cy = 0; cy < SH; cy++) {
+  for (let cx = 0; cx < SW; cx++) {
     const l = lum[cy * SW + cx];
     // Toward the foot of each frame the dots thin out, so he dissolves into the night instead of stopping at an edge.
-    const fy = (cy % (H / DOT)) / (H / DOT);
+    const fy = (cy % FH) / FH;
     const fade = fy < 1 - FADE ? 1 : Math.pow(Math.max(0, (1 - fy) / FADE), 1.6);
-    const v =
-      l < 0
-        ? 0
-        : Math.pow(Math.min(1, Math.max(0, (l - lo) / (hi - lo))), GAMMA) *
-          GAIN *
-          fade;
-    const i = (y * W * COLS + x) * 4;
-    out[i] = out[i + 1] = out[i + 2] = 255;
-    out[i + 3] = v > (BAYER[cy % 8][cx % 8] + 0.5) / 64 ? 255 : 0;
+    const v = l < 0 ? 0 : Math.pow(Math.min(1, Math.max(0, (l - lo) / (hi - lo))), GAMMA) * GAIN * fade;
+    ink[cy * SW + cx] = v > (BAYER[cy % 8][cx % 8] + 0.5) / 64 ? 1 : 0;
   }
 }
-await sharp(out, { raw: { width: W * COLS, height: H * ROWS, channels: 4 } })
-  .png({ palette: true, colours: 2, compressionLevel: 9 })
-  .toFile(OUT);
-console.log("caesar-turn", `${FRAMES} frames of ${W}×${H}, ${COLS}×${ROWS}`);
+const toPng = (w, h, on) => {
+  const px = Buffer.alloc(w * h * 4);
+  for (let i = 0; i < w * h; i++) {
+    px[i * 4] = px[i * 4 + 1] = px[i * 4 + 2] = 255;
+    px[i * 4 + 3] = on(i % w, Math.floor(i / w)) ? 255 : 0;
+  }
+  return sharp(px, { raw: { width: w, height: h, channels: 4 } }).png({ palette: true, colours: 2, compressionLevel: 9 });
+};
+await toPng(SW, SH, (x, y) => ink[y * SW + x]).toFile(OUT);
+// The first frame at full size, as the mask the page shows before (or instead of) the turn.
+await toPng(W, H, (x, y) => ink[Math.floor(y / DOT) * SW + Math.floor(x / DOT)]).toFile(STILL);
+console.log("caesar-turn", `${FRAMES} frames of ${FW}×${FH}, ${COLS}×${ROWS}; and a still`);

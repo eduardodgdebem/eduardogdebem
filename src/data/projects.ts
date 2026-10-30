@@ -4,7 +4,8 @@ import type { Lang } from './site';
 // in this order within each type.
 
 /** What kind of thing it is: the page lists them in groups, in this order. */
-export const TYPES = ['site', 'app', 'language'] as const;
+// In the order shown: his own work first, then the sites made for others.
+export const TYPES = ['language', 'app', 'site'] as const;
 export type Type = (typeof TYPES)[number];
 
 export interface Project {
@@ -34,7 +35,7 @@ export interface Project {
 export const PROJECTS: Project[] = [
   {
     id: 'brazilian-hair-studio',
-    preview: '/projects/brazilian-hair-studio.jpg',
+    preview: '/projects/brazilian-hair-studio.webp',
     latin: 'Tonstrina',
     name: 'Brazilian Hair Studio',
     url: 'https://brazilian-hair-studio.com/',
@@ -51,7 +52,7 @@ export const PROJECTS: Project[] = [
   },
   {
     id: 'cabelos-e-formas',
-    preview: '/projects/cabelos-e-formas.jpg',
+    preview: '/projects/cabelos-e-formas.webp',
     latin: 'Ornatrix',
     name: 'Cabelos e Formas',
     url: 'https://cbf.jeffersonrdebem.workers.dev/',
@@ -69,7 +70,7 @@ export const PROJECTS: Project[] = [
   },
   {
     id: 'debem-consultoria',
-    preview: '/projects/debem-consultoria.jpg',
+    preview: '/projects/debem-consultoria.webp',
     latin: 'Consilium',
     name: 'De Bem Consultoria',
     url: 'https://debemconsultoria.com/',
@@ -86,7 +87,7 @@ export const PROJECTS: Project[] = [
   },
   {
     id: 'ode-city',
-    preview: '/projects/ode-city.jpg',
+    preview: '/projects/ode-city.webp',
     latin: 'Urbs',
     name: 'Ode City',
     url: 'https://eduardodgdebem.github.io/ode-city/',

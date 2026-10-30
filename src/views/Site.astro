@@ -21,9 +21,10 @@ interface Props {
 const { lang } = Astro.props;
 const s = t(lang);
 const other: Lang = lang === 'en' ? 'pt' : 'en';
-const pad = (n: number) => String(n).padStart(2, '0');
+// Numbered the Roman way, as an inscription or a book's chapters would be.
+const roman = (n: number) => ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'][n] ?? String(n);
 const sections = SECTIONS.filter((id) => id !== 'overview');
-const num = (id: (typeof SECTIONS)[number]) => pad(sections.indexOf(id as (typeof sections)[number]) + 1);
+const num = (id: (typeof SECTIONS)[number]) => roman(sections.indexOf(id as (typeof sections)[number]) + 1);
 const projects = TYPES.flatMap((type) => PROJECTS.filter((p) => p.type === type));
 const TYPE_NAME = { site: { en: 'Site', pt: 'Site' }, app: { en: 'App', pt: 'App' }, language: { en: 'Language', pt: 'Linguagem' } };
 const linkLabel = (p: (typeof PROJECTS)[number]) => (p.code === p.url ? s(UI.readCode) : p.type === 'app' ? s(UI.openApp) : s(UI.visit));
@@ -40,7 +41,7 @@ const [user, host] = CONTACT.email.split('@');
   alternates={PATHS}
   schema={{ '@context': 'https://schema.org', '@graph': [WEBSITE, PERSON] }}
 >
-  <div class="frame" aria-hidden="true"></div>
+  <a class="skip" href="#main">{s(UI.skip)}</a>
 
   <!-- The bar across the top -->
   <header class="bar" data-bar>
@@ -69,7 +70,7 @@ const [user, host] = CONTACT.email.split('@');
     </button>
   </header>
 
-  <main>
+  <main id="main" tabindex="-1">
     <!-- Hero: Caesar, and one huge line -->
     <section class="hero" id="overview" data-section="overview">
       <div class="hero-art" aria-hidden="true">
@@ -81,8 +82,8 @@ const [user, host] = CONTACT.email.split('@');
           })}
           <circle cx="500" cy="430" r="250" />
         </svg>
-        <figure class="art caesar caesar-turn" data-turn="48" data-cols="8">
-          <div class="art-ink" role="img" aria-label={`${ART['caesar-turn'].name}, ${ART['caesar-turn'].where}`} style="--src:url(/art/caesar-turn.png)"></div>
+        <figure class="art caesar caesar-turn" data-turn="/art/caesar-turn.png" data-frames="36" data-cols="6">
+          <div class="art-ink" role="img" aria-label={`${ART['caesar-turn'].name}, ${ART['caesar-turn'].where}`} style="--src:url(/art/caesar-still.png)"></div>
         </figure>
       </div>
       <h1 class="hero-title">
@@ -119,7 +120,7 @@ const [user, host] = CONTACT.email.split('@');
               )}
             </a>
             <div class="slide-body">
-              <p class="slide-count"><span>{pad(i + 1)}</span><span class="dim">/ {pad(projects.length)}</span></p>
+              <p class="slide-count"><span>{roman(i + 1)}</span><span class="dim">/ {roman(projects.length)}</span></p>
               <p class="slide-when">{s(TYPE_NAME[p.type])}</p>
               <h3 class="slide-title"><a href={p.url} target="_blank" rel="noopener noreferrer">{p.name}</a></h3>
               <p class="slide-text">{s(p.short)}</p>
@@ -135,13 +136,16 @@ const [user, host] = CONTACT.email.split('@');
     </section>
 
     <!-- A photograph across the screen, in greys with a heavy grain, and a motto over it -->
-    <section class="interlude" aria-label="Ars longa">
+    <div class="key" aria-hidden="true"></div>
+    <section class="interlude" aria-label="Festina lente">
       <img class="interlude-photo" src="/art/laocoon-mono.jpg" alt="" width="2000" height="1063" loading="lazy" decoding="async" />
       <div class="interlude-text">
-        <p class="interlude-latin reveal">Ars longa,<br /><em>vita brevis.</em></p>
+        <p class="interlude-latin reveal">Festina<br /><em>lente.</em></p>
+        <p class="interlude-gloss reveal">{s(UI.festina)}</p>
       </div>
       <p class="interlude-caption">Laocoön and His Sons · Vatican Museums</p>
     </section>
+    <div class="key" aria-hidden="true"></div>
 
     <!-- About: who, where I've worked, what with -->
     <section class="section about" id="about" data-section="about">
@@ -260,7 +264,8 @@ const [user, host] = CONTACT.email.split('@');
       <span>© {new Date().getFullYear()} Eduardo de Bem</span>
       <a href="#overview" class="foot-top">{s(UI.top)} ↑</a>
     </p>
-    <p class="foot-name" aria-hidden="true">Eduardo de Bem</p>
+    <!-- The name cut in the marble as Caesar's is on his pedestal: C · IVLIO · CAESARI -->
+    <p class="foot-name" aria-hidden="true">EDVARDVS<span>·</span>DE<span>·</span>BEM</p>
   </footer>
 </Shell>
 

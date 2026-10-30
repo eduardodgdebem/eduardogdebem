@@ -11,15 +11,16 @@
   --line-2: #1f4728;
   --ink: #e2ece4;
   --ink-soft: #93a998;
-  --ink-faint: #5c7462;
+  --ink-faint: #6e8a74;
   --accent: #09db3a;
   --on-accent: #021405;
   --art-ink: #7cf097;
 
   --f-display: "Oswald", "Arial Narrow", sans-serif;
+  --f-inscription: "Cinzel", "Trajan Pro", Georgia, serif;
   --f-text: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
-  --frame: 4px;
+  --frame: 0px;
   --bar: 64px;
   --gutter: clamp(20px, 4vw, 64px);
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
@@ -82,6 +83,29 @@ ul {
   list-style: none;
 }
 
+.skip {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 200;
+  padding: 0.6rem 0.9rem;
+  font-family: var(--f-display);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--on-accent);
+  background: var(--accent);
+  translate: 0 -200%;
+}
+
+.skip:focus,
+.skip:focus-visible {
+  translate: none;
+}
+
+main:focus {
+  outline: none;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -95,14 +119,15 @@ ul {
   color: var(--ink-faint);
 }
 
-/* ── The frame round the screen, and a grain over everything ── */
+/* ── A Greek key between the sections, and a grain over everything ── */
 
-.frame {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  pointer-events: none;
-  border: var(--frame) solid var(--accent);
+/* The meander, as the book version framed its plates: one unit of the key, repeated along a band. */
+.key {
+  height: 16px;
+  margin: 0 var(--gutter);
+  background: var(--line-2);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='square'%3E%3Cpath d='M0 23H24M0 1H24M3 23V5H19V19H9V11H14'/%3E%3C/svg%3E") left center / 16px 16px repeat-x;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='square'%3E%3Cpath d='M0 23H24M0 1H24M3 23V5H19V19H9V11H14'/%3E%3C/svg%3E") left center / 16px 16px repeat-x;
 }
 
 body::after {
@@ -354,7 +379,7 @@ body::after {
 }
 
 .bar-num {
-  font-family: var(--f-text);
+  font-family: var(--f-inscription);
   font-size: 0.62rem;
   letter-spacing: 0;
   color: var(--ink-faint);
@@ -463,16 +488,29 @@ body::after {
 }
 
 /* Turning: one frame of the sheet (8 across, 6 down) at a time, chosen by site.ts as the page scrolls. */
-.caesar-turn .art-ink {
+/* Turning: the still (frame one) until the page scrolls, then a canvas that
+   site.ts draws each frame into, from a sheet with one pixel to a dot, scaled
+   up without smoothing so the dots stay square. */
+.caesar-turn .art-ink,
+.caesar-turn canvas {
+  display: block;
   width: auto;
   height: 100%;
   margin-inline: auto;
   aspect-ratio: 680 / 840 !important;
-  -webkit-mask-size: 800% 600%;
-  mask-size: 800% 600%;
-  -webkit-mask-position: calc(var(--col, 0) * 100% / 7)
-    calc(var(--row, 0) * 100% / 5);
-  mask-position: calc(var(--col, 0) * 100% / 7) calc(var(--row, 0) * 100% / 5);
+}
+
+.caesar-turn canvas {
+  display: none;
+  image-rendering: pixelated;
+}
+
+.caesar-turn.turning canvas {
+  display: block;
+}
+
+.caesar-turn.turning .art-ink {
+  display: none;
 }
 
 .rays {
@@ -632,7 +670,7 @@ body::after {
 .head-num {
   grid-row: span 2;
   align-self: start;
-  font-family: var(--f-display);
+  font-family: var(--f-inscription);
   font-size: clamp(3rem, 6vw, 5.4rem);
   font-weight: 200;
   line-height: 0.85;
@@ -718,7 +756,7 @@ body::after {
 .slide-count {
   display: flex;
   gap: 0.6rem;
-  font-family: var(--f-display);
+  font-family: var(--f-inscription);
   font-weight: 200;
   font-size: clamp(3.4rem, 6vw, 6rem);
   line-height: 0.85;
@@ -934,13 +972,22 @@ body::after {
 }
 
 .interlude-latin {
-  font-family: var(--f-display);
-  font-weight: 300;
-  font-size: clamp(3.6rem, 11vw, 12rem);
-  line-height: 0.86;
-  letter-spacing: -0.03em;
-  text-transform: uppercase;
+  font-family: var(--f-inscription);
+  font-weight: 400;
+  font-size: clamp(3.2rem, 10vw, 11rem);
+  line-height: 0.95;
+  letter-spacing: 0.04em;
   mix-blend-mode: difference;
+}
+
+.interlude-gloss {
+  display: inline-block;
+  margin-top: 1.6rem;
+  padding: 0.3rem 0.6rem;
+  background: rgb(3 10 5 / 0.72);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
 }
 
 .interlude-latin em {
@@ -1396,15 +1443,14 @@ body::after {
 
 /* The name, as wide as the page, cut out of the grainy photograph and sunk into the page's foot. */
 .foot-name {
-  margin: clamp(30px, 6vh, 70px) calc(-1 * var(--gutter))
-    calc(-0.16em - var(--frame));
+  margin: clamp(30px, 6vh, 70px) calc(-1 * var(--gutter)) -0.2em;
   padding: 0 var(--gutter);
-  font-family: var(--f-display);
-  font-weight: 400;
-  font-size: 15.2vw;
-  line-height: 0.82;
-  letter-spacing: -0.045em;
-  text-transform: uppercase;
+  font-family: var(--f-inscription);
+  font-weight: 500;
+  font-size: 8.6vw;
+  line-height: 0.9;
+  letter-spacing: 0.02em;
+  text-align: center;
   white-space: nowrap;
   color: transparent;
   background: url("/art/laocoon-strip.jpg") center / 100% 100%;
@@ -1412,13 +1458,20 @@ body::after {
   background-clip: text;
 }
 
+/* The stops between the words, raised to the middle of the letters as on a Roman inscription. */
+.foot-name span {
+  position: relative;
+  top: -0.08em;
+  margin: 0 0.1em;
+}
+
 /* ── Motion ── */
 
 @media (prefers-reduced-motion: no-preference) {
   /* The hero's words rise in, and Caesar is printed in row by row. */
-  .word > span {
+  .js .word > span {
     translate: 0 105%;
-    transition: translate 1.1s var(--ease) calc(0.15s + var(--i) * 0.08s);
+    transition: translate 0.9s var(--ease) calc(0.05s + var(--i) * 0.06s);
   }
 
   .loaded .word > span {
@@ -1434,8 +1487,8 @@ body::after {
     animation: spin 240s linear infinite;
   }
 
-  .hero-foot,
-  .hero-meta {
+  .js .hero-foot,
+  .js .hero-meta {
     opacity: 0;
     transition: opacity 1.2s ease 0.7s;
   }
@@ -1539,7 +1592,6 @@ body::after {
   }
 
   :root {
-    --frame: 3px;
     --bar: 58px;
   }
 
