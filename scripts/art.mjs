@@ -60,9 +60,9 @@ for (const [name, m] of Object.entries(MONO)) {
   const oh = Math.round((ow * box.height) / box.width);
   const { data } = await sharp(`${SRC}/${name}.jpg`).extract(box).resize(ow, oh).greyscale().normalise().raw().toBuffer({ resolveWithObject: true });
   const out = Buffer.alloc(ow * oh * 3);
-  // Night #040a07 to ink #e3ebe4.
-  const lo = [4, 10, 7];
-  const hi = [227, 235, 228];
+  // Night #030a05 to ink #e2ece4.
+  const lo = [3, 10, 5];
+  const hi = [226, 236, 228];
   for (let y = 0; y < oh; y++) {
     for (let x = 0; x < ow; x++) {
       let v = Math.pow(data[y * ow + x] / 255, m.gamma);

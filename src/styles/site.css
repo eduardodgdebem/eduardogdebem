@@ -5,16 +5,16 @@
    section is set its own way (see src/views/Site.astro). */
 
 :root {
-  --night: #040a07;
-  --night-2: #08130d;
-  --line: #17301f;
-  --line-2: #24452f;
-  --ink: #e3ebe4;
-  --ink-soft: #94a89a;
-  --ink-faint: #5d7364;
-  --accent: #34d27b;
-  --on-accent: #03140a;
-  --art-ink: #8fe0b0;
+  --night: #030a05;
+  --night-2: #07130a;
+  --line: #132f1a;
+  --line-2: #1f4728;
+  --ink: #e2ece4;
+  --ink-soft: #93a998;
+  --ink-faint: #5c7462;
+  --accent: #09db3a;
+  --on-accent: #021405;
+  --art-ink: #7cf097;
 
   --f-display: "Oswald", "Arial Narrow", sans-serif;
   --f-text: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
@@ -177,7 +177,12 @@ body::after {
   inset: 0;
   z-index: -1;
   --dot: 0px;
-  background: radial-gradient(circle, var(--print) var(--dot), transparent calc(var(--dot) + 0.5px)) center / 4px 4px;
+  background: radial-gradient(
+      circle,
+      var(--print) var(--dot),
+      transparent calc(var(--dot) + 0.5px)
+    )
+    center / 4px 4px;
   transition: --dot 0.42s steps(6, end);
 }
 
@@ -282,7 +287,7 @@ body::after {
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: rgb(4 10 7 / 0.88);
+  background: rgb(3 10 5 / 0.88);
   backdrop-filter: blur(8px);
   opacity: 0;
   transition: opacity 0.4s ease;
@@ -465,7 +470,8 @@ body::after {
   aspect-ratio: 680 / 840 !important;
   -webkit-mask-size: 800% 600%;
   mask-size: 800% 600%;
-  -webkit-mask-position: calc(var(--col, 0) * 100% / 7) calc(var(--row, 0) * 100% / 5);
+  -webkit-mask-position: calc(var(--col, 0) * 100% / 7)
+    calc(var(--row, 0) * 100% / 5);
   mask-position: calc(var(--col, 0) * 100% / 7) calc(var(--row, 0) * 100% / 5);
 }
 
@@ -811,7 +817,7 @@ body::after {
   display: block;
   aspect-ratio: 16 / 10;
   overflow: hidden;
-  background: #1f7a49;
+  background: #0b8a2a;
 }
 
 .shot img {
@@ -831,7 +837,12 @@ body::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle, transparent 0.8px, rgb(4 10 7 / 0.35) 1.4px) 0 0 / 3px 3px;
+  background: radial-gradient(
+      circle,
+      transparent 0.8px,
+      rgb(3 10 5 / 0.35) 1.4px
+    )
+    0 0 / 3px 3px;
   transition: opacity 0.5s ease;
 }
 
@@ -907,7 +918,12 @@ body::after {
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: linear-gradient(var(--night), transparent 25%, transparent 70%, var(--night));
+  background: linear-gradient(
+    var(--night),
+    transparent 25%,
+    transparent 70%,
+    var(--night)
+  );
 }
 
 .interlude-text {
@@ -1098,7 +1114,7 @@ body::after {
   font-size: 0.76rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  border-bottom: 1px solid rgb(3 20 10 / 0.18);
+  border-bottom: 1px solid rgb(2 20 5 / 0.18);
 }
 
 .mail-bar span:last-child {
@@ -1145,13 +1161,13 @@ body::after {
   letter-spacing: 0.08em;
   color: inherit;
   background: none;
-  border: 1px solid rgb(3 20 10 / 0.35);
+  border: 1px solid rgb(2 20 5 / 0.35);
   cursor: pointer;
   transition: background-color 0.25s ease;
 }
 
 .mail-copy:hover {
-  background: rgb(3 20 10 / 0.12);
+  background: rgb(2 20 5 / 0.12);
 }
 
 .mail-copy svg {
@@ -1380,7 +1396,8 @@ body::after {
 
 /* The name, as wide as the page, cut out of the grainy photograph and sunk into the page's foot. */
 .foot-name {
-  margin: clamp(30px, 6vh, 70px) calc(-1 * var(--gutter)) calc(-0.16em - var(--frame));
+  margin: clamp(30px, 6vh, 70px) calc(-1 * var(--gutter))
+    calc(-0.16em - var(--frame));
   padding: 0 var(--gutter);
   font-family: var(--f-display);
   font-weight: 400;
@@ -1458,7 +1475,6 @@ body::after {
     opacity: 1;
     translate: none;
   }
-
 }
 
 @keyframes print {
@@ -1699,7 +1715,7 @@ body::after {
     min-height: 0;
   }
 
-    .about {
+  .about {
     grid-template-columns: 1fr;
   }
 
