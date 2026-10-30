@@ -8,25 +8,14 @@ export const prerender = true;
 ---
 
 <Shell title="Not found — Eduardo de Bem" description={UI.notFoundText.en} lang="en" noindex canonical={false}>
-  <div class="frame" aria-hidden="true"></div>
   <main class="lost">
-    <p class="kicker">// 404</p>
-    <h1 class="display">{UI.notFound.en}</h1>
-    <p class="lede">{UI.notFoundText.en}</p>
-    <p class="actions"><a class="button button--accent" href="/">{UI.back.en}</a></p>
+    <div class="lost-text">
+      <p class="lost-num">CDIV</p>
+      <h1 class="lost-title">{UI.notFound.en}</h1>
+      <p class="lede">{UI.notFoundText.en}</p>
+      <p class="actions"><a class="button button--accent" href="/">{UI.back.en}</a></p>
+    </div>
     <Art id="gladiator-head" class="lost-art" />
   </main>
 </Shell>
 
-<style>
-  .lost {
-    max-width: 44rem;
-    margin: 0 auto;
-    padding: 14vh 28px 10vh;
-  }
-
-  .lost-art {
-    width: min(100%, 22rem);
-    margin-top: 3rem;
-  }
-</style>

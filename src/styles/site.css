@@ -1,8 +1,8 @@
 /* ─── The site: classical pictures printed in one green ink on the night ────
-   After Nous Research's Hermes and Portal: light condensed headlines over
-   small upper-case labels, mono text, flat sharp blocks, a frame of the
-   accent round the screen, every picture dithered to a single ink. Each
-   section is set its own way (see src/views/Site.astro). */
+   Light condensed headlines over small upper-case labels, mono text, flat
+   sharp blocks, every picture dithered to a single ink; Roman numerals, a
+   Greek key and inscription capitals from the book version. Each section is
+   set its own way (see src/views/Site.astro). */
 
 :root {
   --night: #030a05;
@@ -20,7 +20,6 @@
   --f-inscription: "Cinzel", "Trajan Pro", Georgia, serif;
   --f-text: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
-  --frame: 0px;
   --bar: 64px;
   --gutter: clamp(20px, 4vw, 64px);
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
@@ -104,15 +103,6 @@ ul {
 
 main:focus {
   outline: none;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
 }
 
 .dim {
@@ -250,31 +240,6 @@ body::after {
   }
 }
 
-.chip {
-  display: inline-block;
-  padding: 0.05rem 0.4rem;
-  font-family: var(--f-display);
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--on-accent);
-  background: var(--ink);
-}
-
-.tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 0.9rem;
-}
-
-.tags span {
-  padding: 0 0.45rem;
-  font-size: 0.72rem;
-  color: var(--ink-soft);
-  border: 1px solid var(--line-2);
-}
-
 .dots {
   display: inline-flex;
   gap: 5px;
@@ -290,16 +255,16 @@ body::after {
 
 .bar {
   position: fixed;
-  top: var(--frame);
-  left: var(--frame);
-  right: var(--frame);
+  top: 0;
+  left: 0;
+  right: 0;
   z-index: 60;
   height: var(--bar);
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 2rem;
-  padding: 0 calc(var(--gutter) - var(--frame));
+  padding: 0 var(--gutter);
   border-bottom: 1px solid transparent;
   transition: border-color 0.4s ease;
 }
@@ -487,7 +452,6 @@ body::after {
   mask-position: center bottom;
 }
 
-/* Turning: one frame of the sheet (8 across, 6 down) at a time, chosen by site.ts as the page scrolls. */
 /* Turning: the still (frame one) until the page scrolls, then a canvas that
    site.ts draws each frame into, from a sheet with one pixel to a dot, scaled
    up without smoothing so the dots stay square. */
@@ -522,30 +486,6 @@ body::after {
   stroke: var(--art-ink);
   stroke-width: 0.5;
   opacity: 0.12;
-}
-
-.rays-dash {
-  stroke-dasharray: 2 6;
-}
-
-.hero-meta {
-  position: absolute;
-  top: calc(var(--bar) + 18px);
-  display: flex;
-  flex-direction: column;
-  font-size: 0.72rem;
-  letter-spacing: 0.04em;
-  line-height: 1.6;
-}
-
-.hero-meta--tl {
-  left: var(--gutter);
-}
-
-.hero-meta--tr {
-  right: var(--gutter);
-  text-align: right;
-  color: var(--ink-soft);
 }
 
 .hero-title {
@@ -593,62 +533,6 @@ body::after {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-}
-
-.hero-caption {
-  position: absolute;
-  right: var(--gutter);
-  bottom: 70px;
-  font-size: 0.66rem;
-  letter-spacing: 0.04em;
-  color: var(--ink-faint);
-  writing-mode: vertical-rl;
-  rotate: 180deg;
-}
-
-/* A ticker of the stack along the hero's foot. */
-.ticker {
-  position: relative;
-  margin: 0 calc(-1 * var(--gutter));
-  padding: 0.7rem 0;
-  border-top: 1px solid var(--line);
-  overflow: hidden;
-  background: var(--night);
-}
-
-.ticker-track {
-  display: flex;
-  width: max-content;
-  animation: ticker 40s linear infinite;
-}
-
-.ticker-run {
-  display: flex;
-}
-
-.ticker-run > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 2rem;
-  padding-right: 2rem;
-  font-family: var(--f-display);
-  font-size: 1.05rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--ink-soft);
-  white-space: nowrap;
-}
-
-.ticker i {
-  font-style: normal;
-  font-size: 0.7rem;
-  color: var(--accent);
-}
-
-@keyframes ticker {
-  to {
-    translate: -50% 0;
-  }
 }
 
 /* ── A section and its head: a big number, the title, a kicker ── */
@@ -795,12 +679,6 @@ body::after {
 }
 
 .slide-title a:hover {
-  color: var(--accent);
-}
-
-.slide-org {
-  margin-top: 0.5rem;
-  font-size: 0.82rem;
   color: var(--accent);
 }
 
@@ -1001,12 +879,6 @@ body::after {
 
 .links a:hover {
   text-decoration-color: var(--accent);
-}
-
-.note {
-  margin-top: 0.5rem;
-  font-size: 0.75rem;
-  color: var(--ink-faint);
 }
 
 /* ── A photograph across the screen, in greys with a heavy grain ── */
@@ -1332,11 +1204,6 @@ body::after {
   letter-spacing: 0.02em;
 }
 
-.ways-where {
-  font-size: 0.78rem;
-  color: var(--ink-faint);
-}
-
 .ways a:hover {
   padding-left: 0.9rem;
   background: var(--night-2);
@@ -1541,6 +1408,60 @@ body::after {
   margin: 0 0.1em;
 }
 
+/* ── The 404: four hundred and four in Roman, and a statue looking for the page ── */
+
+.lost {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 3rem;
+  min-height: 100svh;
+  padding: 80px var(--gutter);
+}
+
+.lost-num {
+  font-family: var(--f-inscription);
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  line-height: 1;
+  color: var(--accent);
+}
+
+.lost-title {
+  margin-top: 1rem;
+  font-family: var(--f-display);
+  font-weight: 300;
+  font-size: clamp(3rem, 7vw, 7rem);
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+.lost .lede {
+  margin-top: 1.6rem;
+}
+
+.lost .actions {
+  margin-top: 2rem;
+}
+
+.lost-art {
+  max-width: 520px;
+  justify-self: center;
+  width: 100%;
+}
+
+@media (max-width: 860px) {
+  .lost {
+    grid-template-columns: 1fr;
+    align-content: center;
+  }
+
+  .lost-art {
+    max-width: 320px;
+    order: -1;
+  }
+}
+
 /* ── Motion ── */
 
 @media (prefers-reduced-motion: no-preference) {
@@ -1563,14 +1484,12 @@ body::after {
     animation: spin 240s linear infinite;
   }
 
-  .js .hero-foot,
-  .js .hero-meta {
+  .js .hero-foot {
     opacity: 0;
     transition: opacity 1.2s ease 0.7s;
   }
 
-  .loaded .hero-foot,
-  .loaded .hero-meta {
+  .loaded .hero-foot {
     opacity: 1;
   }
 
@@ -1642,9 +1561,6 @@ body::after {
     scroll-behavior: auto;
   }
 
-  .ticker-track {
-    animation: none;
-  }
 }
 
 /* ── Narrower screens ── */
@@ -1740,10 +1656,10 @@ body::after {
   .bar-nav {
     display: none;
     position: fixed;
-    top: calc(var(--frame) + var(--bar));
-    left: var(--frame);
-    right: var(--frame);
-    bottom: var(--frame);
+    top: var(--bar);
+    left: 0;
+    right: 0;
+    bottom: 0;
     flex-direction: column;
     align-items: stretch;
     justify-content: space-between;
@@ -1802,10 +1718,6 @@ body::after {
     width: 110vw;
     bottom: 34%;
     opacity: 0.7;
-  }
-
-  .hero-caption {
-    display: none;
   }
 
   .head,
@@ -1940,10 +1852,6 @@ body::after {
 
   .ways a {
     grid-template-columns: 1.6rem minmax(0, 1fr) auto;
-  }
-
-  .ways-where {
-    display: none;
   }
 
   .foot-grid {

@@ -22,10 +22,6 @@ const OUT = 'public/art';
 const ART = {
   // Giambologna, Mercury, c. 1580. The Met, CC0. Dark bronze on a light wall: inverted, so the bronze is the ink.
   mercury: { crop: [0.12, 0.06, 0.76, 0.92], width: 1000, dot: 2, invert: true, wall: true, gamma: 0.9, gain: 1.3 },
-  // The Tusculum portrait of Julius Caesar, 46-44 BC. Museo di Antichità, Turin. Photo: Marie-Lan Taÿ Pamart, public domain.
-  caesar: { crop: [0.03, 0.03, 0.94, 0.78], width: 1400, dot: 3, gamma: 2.0, gain: 1.2, fade: 0.45, floor: 0.2 },
-  // Antonio Canova, Psyche Revived by Cupid's Kiss, 1787-93. Louvre. Photo: Joe deSousa, CC0.
-  psyche: { crop: [0.18, 0.0, 0.6, 0.92], width: 1000, dot: 2, gamma: 1.7, gain: 1.05, fade: 0.55, floor: 0.2 },
   // The Borghese Gladiator's head. Louvre. Photo: public domain.
   'gladiator-head': { crop: [0.06, 0.04, 0.88, 0.78], width: 900, dot: 2, gamma: 1.5, gain: 1.05, fade: 0.6, floor: 0.15 },
   // Engravings, the right way round: the paper is the ink, the lines are the night.
@@ -50,9 +46,10 @@ const MONO = {
   laocoon: { crop: [0.02, 0, 0.92, 0.45], width: 2000, grain: 46, gamma: 2.1, strip: [0.25, 0.44, 0.33, 0.48] },
 };
 
-const only0 = process.argv.slice(2);
+/** Pictures named on the command line, or all of them. */
+const only = process.argv.slice(2);
 for (const [name, m] of Object.entries(MONO)) {
-  if (only0.length && !only0.includes(name)) continue;
+  if (only.length && !only.includes(name)) continue;
   const { width: W, height: H } = await sharp(`${SRC}/${name}.jpg`).metadata();
   const [l, t, w, h] = m.crop;
   const box = { left: Math.round(l * W), top: Math.round(t * H), width: Math.round(w * W), height: Math.round(h * H) };
@@ -88,7 +85,6 @@ for (const [name, m] of Object.entries(MONO)) {
   }
 }
 
-const only = process.argv.slice(2);
 for (const [name, a] of Object.entries(ART)) {
   if (only.length && !only.includes(name)) continue;
   const src = sharp(`${SRC}/${name}.jpg`);

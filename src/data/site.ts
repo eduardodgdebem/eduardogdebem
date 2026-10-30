@@ -55,7 +55,6 @@ export const UI = {
   menu: { en: 'Menu', pt: 'Menu' },
   skip: { en: 'Skip to content', pt: 'Pular para o conteúdo' },
   top: { en: 'Back to top', pt: 'Voltar ao topo' },
-  scroll: { en: 'Scroll', pt: 'Role' },
   festina: { en: 'Make haste slowly. Augustus’ motto, and a fair rule for software.', pt: 'Apressa-te devagar. O lema de Augusto, e uma boa regra para software.' },
   motto: { en: 'Built to last, as the Romans built.', pt: 'Feito para durar, como construíam os romanos.' },
   close: { en: 'Close', pt: 'Fechar' },

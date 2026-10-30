@@ -16,7 +16,6 @@ export interface Art {
 }
 
 export const ART = {
-  caesar: { name: 'Julius Caesar', where: 'The Tusculum portrait · Turin', w: 1400, h: 1746, credit: 'Photo: Marie-Lan Taÿ Pamart, public domain', source: 'https://commons.wikimedia.org/wiki/File:Head_of_Julius_Caesar_from_Tusculum_MAntTorino_2089_n02.jpg' },
   // A 3D photo scan, rendered all the way round by `npm run turn` (scripts/turn.mjs) into 48 frames on one sheet.
   'caesar-turn': { name: 'Julius Caesar', where: 'Via dei Fori Imperiali, Rome · 3D scan', w: 680, h: 840, credit: 'Scan: massimo.riccioni, CC BY', source: 'https://sketchfab.com/3d-models/statua-di-giulio-cesare-7fc6bfd0ea0643f6bd66baeaa8e3c2e3' },
   melencolia: { name: 'Melencolia I', where: 'Albrecht Dürer, 1514', w: 1000, h: 1322, credit: 'The Met, CC0', source: 'https://commons.wikimedia.org/wiki/File:Melencolia_I_MET_DP815743.jpg' },
