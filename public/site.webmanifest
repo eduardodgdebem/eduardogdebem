@@ -1,6 +1,6 @@
 {
-  "name": "Codex Eduardi — Eduardo de Bem",
-  "short_name": "Codex Eduardi",
+  "name": "Eduardo de Bem",
+  "short_name": "Eduardo de Bem",
   "icons": [
     {
       "src": "/icon-192.png",
@@ -13,8 +13,8 @@
       "type": "image/png"
     }
   ],
-  "theme_color": "#17110c",
-  "background_color": "#efe6d0",
+  "theme_color": "#030a05",
+  "background_color": "#030a05",
   "display": "browser",
   "start_url": "/"
 }
