@@ -1823,6 +1823,62 @@ body::after {
     grid-column: 1;
   }
 
+  /* Projects, tighter on a phone: the cards no longer stack, so they needn't stand so far apart. */
+  .projects {
+    padding-block: 72px;
+  }
+
+  .projects .head {
+    margin-bottom: 40px;
+  }
+
+  .deck {
+    gap: 28px;
+  }
+
+  .slide .shot,
+  .slide .window-code {
+    min-height: 0;
+  }
+
+  .slide .shot {
+    aspect-ratio: 16 / 10;
+  }
+
+  .slide .window-code {
+    aspect-ratio: auto;
+    padding: 1.4rem 1.2rem;
+  }
+
+  .slide-body {
+    padding: 24px 20px 28px;
+  }
+
+  .slide-count {
+    font-size: 2.6rem;
+  }
+
+  .slide-when {
+    padding-top: 1.2rem;
+  }
+
+  .slide-text {
+    margin-top: 0.7rem;
+    font-size: 0.95rem;
+  }
+
+  .slide-stack {
+    margin-top: 0.9rem;
+  }
+
+  .site-list {
+    margin-top: 1rem;
+  }
+
+  .site-list li {
+    padding: 0.65rem 0;
+  }
+
   .slide {
     position: relative;
     top: 0;
