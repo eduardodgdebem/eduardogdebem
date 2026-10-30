@@ -36,7 +36,7 @@ const SHOW = [0.28, 1.09];
 const CROWN = 1.025;
 /** The top of his head, rebuilt: a half ellipsoid at the centre and radii of the head just below the cut (x, y, z). */
 const DOME = { at: [-0.005, 0.998, 0.033], r: [0.053, 0.046, 0.06] };
-const FRONT = 0;
+const FRONT = -0.125; // a three-quarter view, turned toward the headline
 /** The longest side a triangle of the scan may have, in the model's units. */
 const MAX_EDGE = 0.03;
 /** Bronze is dark: a triangle whose texture is brighter than this (0 to 1) is sky the scan caught, and goes. */
