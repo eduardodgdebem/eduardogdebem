@@ -73,7 +73,7 @@ export const UI = {
 export interface Job {
   org: string;
   title: T;
-  /** Where it sits in the story (no dates the site doesn't know). */
+  /** When: the years, from the CV (the Zallpy projects from Eduardo). */
   when: T;
   summary: T;
   stack: string[];
@@ -83,28 +83,28 @@ export const WORK: Job[] = [
   {
     org: 'Zallpy · BMW Europe',
     title: { en: 'An ECU development tool', pt: 'Uma ferramenta de desenvolvimento de ECUs' },
-    when: { en: 'Now', pt: 'Agora' },
+    when: { en: '2026 – now', pt: '2026 – hoje' },
     summary: { en: 'A tool for developing the cars’ ECUs, their electronic control units.', pt: 'Uma ferramenta para o desenvolvimento das ECUs dos carros, as unidades de controle eletrônico.' },
     stack: ['Node.js', 'PostgreSQL', 'BullMQ'],
   },
   {
-    org: 'Zallpy · BMW USA',
-    title: { en: 'A financial platform', pt: 'Uma plataforma financeira' },
-    when: { en: 'Before that', pt: 'Antes disso' },
-    summary: { en: 'An Angular front end whose load time went from over ten seconds to under one.', pt: 'Um front-end em Angular que passou de mais de dez segundos para menos de um para carregar.' },
-    stack: ['Angular', '.NET', 'MuleSoft'],
-  },
-  {
-    org: 'Dema',
+    org: 'Zallpy · Dema',
     title: { en: 'Finding social programs', pt: 'Encontrar programas sociais' },
-    when: { en: 'Also', pt: 'Também' },
+    when: { en: '2025 – 2026', pt: '2025 – 2026' },
     summary: { en: 'Showing people in Brazil the social programs they can get.', pt: 'Mostra às pessoas no Brasil os programas sociais a que têm direito.' },
     stack: ['React', 'NestJS', 'RabbitMQ', 'PostgreSQL'],
   },
   {
+    org: 'Zallpy · BMW USA',
+    title: { en: 'A financial platform', pt: 'Uma plataforma financeira' },
+    when: { en: '2024 – 2025', pt: '2024 – 2025' },
+    summary: { en: 'An Angular front end whose load time went from over ten seconds to under one.', pt: 'Um front-end em Angular que passou de mais de dez segundos para menos de um para carregar.' },
+    stack: ['Angular', '.NET', 'MuleSoft'],
+  },
+  {
     org: 'eTopocart',
     title: { en: 'Geoprocessing for city halls', pt: 'Geoprocessamento para prefeituras' },
-    when: { en: 'First job', pt: 'Primeiro emprego' },
+    when: { en: '2021 – 2022', pt: '2021 – 2022' },
     summary: { en: 'Geoprocessing for city halls around Brazil.', pt: 'Geoprocessamento para prefeituras de todo o Brasil.' },
     stack: ['Angular', 'AWS Lambda', 'Maps'],
   },
@@ -119,10 +119,10 @@ export const STACK: { group: T; items: string[] }[] = [
 
 export const ABOUT: Record<Lang, string[]> = {
   en: [
-    'A full-stack developer in Florianópolis, working mostly in TypeScript. I started at Zallpy as an intern in 2024; I’m finishing my Computer Science degree at UNISUL this year.',
+    'A full-stack developer in Florianópolis with more than three years of experience, working mostly in TypeScript. At Zallpy since 2024, I went from intern to mid-level; I hold a degree in Computer Science from UNISUL.',
   ],
   pt: [
-    'Desenvolvedor full stack em Florianópolis, principalmente em TypeScript. Entrei na Zallpy como estagiário em 2024; termino Ciência da Computação na UNISUL este ano.',
+    'Desenvolvedor full stack em Florianópolis com mais de três anos de experiência, principalmente em TypeScript. Na Zallpy desde 2024, fui de estagiário a pleno; sou formado em Ciência da Computação pela UNISUL.',
   ],
 }
 
