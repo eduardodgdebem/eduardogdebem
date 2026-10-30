@@ -47,7 +47,7 @@ mkdirSync(OUT, { recursive: true });
  */
 const MONO = {
   // Laocoön and His Sons. Vatican Museums. Photo: Wilfredor, CC0.
-  laocoon: { crop: [0.1, 0, 0.8, 0.43], width: 1800, grain: 46, gamma: 2.1, strip: [0.2, 0.46, 0.36, 0.46] },
+  laocoon: { crop: [0.02, 0, 0.92, 0.45], width: 2000, grain: 46, gamma: 2.1, strip: [0.25, 0.44, 0.33, 0.48] },
 };
 
 const only0 = process.argv.slice(2);
