@@ -8,16 +8,16 @@
 // a photo scan of the bronze on Via dei Fori Imperiali, Rome (a copy of the
 // marble in the Palazzo Senatorio). Its source download is a .rar holding an
 // OBJ; extracted into art-src/caesar-rome/source/x/ (kept out of the repo).
-import sharp from 'sharp';
-import { createServer } from 'node:http';
-import { readFileSync } from 'node:fs';
-import { spawn } from 'node:child_process';
+import sharp from "sharp";
+import { createServer } from "node:http";
+import { readFileSync } from "node:fs";
+import { spawn } from "node:child_process";
 
-const DIR = 'art-src/caesar-rome/source/x';
-const MODEL = 'untitled.obj';
-const MATERIALS = 'untitled.mtl';
-const OUT = 'public/art/caesar-turn.png';
-const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+const DIR = "art-src/caesar-rome/source/x";
+const MODEL = "untitled.obj";
+const MATERIALS = "untitled.mtl";
+const OUT = "public/art/caesar-turn.png";
+const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
 /** Frames all the way round, the sheet's columns, a frame's size in px, and the dither's pixel. */
 const FRAMES = 48;
@@ -36,7 +36,7 @@ const SHOW = [0.28, 1.09];
 const CROWN = 1.025;
 /** The top of his head, rebuilt: a half ellipsoid at the centre and radii of the head just below the cut (x, y, z). */
 const DOME = { at: [-0.005, 0.998, 0.033], r: [0.053, 0.046, 0.06] };
-const FRONT = -0.125; // a three-quarter view, turned toward the headline
+const FRONT = -30 / 360; // turned a little toward the headline
 /** The longest side a triangle of the scan may have, in the model's units. */
 const MAX_EDGE = 0.03;
 /** Bronze is dark: a triangle whose texture is brighter than this (0 to 1) is sky the scan caught, and goes. */
@@ -46,8 +46,14 @@ const GAMMA = 1.8;
 const GAIN = 1.1;
 
 const BAYER = [
-  [0, 32, 8, 40, 2, 34, 10, 42], [48, 16, 56, 24, 50, 18, 58, 26], [12, 44, 4, 36, 14, 46, 6, 38], [60, 28, 52, 20, 62, 30, 54, 22],
-  [3, 35, 11, 43, 1, 33, 9, 41], [51, 19, 59, 27, 49, 17, 57, 25], [15, 47, 7, 39, 13, 45, 5, 37], [63, 31, 55, 23, 61, 29, 53, 21],
+  [0, 32, 8, 40, 2, 34, 10, 42],
+  [48, 16, 56, 24, 50, 18, 58, 26],
+  [12, 44, 4, 36, 14, 46, 6, 38],
+  [60, 28, 52, 20, 62, 30, 54, 22],
+  [3, 35, 11, 43, 1, 33, 9, 41],
+  [51, 19, 59, 27, 49, 17, 57, 25],
+  [15, 47, 7, 39, 13, 45, 5, 37],
+  [63, 31, 55, 23, 61, 29, 53, 21],
 ];
 
 const ROWS = Math.ceil(FRAMES / COLS);
@@ -173,42 +179,84 @@ const blob = await new Promise((r) => sheet.toBlob(r, 'image/png'));
 await fetch('/done', { method: 'POST', body: blob });
 </script>`;
 
-const TYPES = { js: 'text/javascript', obj: 'text/plain', mtl: 'text/plain', jpg: 'image/jpeg', html: 'text/html' };
+const TYPES = {
+  js: "text/javascript",
+  obj: "text/plain",
+  mtl: "text/plain",
+  jpg: "image/jpeg",
+  html: "text/html",
+};
 let done;
 const sheetPng = new Promise((r) => (done = r));
 const server = createServer((req, res) => {
-  if (req.method === 'POST') {
+  if (req.method === "POST") {
     const parts = [];
-    req.on('data', (c) => parts.push(c));
-    req.on('end', () => (res.end(), done(Buffer.concat(parts))));
+    req.on("data", (c) => parts.push(c));
+    req.on("end", () => (res.end(), done(Buffer.concat(parts))));
     return;
   }
   const url = decodeURIComponent(req.url);
-  const path = url === '/' ? null : url.startsWith('/model/') ? `${DIR}/${url.slice(7)}` : url.startsWith('/three/') ? `node_modules${url}` : undefined;
+  const path =
+    url === "/"
+      ? null
+      : url.startsWith("/model/")
+        ? `${DIR}/${url.slice(7)}`
+        : url.startsWith("/three/")
+          ? `node_modules${url}`
+          : undefined;
   if (path === undefined) return res.writeHead(404).end();
-  res.writeHead(200, { 'content-type': TYPES[(path ?? 'x.html').split('.').pop()] });
+  res.writeHead(200, {
+    "content-type": TYPES[(path ?? "x.html").split(".").pop()],
+  });
   // A stray line element ('l') would make three's OBJLoader draw the whole object as lines.
-  res.end(!path ? PAGE : path.endsWith('.obj') ? readFileSync(path, 'utf8').replace(/^l .*$/gm, '') : readFileSync(path));
+  res.end(
+    !path
+      ? PAGE
+      : path.endsWith(".obj")
+        ? readFileSync(path, "utf8").replace(/^l .*$/gm, "")
+        : readFileSync(path),
+  );
 }).listen(0);
 const port = server.address().port;
-const chrome = spawn(CHROME, ['--headless', '--use-angle=metal', '--enable-gpu', '--remote-debugging-port=0', `--user-data-dir=${process.env.TMPDIR}turn-chrome`, `http://localhost:${port}/`], { stdio: 'ignore' });
-const png = await Promise.race([sheetPng, new Promise((_, no) => setTimeout(() => no(new Error('the render timed out')), 120000).unref())]).finally(() => {
+const chrome = spawn(
+  CHROME,
+  [
+    "--headless",
+    "--use-angle=metal",
+    "--enable-gpu",
+    "--remote-debugging-port=0",
+    `--user-data-dir=${process.env.TMPDIR}turn-chrome`,
+    `http://localhost:${port}/`,
+  ],
+  { stdio: "ignore" },
+);
+const png = await Promise.race([
+  sheetPng,
+  new Promise((_, no) =>
+    setTimeout(() => no(new Error("the render timed out")), 120000).unref(),
+  ),
+]).finally(() => {
   chrome.kill();
   server.close();
 });
 
 // The render as it came, to look at.
-await sharp(png).toFile('art-src/caesar-turn-raw.png');
+await sharp(png).toFile("art-src/caesar-turn-raw.png");
 
 // One tone for every frame (so he doesn't flicker as he turns), then the dither.
 const SW = (W * COLS) / DOT;
 const SH = (H * ROWS) / DOT;
-const { data } = await sharp(png).resize(SW, SH).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+const { data } = await sharp(png)
+  .resize(SW, SH)
+  .ensureAlpha()
+  .raw()
+  .toBuffer({ resolveWithObject: true });
 const lum = new Float32Array(SW * SH);
 const seen = [];
 for (let i = 0; i < SW * SH; i++) {
   const a = data[i * 4 + 3] / 255;
-  const v = (0.3 * data[i * 4] + 0.59 * data[i * 4 + 1] + 0.11 * data[i * 4 + 2]) / 255;
+  const v =
+    (0.3 * data[i * 4] + 0.59 * data[i * 4 + 1] + 0.11 * data[i * 4 + 2]) / 255;
   lum[i] = a > 0.5 ? v : -1;
   if (a > 0.5 && i % 7 === 0) seen.push(v);
 }
@@ -222,11 +270,17 @@ for (let y = 0; y < H * ROWS; y++) {
     const cx = Math.floor(x / DOT);
     const cy = Math.floor(y / DOT);
     const l = lum[cy * SW + cx];
-    const v = l < 0 ? 0 : Math.pow(Math.min(1, Math.max(0, (l - lo) / (hi - lo))), GAMMA) * GAIN;
+    const v =
+      l < 0
+        ? 0
+        : Math.pow(Math.min(1, Math.max(0, (l - lo) / (hi - lo))), GAMMA) *
+          GAIN;
     const i = (y * W * COLS + x) * 4;
     out[i] = out[i + 1] = out[i + 2] = 255;
     out[i + 3] = v > (BAYER[cy % 8][cx % 8] + 0.5) / 64 ? 255 : 0;
   }
 }
-await sharp(out, { raw: { width: W * COLS, height: H * ROWS, channels: 4 } }).png({ palette: true, colours: 2, compressionLevel: 9 }).toFile(OUT);
-console.log('caesar-turn', `${FRAMES} frames of ${W}×${H}, ${COLS}×${ROWS}`);
+await sharp(out, { raw: { width: W * COLS, height: H * ROWS, channels: 4 } })
+  .png({ palette: true, colours: 2, compressionLevel: 9 })
+  .toFile(OUT);
+console.log("caesar-turn", `${FRAMES} frames of ${W}×${H}, ${COLS}×${ROWS}`);
