@@ -32,8 +32,10 @@ const DOT = 2;
  */
 const AXIS = [-0.02, -0.03];
 const SHOW = [0.28, 1.09];
-/** The top of his head: the scan has only sky above it. */
+/** Where the scan of his head stops: it has only sky above. */
 const CROWN = 1.025;
+/** The top of his head, rebuilt: a half ellipsoid at the centre and radii of the head just below the cut (x, y, z). */
+const DOME = { at: [-0.005, 0.998, 0.033], r: [0.053, 0.046, 0.06] };
 const FRONT = 0;
 /** The longest side a triangle of the scan may have, in the model's units. */
 const MAX_EDGE = 0.03;
@@ -131,6 +133,25 @@ statue.traverse((o) => {
   out.computeVertexNormals();
   o.geometry = out;
 });
+// The top of his head, which the scan lost: a dome, a little rough like cast hair, in the colour of the head below the cut.
+let tone = 0, n = 0;
+statue.traverse((o) => {
+  if (!o.isMesh) return;
+  const p = o.geometry.attributes.position, uv = o.geometry.attributes.uv;
+  for (let i = 0; i < p.count; i += 3) if (p.getY(i) > ${CROWN} - 0.06 && Math.hypot(p.getX(i) - ${DOME.at[0]}, p.getZ(i) - ${DOME.at[2]}) < 0.07) (tone += bright(uv.getX(i), uv.getY(i))), n++;
+});
+const dome = new THREE.SphereGeometry(1, 64, 32, 0, Math.PI * 2, 0, Math.PI / 2);
+const dp = dome.attributes.position;
+for (let i = 0; i < dp.count; i++) {
+  const k = 1 + (Math.sin(dp.getX(i) * 90) * Math.sin(dp.getZ(i) * 80) + Math.sin(dp.getY(i) * 70 + dp.getX(i) * 40)) * 0.012;
+  dp.setXYZ(i, dp.getX(i) * ${DOME.r[0]} * k, dp.getY(i) * ${DOME.r[1]} * k, dp.getZ(i) * ${DOME.r[2]} * k);
+}
+dome.computeVertexNormals();
+const grey = Math.round((tone / n) * 255);
+const cap = new THREE.Mesh(dome, new THREE.MeshStandardMaterial({ color: new THREE.Color(\`rgb(\${grey},\${grey},\${grey})\`), metalness: 0, roughness: 0.8 }));
+cap.position.set(${DOME.at[0]}, ${DOME.at[1]}, ${DOME.at[2]});
+statue.add(cap);
+
 // Turned on the figure's own axis; the camera level with the middle of what it shows, far enough to fit it.
 statue.position.set(-AX, -(LO + HI) / 2, -AZ);
 const turn = new THREE.Group();

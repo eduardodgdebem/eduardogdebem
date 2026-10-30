@@ -1,6 +1,6 @@
 // The page's behaviour (src/views/Site.astro): the bar marks the section being
 // read and darkens once the hero is behind; Caesar turns; things are printed in as they come
-// into view; the phone's menu; copying the address.
+// into view; the phone's menu; buttons re-printed on hover; copying the address.
 
 const root = document.documentElement;
 const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -77,6 +77,40 @@ const setMenu = (open: boolean) => {
 menu.addEventListener('click', () => setMenu(menu.getAttribute('aria-expanded') !== 'true'));
 document.getElementById('bar-nav')!.addEventListener('click', (e) => (e.target as Element).closest('a') && setMenu(false));
 addEventListener('keydown', (e) => e.key === 'Escape' && root.classList.contains('menu-open') && (setMenu(false), menu.focus()));
+
+/* ── Buttons: the label re-printed on hover, a letter at a time ── */
+
+const GLYPHS = 'ABCDEFGHKMNPRSTUVXZ0123456789#%&*+=/<>';
+if (!still) {
+  for (const b of document.querySelectorAll<HTMLElement>('.button')) {
+    const label = [...b.childNodes].find((n) => n.nodeType === Node.TEXT_NODE && n.textContent!.trim());
+    if (!label) continue;
+    const text = label.textContent!;
+    let timer = 0;
+    b.addEventListener('pointerenter', () => {
+      clearInterval(timer);
+      // Held at its width, so the button doesn't twitch as the letters change.
+      b.style.width = `${b.getBoundingClientRect().width}px`;
+      let tick = 0;
+      timer = window.setInterval(() => {
+        tick++;
+        const settled = Math.floor(tick / 1.4);
+        label.textContent = [...text]
+          .map((c, i) => {
+            if (i < settled || !/[a-z0-9]/i.test(c)) return c;
+            const g = GLYPHS[(Math.random() * GLYPHS.length) | 0];
+            return c === c.toLowerCase() ? g.toLowerCase() : g;
+          })
+          .join('');
+        if (settled >= text.length) {
+          clearInterval(timer);
+          label.textContent = text;
+          b.style.width = '';
+        }
+      }, 28);
+    });
+  }
+}
 
 /* ── Copying the address ── */
 
