@@ -22,6 +22,8 @@ const { title, description, lang, alternates, schema, noindex, canonical } = Ast
   <head>
     <!-- Set before anything paints: motion that hides things first only runs where the script can show them again. -->
     <script is:inline>document.documentElement.classList.add('js');</script>
+    <!-- The page opens at the top: the hero, and Caesar's turn, are meant to be scrolled from there, so a reload doesn't put it back where it was (a link to a section still goes to it). -->
+    <script is:inline>if ('scrollRestoration' in history && !location.hash) history.scrollRestoration = 'manual';</script>
     <BaseHead title={title} description={description} lang={lang} alternates={alternates} schema={schema} noindex={noindex} canonical={canonical} />
   </head>
   <body>
