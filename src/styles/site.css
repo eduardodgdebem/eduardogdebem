@@ -409,6 +409,18 @@ body::after {
   mask-position: center bottom;
 }
 
+/* Turning: one frame of the sheet (8 across, 6 down) at a time, chosen by site.ts as the page scrolls. */
+.caesar-turn .art-ink {
+  width: auto;
+  height: 100%;
+  margin-inline: auto;
+  aspect-ratio: 1 / 2 !important;
+  -webkit-mask-size: 800% 600%;
+  mask-size: 800% 600%;
+  -webkit-mask-position: calc(var(--col, 0) * 100% / 7) calc(var(--row, 0) * 100% / 5);
+  mask-position: calc(var(--col, 0) * 100% / 7) calc(var(--row, 0) * 100% / 5);
+}
+
 .rays {
   position: absolute;
   inset: -10%;

@@ -28,7 +28,7 @@ const projects = TYPES.flatMap((type) => PROJECTS.filter((p) => p.type === type)
 const TYPE_NAME = { site: { en: 'Site', pt: 'Site' }, app: { en: 'App', pt: 'App' }, language: { en: 'Language', pt: 'Linguagem' } };
 const linkLabel = (p: (typeof PROJECTS)[number]) => (p.code === p.url ? s(UI.readCode) : p.type === 'app' ? s(UI.openApp) : s(UI.visit));
 // Only the pictures on the page are credited.
-const SHOWN: ArtId[] = ['caesar', 'melencolia', 'laocoon', 'gladiator-head', 'mercury'];
+const SHOWN: ArtId[] = ['caesar-turn', 'melencolia', 'laocoon', 'gladiator-head', 'mercury'];
 const credited = SHOWN.map((id) => [id, ART[id]] as const);
 const [user, host] = CONTACT.email.split('@');
 ---
@@ -81,7 +81,9 @@ const [user, host] = CONTACT.email.split('@');
           })}
           <circle cx="500" cy="430" r="250" />
         </svg>
-        <Art id="caesar" class="caesar" />
+        <figure class="art caesar caesar-turn" data-turn="48" data-cols="8">
+          <div class="art-ink" role="img" aria-label={`${ART['caesar-turn'].name}, ${ART['caesar-turn'].where}`} style="--src:url(/art/caesar-turn.png)"></div>
+        </figure>
       </div>
       <h1 class="hero-title">
         <span class="sr-only">Eduardo de Bem: </span>

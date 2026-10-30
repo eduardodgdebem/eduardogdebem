@@ -1,5 +1,5 @@
 // The page's behaviour (src/views/Site.astro): the bar marks the section being
-// read and darkens once the hero is behind; things are printed in as they come
+// read and darkens once the hero is behind; Caesar turns; things are printed in as they come
 // into view; the phone's menu; copying the address.
 
 const root = document.documentElement;
@@ -20,6 +20,28 @@ sections.forEach((s) => reading.observe(s));
 
 const hero = document.querySelector<HTMLElement>('.hero');
 if (hero) new IntersectionObserver(([e]) => root.classList.toggle('past-hero', !e.isIntersecting), { rootMargin: '-80px 0px 0px 0px' }).observe(hero);
+
+/* ── Caesar turns all the way round as the hero scrolls away ── */
+
+const turn = document.querySelector<HTMLElement>('[data-turn]');
+if (turn && !still) {
+  const frames = Number(turn.dataset.turn);
+  const cols = Number(turn.dataset.cols);
+  const ink = turn.querySelector<HTMLElement>('.art-ink')!;
+  let shown = -1;
+  let queued = false;
+  const step = () => {
+    queued = false;
+    const p = Math.min(1, Math.max(0, scrollY / innerHeight));
+    const f = Math.round(p * frames) % frames;
+    if (f === shown) return;
+    shown = f;
+    ink.style.setProperty('--col', String(f % cols));
+    ink.style.setProperty('--row', String(Math.floor(f / cols)));
+  };
+  addEventListener('scroll', () => queued || ((queued = true), requestAnimationFrame(step)), { passive: true });
+  step();
+}
 
 /* ── Printed in as it comes into view ── */
 
