@@ -16,9 +16,9 @@
   --on-accent: #021405;
   --art-ink: #7cf097;
 
-  --f-display: "Oswald", "Arial Narrow", sans-serif;
-  --f-inscription: "Cinzel", "Trajan Pro", Georgia, serif;
-  --f-text: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --f-display: var(--font-oswald);
+  --f-inscription: var(--font-cinzel);
+  --f-text: var(--font-geist-mono);
 
   --bar: 64px;
   --gutter: clamp(20px, 4vw, 64px);
@@ -395,14 +395,20 @@ body::after {
 
 .bar-lang {
   display: flex;
-  gap: 4px;
+  gap: 0;
   font-family: var(--f-display);
   font-size: 0.8rem;
   letter-spacing: 0.08em;
   line-height: 1;
 }
 
+/* Each at least 24px square to tap, the bar's height untouched. */
 .bar-lang a {
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  min-height: 24px;
+  margin-block: -6px;
   text-decoration: none;
   color: var(--ink-faint);
 }
